@@ -1,4 +1,4 @@
-.PHONY: clean
+.PHONY: tidy clean
 
 all: out/10k.js
 
@@ -7,7 +7,13 @@ out/%.js: templates/jsonwrapper.js data/%.json
 
 
 data/10k.json: ~/Downloads/ISCX_Botnet-Training.pcap
-	tshark -r $< -T json -e ip.src -e ip.dst -e udp.srcport -e udp.srcport -e tcp.srcport -e tcp.dstport -c 100  'tcp or udp' > $@
+	tshark -r $< -T json -e ip.src -e ip.dst -e udp.srcport -e udp.dstport -e tcp.srcport -e tcp.dstport -c 100  'tcp or udp' > $@
 
-clean:
+data/services.json: /etc/services
+	awk -v Q="'" -F '[/ \t]*' '/^#/ {next} /\// {print "[" $$2 "," Q $$1 Q "]," }' $< | sort -unk1.2 > $@
+
+tidy:
 	$(RM) out/*
+
+clean: tidy
+	$(RM) data/*
