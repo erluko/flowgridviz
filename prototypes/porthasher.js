@@ -55,29 +55,21 @@
     knownback.has(h)?knownback.get(h).push(k):knownback.set(h,[k])
   });
 
-  let revstarts = new Map();
-  for(let p = 0; p < 2**16 && revstarts.size < bcount;p++){
-    let h = simphash(p);
-    if (!revstarts.has(h)) revstarts.set(h,p);
-  }
-
   backhasher = function(h,max=2**16){
     let list = (knownback.has(h)?Array.from(knownback.get(h)):[]).filter(x=>x<max);
     //P == h * bdp % bcount + bcount - lpm |!known(P)
-    let start = revstarts.get(h);
-    if(isNaN(start)){
-      if(list.length==0){
-        // only checks to 2**16, but unlikey that max > 2**16 AND no hashes match
-        throw("No ports in expected range hash to this value");
-      } else {
-        return list;
-      }
+    let start = h * bdp % bcount + bcount - lpm;
+
+    if(start > max){
+      return list;
     }
+
     for(p=start;p<=max;p+=256){
       if(!known.has(p)){
         list.push(p);
       }
     }
+
     list.sort((a,b)=>(a-b)); //it would be faster to do insertion correctly
     return list;
   }
