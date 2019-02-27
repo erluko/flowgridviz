@@ -18,7 +18,8 @@ function ipStrToInt(s){
 
 let bcount = 256;
 let matrix = new Array(bcount ** 2).fill(0);
-let maxv = 0;
+let sports = new Set();
+let dports = new Set();
 
 rl.on('line', function(line){
   //147.32.84.180 86.126.40.27   1063 3128
@@ -38,8 +39,14 @@ rl.on('line', function(line){
   }
   let sport = ph.porthasher(+out[2]);
   let dport = ph.porthasher(+out[3]);
-  matrix[sport * bcount + dport]++
+  matrix[sport * bcount + dport]++;
+  sports.add(sport);
+  dports.add(dport);
 });
 
-rl.on('close', _=> process.stdout.write(JSON.stringify(matrix)));
+rl.on('close', _=> process.stdout.write(JSON.stringify(
+  {matrix:matrix,
+   sports:Array.from(sports).sort((a,b)=>a-b),
+   dports:Array.from(dports).sort((a,b)=>a-b),
+  })));
 

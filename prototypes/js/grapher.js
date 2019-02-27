@@ -6,35 +6,9 @@
   let importData = inNode?n=>require('../out/'+n+'.js').IMPORT_DATA.get(n):n=>IMPORT_DATA.get(n);
 
   let bcount = 256;
-  /*let matrix = Array.from({length:bcount},
-                          (x,i)=>Array.from({length:bcount},_=>0));
-  let maxv = 0;
-  let fields = new Map(
-    [['udp.srcport','sport'],
-     ['udp.dstport','dport'],
-     ['tcp.srcport','sport'],
-     ['tcp.dstport','dport']]);
-  for(let rec of IMPORT_DATA.get('pcap')){
-    let d = {};
-    let r = rec._source.layers;
-    fields.forEach(function(v,k) {
-      if(typeof r[k] !== 'undefined'){
-        d[v]=porthasher(r[k]);
-      }
-    });
-    //console.log(d);
-    matrix[d.sport][d.dport]++;
-    maxv = Math.max(matrix[d.sport][d.dport],maxv);
-  }
+  let pdata = importData('pmatrix');
 
-  let plotrix=new Array(bcount*bcount);
-  for(let x = 0;x<bcount;x++){
-    for(let y = 0;y<bcount;y++){
-      plotrix[y*256+x]={x:x,y:y,z:matrix[y][x]};
-    }
-    }*/
-  let plotrix = importData('pmatrix');
-
+  let plotrix = pdata.matrix;
 
   // first watch for any existing load events
   let oldload = null;
