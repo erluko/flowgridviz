@@ -1,4 +1,10 @@
 (function(){
+  var inNode = !(typeof Window === 'function' &&
+                 Window.prototype.isPrototypeOf(this));
+
+  var root = inNode?module.exports:this;
+  let importData = inNode?n=>require('../out/'+n+'.js').IMPORT_DATA.get(n):n=>IMPORT_DATA.get(n);
+
   let bcount = 256;
   let bigp = 4295012789;
   let lilp = 4295021
@@ -10,7 +16,7 @@
 
   let known = (function (){ // list of known services from /etc/services
     let ret = new Map();
-    let data = new Map(IMPORT_DATA.get('services'));
+    let data = new Map(importData('services'));
     let snames = Array.from(new Set(data.values()));
     let smap = new Map();
     snames.sort().forEach((n,i)=>smap.set(n,i))
@@ -41,7 +47,7 @@
     // == ((p*bpm % bcount) +  lpm * bpm) % bcount
     // == ((p % bcount * bpm) +  lpm * bpm) % bcount
   }
-  porthasher = function(p){
+  root.porthasher = function(p){
     if(known.has(p)){
       return (known.get(p) + bpm) % bcount;
     } else {
@@ -51,11 +57,11 @@
 
   let knownback = new Map();
   known.forEach(function(v,k){
-    let h = porthasher(v);
+    let h = root.porthasher(v);
     knownback.has(h)?knownback.get(h).push(k):knownback.set(h,[k])
   });
 
-  backhasher = function(h,max=2**16){
+  root.backhasher = function(h,max=2**16){
     let list = (knownback.has(h)?Array.from(knownback.get(h)):[]).filter(x=>x<max);
     //P == h * bdp % bcount + bcount - lpm |!known(P)
     let start = h * bdp % bcount + bcount - lpm;

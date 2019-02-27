@@ -1,0 +1,45 @@
+#!/usr/bin/env node
+var readline = require('readline');
+
+let ph = require('./js/porthasher.js');
+
+//http://logan.tw/posts/2015/12/12/read-lines-from-stdin-in-nodejs/
+var rl = readline.createInterface({
+  input: process.stdin,
+  output: process.stdout,
+  terminal: false
+});
+
+function ipStrToInt(s){
+  // ">>>0" thanks to http://2ality.com/2012/02/js-integers.html
+  let octets = s.split('.');
+  return (octets[0]<<24 | octets[1] <<16 | octets[2]<<8 |octets[3] )>>>0;
+}
+
+let bcount = 256;
+let matrix = new Array(bcount ** 2).fill(0);
+let maxv = 0;
+
+rl.on('line', function(line){
+  //147.32.84.180 86.126.40.27   1063 3128
+  let idx = 0;
+  let space = false;
+  let out = new Array(6).fill('');
+  for(c of line){
+    if(c == ' '){
+      if(!space){
+        space = true;
+        idx++;
+      }
+    } else {
+      space = false;
+      out[idx]+=c;
+    }
+  }
+  let sport = ph.porthasher(+out[2]);
+  let dport = ph.porthasher(+out[3]);
+  matrix[sport * bcount + dport]++
+});
+
+rl.on('close', _=> process.stdout.write(JSON.stringify(matrix)));
+
