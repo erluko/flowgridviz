@@ -1,6 +1,12 @@
 (function(){
+    var inNode = !(typeof Window === 'function' &&
+                 Window.prototype.isPrototypeOf(this));
+
+  var root = inNode?module.exports:this;
+  let importData = inNode?n=>require('../out/'+n+'.js').IMPORT_DATA.get(n):n=>IMPORT_DATA.get(n);
+
   let bcount = 256;
-  let matrix = Array.from({length:bcount},
+  /*let matrix = Array.from({length:bcount},
                           (x,i)=>Array.from({length:bcount},_=>0));
   let maxv = 0;
   let fields = new Map(
@@ -26,7 +32,8 @@
     for(let y = 0;y<bcount;y++){
       plotrix[y*256+x]={x:x,y:y,z:matrix[y][x]};
     }
-  }
+    }*/
+  let plotrix = importData('pmatrix');
 
 
   // first watch for any existing load events
@@ -83,19 +90,15 @@
       y: scales.y(1)-scales.y(0)  //~=squareSide
     };
 
-    let gradations = 20;
-    let colors = new Array(gradations);
-    for(let t=0; t<1; t+=1/gradations){
-      colors.push(d3.interpolateOranges(maxv));
-    }
-
-    scales.z = d3.scaleQuantize()
-      .domain([0,maxv])
-        .range(colors);
 
 
-    let gapf = 2;//0.03;
-    let rf = 0;//0.08;
+
+    scales.z = d3.scaleLog()
+      .domain([1,d3.max(plotrix)])
+      .range([0,1]);
+
+    let gapf = 1;//0.03;
+    let rf = 1;//0.08;
 
     svg.selectAll("rect.plot")
       .data(plotrix)
@@ -104,8 +107,9 @@
       .classed("plot",true)
       .attr("width",UNIT_SIZE.x*(gapf))
       .attr("height",UNIT_SIZE.y*(gapf))
-      .attr("x",d=>scales.x(d.x)+UNIT_SIZE.x*(gapf/2))
-      .attr("y",d=>scales.y(d.y)+UNIT_SIZE.y*(gapf/2))
-      .attr("fill",d=>scales.z(d.z));
+      .attr("x",(d,i)=>scales.x(Math.floor(i / bcount))+UNIT_SIZE.x*(gapf/2))
+      .attr("y",(d,i)=>scales.y(i % bcount)+UNIT_SIZE.y*(gapf/2))
+      .attr("fill",d=>d==0?'white':d3.interpolateYlOrBr(scales.z(d)))
+      .attr("d",d=>d);
     };
   })();
