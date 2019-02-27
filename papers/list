@@ -2,6 +2,13 @@
 MalwareVis: Entity-based Visualization of Malware Network Traces
 https://dl.acm.org/citation.cfm?id=2379696 -> p41-zhuo.pdf
 
+^
+
+MalwareVis is another network activity visualizer. It focuses on
+network flows of known-malicious software in order to better
+understand the malware. The output is useful for finding other
+malicious flows, but the visualization techniques themselves may not
+serve as well in a mixed benign/malicious network environment.
 
 Visualizing network data for intrusion detection
 https://ieeexplore.ieee.org/abstract/document/1495940 -> 01495940.pdf
@@ -10,13 +17,20 @@ https://ieeexplore.ieee.org/abstract/document/1495940 -> 01495940.pdf
 Examines a few network data visualization shcemes for their suitability in detecting new forms of malicious traffic. Proposes an alternative port-focused methodology. Uses this methodology to find new botnet traffic.
 
 
+Visualizing Network Data For Intrusion Detection examines a few
+network data visualization shcemes for their suitability in detecting
+new forms of malicious traffic. It then proposes an alternative
+port-focused methodology and uses this methodology to successfully
+discover new botnet traffic.
+
+
 
 
 
 Hybrid and Enhanced Framework for Visualization and Analysis of Network Traffic Data
 http://tudr.thapar.edu:8080/jspui/handle/10266/1397 ->  http://tudr.thapar.edu:8080/jspui/bitstream/10266/1397/3/1397.pdf
 
-
+^ too big
 
 
 ------- Round 2
@@ -51,3 +65,5 @@ A Novel Visualization Approach for Efficient Network Scans Detection
 https://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=4725337
 04725337.pdf
 
+^
+ScanViewer is used for visially detecting network scans. It uses Parallel Coordinates, histograms, color maps, and scatterplots to visualize the same network packet capture data. Mapping between source IP and destination port is used to find nodes with high out-degree, which are performing scans.`
