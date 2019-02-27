@@ -5,6 +5,7 @@
     <meta name="author" content="Eric Kobrin &lt;ekobrin@gatech.edu&gt;">
     <meta name="description" content="">
     <script type="text/javascript" src="js/d3.min.js"></script>
+    <script type="text/javascript" src="js/d3-tip.min.js"></script>
     <script type="text/javascript" src="out/pmatrix.js"></script>
     <script type="text/javascript" src="out/services.js"></script>
     <script type="text/javascript" src="js/porthasher.js"></script>
@@ -20,6 +21,14 @@
      svg { display: block; }
      rect { stroke: none }
      h1 { text-align: center; font-size: 24px }
+     div.port-tip {
+      font-size: 10px;
+      background: lightblue;
+      padding: 5px;
+      pointer-events: none;
+      opacity: 0.9;
+       max-width: 200px;
+     }
     </style>
   </head>
   <body>

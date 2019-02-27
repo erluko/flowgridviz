@@ -5,9 +5,16 @@
   var root = inNode?module.exports:this;
   let importData = inNode?n=>require('../out/'+n+'.js').IMPORT_DATA.get(n):n=>IMPORT_DATA.get(n);
 
-  let bcount = 256;
-  let pdata = importData('pmatrix');
+  let ph = inNode?require('porthasher.js'):{
+    porthasher:root.porthasher,
+    backhasher:root.backhasher};
 
+  let bcount = 256;
+  pdata = importData('pmatrix');
+  let sports = new Set(pdata.sports);
+  let spmax = pdata.sports[pdata.sports.length-1];
+  let dports = new Set(pdata.dports);
+  let dpmax = pdata.dports[pdata.dports.length-1];
   let plotrix = pdata.matrix;
 
   // first watch for any existing load events
@@ -74,6 +81,34 @@
     let gapf = 1;//0.03;
     let rf = 1;//0.08;
 
+
+    let tip = d3.tip()
+        .attr('class', 'port-tip')
+        .html(function([c,idx]){
+          if(c>0){
+            let x = idx % bcount;
+            let y = Math.floor(idx / bcount);
+            let sps = ph.backhasher(y,spmax).filter(p=>sports.has(p)).join(' ');
+            let dps = ph.backhasher(x,dpmax).filter(p=>dports.has(p)).join(' ');
+            return "count: "+c+"<br/>from: "+sps+"<br/>to: "+dps;
+          } else {
+            return "";
+          }
+        });
+
+    svg.call(tip)
+    function handleHover(mode,datum,index,nodes){
+      if(mode){
+        if(datum>0){
+          tip.show([datum,index])
+            .style("pointer-events","")//get from css
+            .style("opacity","");//get from css
+        }
+      } else {
+        tip.hide();
+      }
+    }
+
     svg.selectAll("rect.plot")
       .data(plotrix)
       .enter()
@@ -84,6 +119,8 @@
       .attr("x",(d,i)=>scales.x(Math.floor(i / bcount))+UNIT_SIZE.x*(gapf/2))
       .attr("y",(d,i)=>scales.y(i % bcount)+UNIT_SIZE.y*(gapf/2))
       .attr("fill",d=>d==0?'white':d3.interpolateYlOrBr(scales.z(d)))
-      .attr("d",d=>d);
+      .on("mouseover",function(){handleHover.call(this,true,...arguments)})
+      .on("mouseout",function(){handleHover.call(this,false,...arguments)})
+
     };
   })();

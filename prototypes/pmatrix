@@ -40,8 +40,8 @@ rl.on('line', function(line){
   let sport = ph.porthasher(+out[2]);
   let dport = ph.porthasher(+out[3]);
   matrix[sport * bcount + dport]++;
-  sports.add(sport);
-  dports.add(dport);
+  sports.add(+out[2]);
+  dports.add(+out[3]);
 });
 
 rl.on('close', _=> process.stdout.write(JSON.stringify(
