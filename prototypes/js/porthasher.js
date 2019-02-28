@@ -28,8 +28,9 @@
   }
 
   let porthasher = function(config){
-    //todo accept config.portlist
-    let known =  config.portmap || new Map();
+    let known =  new Map(config.portmap);
+    (config.portlist || [] ).forEach((p,i) => known.set(p,i));
+
     let knownback = new Map();
     // the use of 'call' bellow is a major hack
     known.forEach(function(v,k){
@@ -38,17 +39,32 @@
           knownback.get(h).push(k):
         knownback.set(h,[k])
     });
+    // since knownback will enforce only we don't need:
+    // thisonly = new Set(known.keys())
+    this.only = config.only;
     this.known = known;
     this.knownback = knownback;
-
   }
 
   porthasher.prototype = {
     hash: phash,
-    backhash: function(h,max=2**16){//todo get max from list
+    backhash: function(h,max){
       let list = (this.knownback.has(h)?
                   Array.from(this.knownback.get(h)):
-                  []).filter(x=>x<max);
+                  []);
+
+      if(typeof max !== 'undefined'){
+        list = list.filter(x=>x<max);
+      }
+
+      if(this.only){
+        return list;
+      }
+
+      if(typeof max == 'undefined'){
+        max = 2**16;
+        list = list.filter(x=>x<max);
+      }
 
       //P == h * bdp % bcount + bcount - lpm |!known(P)
       let start = h * bdp % bcount + bcount - lpm;
