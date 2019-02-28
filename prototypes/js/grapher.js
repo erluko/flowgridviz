@@ -5,9 +5,10 @@
   var root = inNode?module.exports:this;
   let importData = inNode?n=>require('../out/'+n+'.js').IMPORT_DATA.get(n):n=>IMPORT_DATA.get(n);
 
-  let ph = inNode?require('porthasher.js'):{
-    porthash:root.porthash,
-    backhash:root.backhash};
+  let slist = inNode?require('servicelist.js'):{servicemap: root.servicemap};
+  let phr = inNode?require('porthasher.js'):{porthasher: root.porthasher};
+  let ph = new phr.porthasher({portmap: slist.servicemap,
+                               only:false});
 
   let bcount = 256;
   pdata = importData('pmatrix');

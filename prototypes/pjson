@@ -1,7 +1,10 @@
 #!/usr/bin/env node
 var readline = require('readline');
 
-let ph = require('./js/porthasher.js');
+let slist = require('./js/servicelist.js');
+let phr = require('./js/porthasher.js');
+let ph = new phr.porthasher({portmap: slist.servicemap,
+                             only:false});
 
 //http://logan.tw/posts/2015/12/12/read-lines-from-stdin-in-nodejs/
 var rl = readline.createInterface({
@@ -37,8 +40,8 @@ rl.on('line', function(line){
   out[1] = ipStrToInt(out[1]);
   out[2] = +out[2];
   out[3] = +out[3];
-  out[4] = ph.porthash(out[2]);
-  out[5] = ph.porthash(out[3]);
+  out[4] = ph.hash(out[2]);
+  out[5] = ph.hash(out[3]);
   process.stdout.write(JSON.stringify(out));
   process.stdout.write(',\n');
 });
