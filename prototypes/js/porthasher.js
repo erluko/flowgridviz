@@ -23,18 +23,6 @@
     this.from.apply(this,arguments);
   }
 
-  let getKnownBack = function(){
-    if(typeof this.knownback == 'undefined'){
-      this.knownback = new Map();
-      this.known.forEach(function(v,k){
-        let h = this.hash(v);
-        this.knownback.has(h)?
-          this.knownback.get(h).push(k):
-          this.knownback.set(h,[k])
-      });
-    }
-    return this.knownback;
-  }
   porthasher.prototype = {
     hash: function(p){
       if(this.known.has(p)){
@@ -44,7 +32,6 @@
       }
     },
     backhash: function(h,max=2**16){//todo get max from list
-      getKnownBack.call(this);
       let list = (this.knownback.has(h)?
                   Array.from(this.knownback.get(h)):
                   []).filter(x=>x<max);
@@ -68,6 +55,15 @@
     from: function(config={}){
       //todo accept config.portlist
       this.known =  config.portmap || new Map();
+      this.knownback = new Map();
+      // the use of 'call' bellow is a major hack
+      this.known.forEach(function(v,k){
+        let h = this.prototype.hash.call({known: this.known},v);
+        this.knownback.has(h)?
+          this.knownback.get(h).push(k):
+          this.knownback.set(h,[k])
+      });
+
     }
   }
 
