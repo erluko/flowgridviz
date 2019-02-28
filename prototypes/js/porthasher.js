@@ -19,18 +19,32 @@
     // == ((p % bcount * bpm) +  lpm * bpm) % bcount
   }
 
-  let porthasher = function(){
-    this.from.apply(this,arguments);
+  let phash = function(p){
+    if(this.known.has(p)){
+      return (this.known.get(p) + bpm) % bcount;
+    } else {
+      return simphash(p);
+    }
+  }
+
+  let porthasher = function(config){
+    //todo accept config.portlist
+    let known =  config.portmap || new Map();
+    let knownback = new Map();
+    // the use of 'call' bellow is a major hack
+    known.forEach(function(v,k){
+      let h = phash.call({known: known},v);
+      knownback.has(h)?
+          knownback.get(h).push(k):
+        knownback.set(h,[k])
+    });
+    this.known = known;
+    this.knownback = knownback;
+
   }
 
   porthasher.prototype = {
-    hash: function(p){
-      if(this.known.has(p)){
-        return (this.known.get(p) + bpm) % bcount;
-      } else {
-        return simphash(p);
-      }
-    },
+    hash: phash,
     backhash: function(h,max=2**16){//todo get max from list
       let list = (this.knownback.has(h)?
                   Array.from(this.knownback.get(h)):
@@ -52,19 +66,6 @@
       list.sort((a,b)=>(a-b)); //it would be faster to do insertion correctly
       return list;
     },
-    from: function(config={}){
-      //todo accept config.portlist
-      this.known =  config.portmap || new Map();
-      this.knownback = new Map();
-      // the use of 'call' bellow is a major hack
-      this.known.forEach(function(v,k){
-        let h = this.prototype.hash.call({known: this.known},v);
-        this.knownback.has(h)?
-          this.knownback.get(h).push(k):
-          this.knownback.set(h,[k])
-      });
-
-    }
   }
 
   root.porthasher=porthasher;
