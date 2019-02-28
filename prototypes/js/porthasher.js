@@ -23,6 +23,18 @@
     this.from.apply(this,arguments);
   }
 
+  let getKnownBack = function(){
+    if(typeof this.knownback == 'undefined'){
+      this.knownback = new Map();
+      this.known.forEach(function(v,k){
+        let h = this.hash(v);
+        this.knownback.has(h)?
+          this.knownback.get(h).push(k):
+          this.knownback.set(h,[k])
+      });
+    }
+    return this.knownback;
+  }
   porthasher.prototype = {
     hash: function(p){
       if(this.known.has(p)){
@@ -31,22 +43,10 @@
         return simphash(p);
       }
     },
-    _getKnownBack: function(){
-      if(typeof this.knownback == 'undefined'){
-        this.knownback = new Map();
-        this.known.forEach(function(v,k){
-          let h = this.hash(v);
-          this.knownback.has(h)?
-            this.knownback.get(h).push(k):
-            this.knownback.set(h,[k])
-        });
-      }
-      return this.knownback;
-    },
     backhash: function(h,max=2**16){//todo get max from list
-      let knownback = this._getKnownBack();
-      let list = (knownback.has(h)?
-                  Array.from(knownback.get(h)):
+      getKnownBack.call(this);
+      let list = (this.knownback.has(h)?
+                  Array.from(this.knownback.get(h)):
                   []).filter(x=>x<max);
 
       //P == h * bdp % bcount + bcount - lpm |!known(P)
