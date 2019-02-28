@@ -37,8 +37,8 @@ rl.on('line', function(line){
   out[1] = ipStrToInt(out[1]);
   out[2] = +out[2];
   out[3] = +out[3];
-  out[4] = ph.porthasher(out[2]);
-  out[5] = ph.porthasher(out[3]);
+  out[4] = ph.porthash(out[2]);
+  out[5] = ph.porthash(out[3]);
   process.stdout.write(JSON.stringify(out));
   process.stdout.write(',\n');
 });

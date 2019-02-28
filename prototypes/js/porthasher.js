@@ -26,7 +26,7 @@
   let maxknown = Math.max.apply(null,Array.from(known.keys()));
 
   /* distribution check:
-     Array.from({length:2**16},(x,i)=>porthasher(i)).reduce(function(a,x,i){if(!a[x]){a[x]=[];}a[x].push(i); return a},[]).map(x=>x.length).reduce((a,b)=>((a[''+b]=(a[''+b]?a[''+b]+1:1)),a),{})
+     Array.from({length:2**16},(x,i)=>porthash(i)).reduce(function(a,x,i){if(!a[x]){a[x]=[];}a[x].push(i); return a},[]).map(x=>x.length).reduce((a,b)=>((a[''+b]=(a[''+b]?a[''+b]+1:1)),a),{})
 
      Results:
      253: 10
@@ -47,7 +47,7 @@
     // == ((p*bpm % bcount) +  lpm * bpm) % bcount
     // == ((p % bcount * bpm) +  lpm * bpm) % bcount
   }
-  root.porthasher = function(p){
+  root.porthash = function(p){
     if(known.has(p)){
       return (known.get(p) + bpm) % bcount;
     } else {
@@ -57,11 +57,11 @@
 
   let knownback = new Map();
   known.forEach(function(v,k){
-    let h = root.porthasher(v);
+    let h = root.porthash(v);
     knownback.has(h)?knownback.get(h).push(k):knownback.set(h,[k])
   });
 
-  root.backhasher = function(h,max=2**16){
+  root.backhash = function(h,max=2**16){
     let list = (knownback.has(h)?Array.from(knownback.get(h)):[]).filter(x=>x<max);
     //P == h * bdp % bcount + bcount - lpm |!known(P)
     let start = h * bdp % bcount + bcount - lpm;

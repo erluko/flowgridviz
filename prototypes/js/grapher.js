@@ -6,8 +6,8 @@
   let importData = inNode?n=>require('../out/'+n+'.js').IMPORT_DATA.get(n):n=>IMPORT_DATA.get(n);
 
   let ph = inNode?require('porthasher.js'):{
-    porthasher:root.porthasher,
-    backhasher:root.backhasher};
+    porthash:root.porthash,
+    backhash:root.backhash};
 
   let bcount = 256;
   pdata = importData('pmatrix');
@@ -88,8 +88,8 @@
           if(c>0){
             let x = idx % bcount;
             let y = Math.floor(idx / bcount);
-            let sps = ph.backhasher(y,spmax).filter(p=>sports.has(p)).join(' ');
-            let dps = ph.backhasher(x,dpmax).filter(p=>dports.has(p)).join(' ');
+            let sps = ph.backhash(y,spmax).filter(p=>sports.has(p)).join(' ');
+            let dps = ph.backhash(x,dpmax).filter(p=>dports.has(p)).join(' ');
             return "count: "+c+"<br/>from: "+sps+"<br/>to: "+dps;
           } else {
             return "";

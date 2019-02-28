@@ -37,8 +37,8 @@ rl.on('line', function(line){
       out[idx]+=c;
     }
   }
-  let sport = ph.porthasher(+out[2]);
-  let dport = ph.porthasher(+out[3]);
+  let sport = ph.porthash(+out[2]);
+  let dport = ph.porthash(+out[3]);
   matrix[sport * bcount + dport]++;
   sports.add(+out[2]);
   dports.add(+out[3]);
