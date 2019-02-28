@@ -27,14 +27,14 @@
 
   /* distribution check:
      Array.from({length:2**16},(x,i)=>porthasher(i)).reduce(function(a,x,i){if(!a[x]){a[x]=[];}a[x].push(i); return a},[]).map(x=>x.length).reduce((a,b)=>((a[''+b]=(a[''+b]?a[''+b]+1:1)),a),{})
-​
+
      Results:
      253: 10
-     ​254: 18
-     ​255: 53
-     ​256: 80
-     ​257: 71
-     ​258: 24
+     254: 18
+     255: 53
+     256: 80
+     257: 71
+     258: 24
 
      Meaning, 10 buckets had 253 values, 18 had 254, 53 had 255 ...
      The expected value for a perectly random hash would be 256 entries
