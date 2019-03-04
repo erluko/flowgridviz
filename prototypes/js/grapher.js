@@ -82,16 +82,26 @@
     let gapf = 1;//0.03;
     let rf = 1;//0.08;
 
+    let showSubgraph = function([sps,dps]){
+      console.log('subgraph?sports='+sps.join(',')+'&dports='+dps.join(','));
+    }
+
+    //todo: allow for src/dest to each be either ip or  port
+    let portsForIndex = function(idx){
+      let x = idx % bcount;
+      let y = Math.floor(idx / bcount);
+      let sps = ph.backhash(y,spmax).filter(p=>sports.has(p));
+      let dps = ph.backhash(x,dpmax).filter(p=>dports.has(p));
+      return [sps,dps];
+    }
 
     let tip = d3.tip()
         .attr('class', 'port-tip')
         .html(function([c,idx]){
           if(c>0){
-            let x = idx % bcount;
-            let y = Math.floor(idx / bcount);
-            let sps = ph.backhash(y,spmax).filter(p=>sports.has(p)).join(' ');
-            let dps = ph.backhash(x,dpmax).filter(p=>dports.has(p)).join(' ');
-            return "count: "+c+"<br/>from: "+sps+"<br/>to: "+dps;
+            let [sps,dps] = portsForIndex(idx);
+            return "count: "+c+"<br/>from: "+sps.join(' ')+
+              "<br/>to: "+dps.join(' ');
           } else {
             return "";
           }
@@ -122,6 +132,6 @@
       .attr("fill",d=>d==0?'white':d3.interpolateYlOrBr(scales.z(d)))
       .on("mouseover",function(){handleHover.call(this,true,...arguments)})
       .on("mouseout",function(){handleHover.call(this,false,...arguments)})
-
+      .on("click", (count,idx) => showSubgraph(portsForIndex(idx)))
     };
   })();
