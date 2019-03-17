@@ -19,7 +19,7 @@ data/pmatrix.json: data/pcap.txt out/services.js pmatrix
 	./pmatrix < $< > $@
 
 data/services.json: /etc/services
-	awk -v Q="'" -F '[/ \t]*' '/^#/ {next} /\// {print "[" $$2 "," Q $$1 Q "]," }' $< | sort -unk1.2 > $@
+	tr '\t' ' ' < $< | sed -n -e 's/^\([^#][^ $(TAB)]\{1,\}\)[ $(TAB)]\{1,\}\([0-9]\{1,\}\)\/.*$$/[\2,"\1"],/p' | sort -unk1.2 > $@
 
 tidy:
 	$(RM) out/*

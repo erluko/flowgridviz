@@ -82,16 +82,42 @@
     let gapf = 1;//0.03;
     let rf = 1;//0.08;
 
+    /* todo: consider defining subgraphs as a series of triples:
+      (i|p,i|p,idx) instead of sources and destingations
+      this takes us from:
+         /subgraph?sports=1110,1366,...&dports=1177,1433,...
+      to:
+         /pp54/pi234/ip3423/ii743
+      which says to first get idx=54 in a port/port matrix, then
+      idx=234 in the resulting port/ip matrix, then idx=2423 in
+      an ip/port view of that result, then finally to render the 743rd
+      element of an ip/ip view of that matrix.
+
+      What axes should be used for the last one? Not sure. Maybe use
+      the pi|pp|ip|ii pairs as a final dir entry?
+         e.g. /pp/54/pi/234/ip/3423/ii/743/pp to view the last
+         matrix as a port/port view by default?
+    */
+    let showSubgraph = function([sps,dps]){
+      console.log('subgraph?sports='+sps.join(',')+'&dports='+dps.join(','));
+    }
+
+    //todo: allow for src/dest to each be either ip or  port
+    let portsForIndex = function(idx){
+      let x = idx % bcount;
+      let y = Math.floor(idx / bcount);
+      let sps = ph.backhash(y,spmax).filter(p=>sports.has(p));
+      let dps = ph.backhash(x,dpmax).filter(p=>dports.has(p));
+      return [sps,dps];
+    }
 
     let tip = d3.tip()
         .attr('class', 'port-tip')
         .html(function([c,idx]){
           if(c>0){
-            let x = idx % bcount;
-            let y = Math.floor(idx / bcount);
-            let sps = ph.backhash(y,spmax).filter(p=>sports.has(p)).join(' ');
-            let dps = ph.backhash(x,dpmax).filter(p=>dports.has(p)).join(' ');
-            return "count: "+c+"<br/>from: "+sps+"<br/>to: "+dps;
+            let [sps,dps] = portsForIndex(idx);
+            return "count: "+c+"<br/>from: "+sps.join(' ')+
+              "<br/>to: "+dps.join(' ');
           } else {
             return "";
           }
@@ -122,6 +148,6 @@
       .attr("fill",d=>d==0?'white':d3.interpolateYlOrBr(scales.z(d)))
       .on("mouseover",function(){handleHover.call(this,true,...arguments)})
       .on("mouseout",function(){handleHover.call(this,false,...arguments)})
-
+      .on("click", (count,idx) => showSubgraph(portsForIndex(idx)))
     };
   })();
