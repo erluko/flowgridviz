@@ -28,6 +28,9 @@
   }
 
   let porthasher = function(config){
+    // "known" is typically used for services loaded from
+    //  /etc/services It maps port numbers to and ID other than
+    //  the portnumber itself
     let known =  new Map(config.portmap);
     (config.portlist || [] ).forEach((p,i) => known.set(p,i));
 
