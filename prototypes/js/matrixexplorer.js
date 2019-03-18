@@ -1,4 +1,4 @@
-    /* todo: consider defining subgraphs as a series of triples:
+/* todo: consider defining subgraphs as a series of triples:
       (i|p,i|p,idx) instead of sources and destingations
       this takes us from:
          /subgraph?sports=1110,1366,...&dports=1177,1433,...
@@ -14,18 +14,25 @@
          e.g. /pp/54/pi/234/ip/3423/ii/743/pp to view the last
          matrix as a port/port view by default?
     */
+(function(){
+  var inNode = !(typeof Window === 'function' &&
+                 Window.prototype.isPrototypeOf(this));
 
-function pathParser(s){
-  let instr = s.split('/')
-      .filter(g => g.length > 0)
-      .map((p,i)=>i%2?
-           (/^\d+$/.test(p)?+p:null):
-           (/^[pi]{2}$/.test(p)?Array.from(p):null));
-  return instr.includes(null)?[]:instr.reduce(
-    (a,b,i)=>((i%2?a[0]=[a[0],b]:a.unshift(b)),a),[]);
-}
+  var root = inNode?module.exports:this;
+  root.pathParser = function (s){
+    let instr = s.split('/')
+        .filter(g => g.length > 0)
+        .map((p,i)=>i%2?
+             (/^\d+$/.test(p)?+p:null):
+             (/^[pi]{2}$/.test(p)?Array.from(p):null));
+    return instr.includes(null)?[]:instr.reduce(
+      (a,b,i)=>((i%2?a[0]=[a[0],b]:a.unshift(b)),a),[]).reverse();
+  }
 
-function cd(m,[axes,idx]){
-  let [xvs,yvs] = m.withAxes(axes).backhash(idx);
-  return data.select(axes[0],xvs,axes[1],yvy)
-}
+  root.cd = function (m,[axes,idx]){
+    let [xvs,yvs] = m.withAxes(axes).backhash(idx);
+    return data.select(axes[0],xvs,axes[1],yvy)
+  }
+})();
+
+
