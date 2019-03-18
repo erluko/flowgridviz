@@ -3,13 +3,7 @@ const app = express();
 const jsdom = require("jsdom");
 const { JSDOM } = jsdom;
 
-app.engine('html', function (filename, options, callback) {
-  JSDOM.fromFile(filename).then(dom => {
-    options || (options = { render: _ => null});
-    options.render(dom.window);
-    callback(null, dom.serialize());
-  });
-})
+app.engine('html',require('./jsdt')());
 
 app.set('view engine', 'html');
 
