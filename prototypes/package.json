@@ -7,7 +7,9 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
-    "express": "^4.16.4"
+    "express": "^4.16.4",
+    "express-views-dom": "https://github.com/erluko/express-views-dom.git",
+    "jsdom": "^14.0.0"
   },
   "repository": {
     "type": "git",
