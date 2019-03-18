@@ -14,7 +14,7 @@ app.set('view engine', 'html');
 const port = 3000;
 const ip = '127.17.96.39';
 
-const me = require('./js/matrixexplorer');
+const me = require('./lib/matrixexplorer');
 
 app.get('/', (req, res) => res.send('Hello World!'))
 app.get('/matrix/*', function(req, res){
