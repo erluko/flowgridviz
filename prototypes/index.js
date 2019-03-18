@@ -7,7 +7,7 @@ let packets = null;
 
 require('./lib/pcsd').fromFile('data/pcap.txt').then(p=>packets=p);
 
-app.engine('html',require('./jsdt')({cache: new LRU(30)}));
+app.engine('html',require('./lib/jsdt')({cache: new LRU(30)}));
 app.set('view engine', 'html');
 
 
