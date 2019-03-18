@@ -11,8 +11,11 @@ function ipStrToInt(s){
 module.exports.fromFile = function(fname){
   return new Promise(function(resolve,reject){
     let rows;
+    let ridx = 0;
     try {
-      rows = [];//new Array(Math.ceil(fs.statSync(fname).size/39));
+      //estimate 39 bytes per row
+      //preallocation was faster in testing
+      rows = new Array(Math.ceil(fs.statSync(fname).size/39));
     } catch (e){
       return reject(e)
     }
@@ -41,7 +44,8 @@ module.exports.fromFile = function(fname){
       row[1] = ipStrToInt(row[1]);
       row[2] = +row[2];
       row[3] = +row[3];
-      rows.push(row);
-    }).on('close',_=>resolve(rows))
+      rows[ridx++] = row;
+    }).on('close',_=>{rows.length=ridx; // truncate if overallocated
+                      resolve(rows)})
   })};
 
