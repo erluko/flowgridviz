@@ -29,6 +29,30 @@
       (a,b,i)=>((i%2?a[0]=[a[0],b]:a.unshift(b)),a),[]).reverse();
   }
 
+  root.getMatrix = function(ph,data){
+    //data: [[sip,dip,sport,dport],...]
+    //ips are in int form
+    //TODO: accept an IP hasher and port hasher
+    //TODO: support X or Y being IP or Port
+
+    let bcount = 256; //TODO: perhaps get from ph
+    let matrix = new Array(bcount ** 2).fill(0);
+    let sports = new Set();
+    let dports = new Set();
+    for(let row of data){
+      let sport = ph.hash(+row[2]);
+      let dport = ph.hash(+row[3]);
+      matrix[sport * bcount + dport]++;
+      sports.add(+row[2]);
+      dports.add(+row[3]);
+    }
+    return  {
+      matrix: matrix,
+      sports: Array.from(sports).sort((a,b)=>a-b),
+      dports: Array.from(dports).sort((a,b)=>a-b)
+    };
+  }
+
   root.cd = function (m,[axes,idx]){
     let [xvs,yvs] = m.withAxes(axes).backhash(idx);
     return data.select(axes[0],xvs,axes[1],yvy)

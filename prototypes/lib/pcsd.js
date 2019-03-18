@@ -12,7 +12,7 @@ module.exports.fromFile = function(fname){
   return new Promise(function(resolve,reject){
     let rows;
     try {
-      rows = new Array(Math.ceil(fs.statSync(fname).size/39));
+      rows = [];//new Array(Math.ceil(fs.statSync(fname).size/39));
     } catch (e){
       return reject(e)
     }
