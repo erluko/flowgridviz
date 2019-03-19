@@ -69,14 +69,17 @@ let mwalk = function(pth){
           let y = Math.floor(idx / bcount);
           let sps = lph.backhash(y,spmax).filter(p=>sports.has(p));
           let dps = lph.backhash(x,dpmax).filter(p=>dports.has(p));
-          return [sps, dps,new phr.porthasher({portlist: sps.concat(dps),
-                                               only: true})]
+          return [new Set(sps),
+                  new Set(dps),
+                  new phr.porthasher({portlist: sps.concat(dps),
+                                      only: true})]
         });
       spmax = undefined;
       dpmax = undefined;
     }
   }
-  return me.getMatrix(lph,packets);
+  return me.getMatrix(lph,packets.filter(r=>sports.has(r[2]) &&
+                                         dports.has(r[3])));
 }
 
 

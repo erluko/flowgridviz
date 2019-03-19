@@ -102,6 +102,14 @@
       console.log('subgraph?sports='+sps.join(',')+'&dports='+dps.join(','));
     }
 
+    let showSubgraphI = function(idx){
+      let newpath='./'+idx+'/pp/index.html'
+      if(window.location.pathname.startsWith('/index.html')){
+        newpath = 'pp/'+newpath;
+      }
+      window.location.href=newpath;
+    }
+
     //todo: allow for src/dest to each be either ip or  port
     let portsForIndex = function(idx){
       let x = idx % bcount;
@@ -148,6 +156,7 @@
       .attr("fill",d=>d==0?'white':d3.interpolateYlOrBr(scales.z(d)))
       .on("mouseover",function(){handleHover.call(this,true,...arguments)})
       .on("mouseout",function(){handleHover.call(this,false,...arguments)})
-      .on("click", (count,idx) => showSubgraph(portsForIndex(idx)))
+      .on("click", (count,idx) => showSubgraphI(idx))
+  //      .on("click", (count,idx) => showSubgraph(portsForIndex(idx)))
     };
   })();
