@@ -82,27 +82,19 @@
     let gapf = 1;//0.03;
     let rf = 1;//0.08;
 
-    /* todo: consider defining subgraphs as a series of triples:
-      (i|p,i|p,idx) instead of sources and destingations
-      this takes us from:
-         /subgraph?sports=1110,1366,...&dports=1177,1433,...
-      to:
-         /pp54/pi234/ip3423/ii743
+    /* Subgraphs are defined as a series of triples: (i|p,i|p,idx)
+       expressed as a path: /(i|p)(ip)/idx/...
+       e.g.  /pp/54/pi/234/ip/3423/ii/743
       which says to first get idx=54 in a port/port matrix, then
       idx=234 in the resulting port/ip matrix, then idx=2423 in
       an ip/port view of that result, then finally to render the 743rd
       element of an ip/ip view of that matrix.
 
-      What axes should be used for the last one? Not sure. Maybe use
-      the pi|pp|ip|ii pairs as a final dir entry?
-         e.g. /pp/54/pi/234/ip/3423/ii/743/pp to view the last
-         matrix as a port/port view by default?
+      What axes should be used for the last one? See the last path
+      element. If it is a number, the axes will be port/port. If it
+      is one of the pi|pp|ip|ii pairs, the axes expressed will be used.
     */
-    let showSubgraph = function([sps,dps]){
-      console.log('subgraph?sports='+sps.join(',')+'&dports='+dps.join(','));
-    }
-
-    let showSubgraphI = function(idx){
+    let showSubgraph = function(idx){
       let newpath='./'+idx+'/pp/index.html'
       if(window.location.pathname.startsWith('/index.html')){
         newpath = 'pp/'+newpath;
@@ -156,7 +148,6 @@
       .attr("fill",d=>d==0?'white':d3.interpolateYlOrBr(scales.z(d)))
       .on("mouseover",function(){handleHover.call(this,true,...arguments)})
       .on("mouseout",function(){handleHover.call(this,false,...arguments)})
-      .on("click", (count,idx) => showSubgraphI(idx))
-  //      .on("click", (count,idx) => showSubgraph(portsForIndex(idx)))
+      .on("click", (count,idx) => showSubgraph(idx))
     };
   })();
