@@ -13,6 +13,16 @@ let ph = new phr.porthasher({portmap: slist.servicemap,
 let packets = null;
 let matrix = null;
 
+LRU.prototype.getOrSet = function(k,f){
+  let v = this.get(k);
+  if(typeof v === 'undefined'){
+    v = f();
+    this.set(k,v);
+  }
+  return v;
+}
+
+
 app.engine('html',require('./lib/jsdt')({cache: new LRU(30)}));
 app.set('view engine', 'html');
 
@@ -34,6 +44,7 @@ app.get('/matrix/*', function(req, res){
   });
 });
 
+let mwcache = new LRU(80);
 
 let mwalk = function(pth){
   if(typeof ph === 'undefined'
@@ -47,17 +58,20 @@ let mwalk = function(pth){
   let dpmax = matrix.dports[matrix.dports.length-1];
 
   let lph = ph;
-  for(let [[x,y],idx] of pth) {
-    //ignoring x and y for now. Treating both as 'p'
+  let mwk = [];
+  for(let [[xt,yt],idx] of pth) {
+    //ignoring xt and yt for now. Treating both as 'p'
     if(idx != null){
-      let x = idx % bcount;
-      let y = Math.floor(idx / bcount);
-      let sps = lph.backhash(y,spmax).filter(p=>sports.has(p));
-      let dps = lph.backhash(x,dpmax).filter(p=>dports.has(p));
-      sports = sps;
-      dports = dps;
-      lph = new phr.porthasher({portlist: sps.concat(dps),
-                                only: true})
+      mwk.push(idx);
+      [sports,dports,lph] = mwcache
+        .getOrSet(JSON.stringify(mwk), function(){
+          let x = idx % bcount;
+          let y = Math.floor(idx / bcount);
+          let sps = lph.backhash(y,spmax).filter(p=>sports.has(p));
+          let dps = lph.backhash(x,dpmax).filter(p=>dports.has(p));
+          return [sps, dps,new phr.porthasher({portlist: sps.concat(dps),
+                                               only: true})]
+        });
       spmax = undefined;
       dpmax = undefined;
     }
