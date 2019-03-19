@@ -80,11 +80,51 @@ let mwalk = function(pth){
 }
 
 
-app.get('/*/matrix.json',function(req,res){
+/* sed mimicry */
+
+function jsonWrap(n,d){
+  let j = JSON.stringify(d);
+  return `(function(){
+  var inNode = !(typeof Window === 'function' &&
+                 Window.prototype.isPrototypeOf(this));
+  var root = inNode?module.exports:this;
+
+  if(typeof root.IMPORT_DATA === 'undefined'){
+    root.IMPORT_DATA = new Map();
+  }
+  // NOTE: this section is filled in by sed.
+  let data = [
+    ${j}
+  ]; //end data
+  if(data.length == 1) {
+    data = data[0];
+  }
+  root.IMPORT_DATA.set('${n}',data);
+})();
+`;
+}
+
+app.get('/js/:script.js',function (req,res){
+  res.sendFile(req.params['script']+'.js',{root:'js'});
+});
+app.get('/out/:script.js',function (req,res){
+  res.sendFile(req.params['script']+'.js',{root:'out'});
+});
+app.get('*/index.html',function(req,res){
+  //todo: consider moving index.html to './static/'
+  res.sendFile('views/index.html',{root:'.'});
+});
+app.get('*/matrix.json',function(req,res){
   let ps = req.params['0'];
   let pp = me.pathParser(ps);
   let lmat = mwalk(pp);
   res.json(lmat);
+});
+app.get('*/pmatrix.js',function(req,res){
+  let ps = req.params['0'];
+  let pp = me.pathParser(ps);
+  let lmat = mwalk(pp);
+  res.send(jsonWrap('pmatrix',lmat));
 });
 app.get('/pcap.json',(req,res)=>res.json(packets));
 
