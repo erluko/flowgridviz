@@ -46,7 +46,7 @@ app.get('/matrix/*', function(req, res){
 
 let mwcache = new LRU(80);
 
-let mwalk = function(pth){
+let phwalk = function(pth){
   if(typeof ph === 'undefined'
      || typeof matrix === 'undefined'){
     return [];
@@ -78,6 +78,11 @@ let mwalk = function(pth){
       dpmax = undefined;
     }
   }
+  return [sports,dports,lph];
+};
+
+let mwalk = function(pth){
+  let [sports,dports,lph] = phwalk(pth);
   return me.getMatrix(lph,packets.filter(r=>sports.has(r[2]) &&
                                          dports.has(r[3])));
 }
@@ -129,7 +134,16 @@ app.get('*/pmatrix.js',function(req,res){
   let lmat = mwalk(pp);
   res.send(jsonWrap('pmatrix',lmat));
 });
+
 app.get('/pcap.json',(req,res)=>res.json(packets));
+
+app.get('/*/pcap.json',function(req,res){
+  let ps = req.params['0'];
+  let pp = me.pathParser(ps);
+  let [sports,dports,lph] = phwalk(pp);
+  res.json(packets.filter(r=>sports.has(r[2]) &&
+                          dports.has(r[3])))
+});
 
 
 console.log("Reading pcap data");
