@@ -17,6 +17,7 @@ let matrix = null;
   .then(function(p){
     packets = p;
     matrix = me.getMatrix(ph,packets);
+    console.log("ready");
   }));
 
 app.engine('html',require('./lib/jsdt')({cache: new LRU(30)}));
@@ -40,7 +41,44 @@ app.get('/matrix/*', function(req, res){
   });
 });
 
-app.get('/matrix.json',(req,res)=>res.json(matrix));
+
+let mwalk = function(pth){
+  if(typeof ph === 'undefined'
+     || typeof matrix === 'undefined'){
+    return [];
+  }
+  bcount = 256
+  let sports = new Set(matrix.sports);
+  let spmax = matrix.sports[matrix.sports.length-1];
+  let dports = new Set(matrix.dports);
+  let dpmax = matrix.dports[matrix.dports.length-1];
+
+  let lph = ph;
+  for(let [[x,y],idx] of pth) {
+    //ignoring x and y for now. Treating both as 'p'
+    if(idx != null){
+      let x = idx % bcount;
+      let y = Math.floor(idx / bcount);
+      let sps = lph.backhash(y,spmax).filter(p=>sports.has(p));
+      let dps = lph.backhash(x,dpmax).filter(p=>dports.has(p));
+      sports = sps;
+      dports = dps;
+      lph = new phr.porthasher({portlist: sps.concat(dps),
+                                only: true})
+      spmax = undefined;
+      dpmax = undefined;
+    }
+  }
+  return me.getMatrix(lph,packets);
+}
+
+
+app.get('/*/matrix.json',function(req,res){
+  let ps = req.params['0'];
+  let pp = me.pathParser(ps);
+  let lmat = mwalk(pp);
+  res.json(lmat);
+});
 app.get('/pcap.json',(req,res)=>res.json(packets));
 
 

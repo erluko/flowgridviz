@@ -25,7 +25,7 @@
         .map((p,i)=>i%2?
              (/^\d+$/.test(p)?+p:null):
              (/^[pi]{2}$/.test(p)?Array.from(p):null));
-    return instr.includes(null)?[]:instr.reduce(
+    return instr.includes(null)?[]:(instr.length%2?instr.concat(null):instr).reduce(
       (a,b,i)=>((i%2?a[0]=[a[0],b]:a.unshift(b)),a),[]).reverse();
   }
 
