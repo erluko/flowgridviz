@@ -57,7 +57,7 @@
                   []);
 
       if(typeof max !== 'undefined'){
-        list = list.filter(x=>x<max);
+        list = list.filter(x=>x<=max);
       }
 
       if(this.only){
@@ -66,11 +66,11 @@
 
       if(typeof max == 'undefined'){
         max = 2**16;
-        list = list.filter(x=>x<max);
+        list = list.filter(x=>x<=max);
       }
 
       //P == h * bdp % bcount + bcount - lpm |!known(P)
-      let start = h * bdp % bcount + bcount - lpm;
+      let start = (h * bdp % bcount + bcount - lpm) % bcount;
 
       if(start > max){
         return list;
