@@ -1,3 +1,4 @@
+const http = require('http');
 const express = require('express');
 const app = express();
 const jsdom = require("jsdom");
@@ -11,14 +12,6 @@ let ph = new phr.porthasher({portmap: slist.servicemap,
                              only:false});
 let packets = null;
 let matrix = null;
-
-(require('./lib/pcsd')
-  .fromFile('data/pcap.txt')
-  .then(function(p){
-    packets = p;
-    matrix = me.getMatrix(ph,packets);
-    console.log("ready");
-  }));
 
 app.engine('html',require('./lib/jsdt')({cache: new LRU(30)}));
 app.set('view engine', 'html');
@@ -82,4 +75,14 @@ app.get('/*/matrix.json',function(req,res){
 app.get('/pcap.json',(req,res)=>res.json(packets));
 
 
-app.listen(port, ip, () => console.log(`Example app listening on http://${ip}:${port}!`))
+console.log("Reading pcap data");
+(require('./lib/pcsd')
+  .fromFile('data/pcap.txt')
+  .then(function(p){
+    packets = p;
+    matrix = me.getMatrix(ph,packets);
+    var server = http.createServer(app);
+    server.on("error", e =>console.log(`Unable to start server: ${e}`));
+    server.listen(port, ip, () => console.log(`Packet capture visualization app listening on http://${ip}:${port}!`));
+  }));
+
