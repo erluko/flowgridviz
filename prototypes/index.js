@@ -30,7 +30,6 @@ app.set('view engine', 'html');
 const port = 3000;
 const ip = '127.17.96.39';
 
-app.get('/', (req, res) => res.send('Hello World!'))
 app.get('/matrix/*', function(req, res){
   let ps = req.params['0'];
   let pp = me.pathParser(ps);
@@ -110,6 +109,8 @@ function jsonWrap(n,d){
 })();
 `;
 }
+
+app.get('/',(req,res) => res.redirect('/pp/index.html'));
 
 app.get('/js/:script.js',function (req,res){
   res.sendFile(req.params['script']+'.js',{root:'js'});
