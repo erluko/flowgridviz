@@ -5,10 +5,6 @@
   var root = inNode?module.exports:this;
   let importData = inNode?n=>require('../out/'+n+'.js').IMPORT_DATA.get(n):n=>IMPORT_DATA.get(n);
 
-  let slist = inNode?require('servicelist.js'):{servicemap: root.servicemap};
-  let phr = inNode?require('porthasher.js'):{porthasher: root.porthasher};
-  let ph = new phr.porthasher({portmap: slist.servicemap,
-                               only:false});
 
   let bcount = 256;
   pdata = importData('pmatrix');
@@ -17,6 +13,20 @@
   let dports = new Set(pdata.dports);
   let dpmax = pdata.dports[pdata.dports.length-1];
   let plotrix = pdata.matrix;
+
+
+  //todo: remove this hack and have express serve up this bit of js
+  //based on the path
+  let ph;
+  let phr = inNode?require('porthasher.js'):{porthasher: root.porthasher};
+  if(window.location.pathname.startsWith('/index.html')){
+    let slist = inNode?require('servicelist.js'):{servicemap: root.servicemap};
+    ph = new phr.porthasher({portmap: slist.servicemap,
+                             only:false});
+  } else {
+    ph = new phr.porthasher({portlist: pdata.sports.concat(pdata.dports),
+                             only: true})
+  }
 
   // first watch for any existing load events
   let oldload = null;

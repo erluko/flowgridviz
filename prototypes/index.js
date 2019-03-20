@@ -8,7 +8,7 @@ const me = require('./lib/matrixexplorer');
 
 const slist = require('./js/servicelist.js');
 const phr = require('./js/porthasher.js');
-let ph = new phr.porthasher({portmap: slist.servicemap,
+let ph0 = new phr.porthasher({portmap: slist.servicemap,
                              only:false});
 let packets = null;
 let matrix = null;
@@ -47,17 +47,16 @@ app.get('/matrix/*', function(req, res){
 let mwcache = new LRU(80);
 
 let phwalk = function(pth){
-  if(typeof ph === 'undefined'
-     || typeof matrix === 'undefined'){
+  if(typeof matrix === 'undefined'){
     return [];
   }
-  bcount = 256
+  let bcount = 256
   let sports = new Set(matrix.sports);
   let spmax = matrix.sports[matrix.sports.length-1];
   let dports = new Set(matrix.dports);
   let dpmax = matrix.dports[matrix.dports.length-1];
 
-  let lph = ph;
+  let lph = ph0;
   let mwk = [];
   for(let [[xt,yt],idx] of pth) {
     //ignoring xt and yt for now. Treating both as 'p'
@@ -84,7 +83,7 @@ let phwalk = function(pth){
 let mwalk = function(pth){
   let [sports,dports,lph] = phwalk(pth);
   return me.getMatrix(lph,packets.filter(r=>sports.has(r[2]) &&
-                                         dports.has(r[3])));
+                                          dports.has(r[3])));
 }
 
 
@@ -134,6 +133,14 @@ app.get('*/pmatrix.js',function(req,res){
   let lmat = mwalk(pp);
   res.send(jsonWrap('pmatrix',lmat));
 });
+app.get('*/viewhash.js',function(req,res){
+  let ps = req.params['0'];
+  let pp = me.pathParser(ps);
+  let [sports,dports,lph] = phwalk(pp);
+  res.json(/*{sports:Array.from(sports),
+            dports:Array.from(dports),
+            ph:*/ lph/*}*/);
+});
 
 app.get('/pcap.json',(req,res)=>res.json(packets));
 
@@ -151,7 +158,7 @@ console.log("Reading pcap data");
   .fromFile('data/pcap.txt')
   .then(function(p){
     packets = p;
-    matrix = me.getMatrix(ph,packets);
+    matrix = me.getMatrix(ph0,packets);
     var server = http.createServer(app);
     server.on("error", e =>console.log(`Unable to start server: ${e}`));
     server.listen(port, ip, () => console.log(`Packet capture visualization app listening on http://${ip}:${port}!`));

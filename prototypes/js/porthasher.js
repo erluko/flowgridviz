@@ -32,12 +32,15 @@
     //  /etc/services It maps port numbers to an ID other than
     //  the portnumber itself
     let known =  new Map(config.portmap);
-    (config.portlist || [] ).forEach((p,i) => known.set(p,i));
+    //to be safe, order the portlist here
+    let pl = Array.from((config.portlist || [] ));
+    pl.sort((a,b)=>a-b);
+    pl.forEach((p,i) => known.set(p,i));
 
     let knownback = new Map();
     // the use of 'call' bellow is a major hack
     known.forEach(function(v,k){
-      let h = phash.call({known: known},v);
+      let h = phash.call({known: known},k);
       knownback.has(h)?
           knownback.get(h).push(k):
         knownback.set(h,[k])
@@ -50,6 +53,14 @@
   }
 
   porthasher.prototype = {
+    toString: function(){
+      return JSON.stringify(
+        this.toJSON())},
+    toJSON: function(){
+      return {known: Array.from(this.known),
+              knownback: Array.from(this.knownback),
+              only: this.only};
+    },
     hash: phash,
     backhash: function(h,max){
       let list = (this.knownback.has(h)?

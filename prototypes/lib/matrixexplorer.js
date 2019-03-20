@@ -40,9 +40,10 @@
     let sports = new Set();
     let dports = new Set();
     for(let row of data){
-      let sport = ph.hash(+row[2]);
-      let dport = ph.hash(+row[3]);
-      matrix[sport * bcount + dport]++;
+      let sph = ph.hash(+row[2]);
+      let dph = ph.hash(+row[3]);
+      matrix[sph * bcount + dph]++;
+      //console.log([row[2],row[3],sph,dph,sph*bcount+dph]);
       sports.add(+row[2]);
       dports.add(+row[3]);
     }
