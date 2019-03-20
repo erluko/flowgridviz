@@ -30,19 +30,6 @@ app.set('view engine', 'html');
 const port = 3000;
 const ip = '127.17.96.39';
 
-app.get('/matrix/*', function(req, res){
-  let ps = req.params['0'];
-  let pp = me.pathParser(ps);
-  res.render('matrix',{
-    key: pp,
-    render: function(window,sdone) {
-      let doc = window.document;
-      let t = doc.createTextNode(packets?JSON.stringify(pp)+"\n"+packets.length:"No Packets Yet");
-      doc.getElementsByTagName("body")[0].appendChild(t);
-    }
-  });
-});
-
 let mwcache = new LRU(80);
 
 let phwalk = function(pth){
@@ -58,6 +45,7 @@ let phwalk = function(pth){
   let lph = ph0;
   let mwk = [];
   for(let [[xt,yt],idx] of pth) {
+    //xt and yt are either 'p' meaning port of 'i' meaning ip
     //ignoring xt and yt for now. Treating both as 'p'
     if(idx != null){
       mwk.push(idx);
