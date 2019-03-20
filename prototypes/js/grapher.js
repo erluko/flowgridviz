@@ -44,7 +44,8 @@
     let svg = d3.select("body")
         .append("svg")
         .attr("width",WIDTH)
-        .attr("height",HEIGHT);
+        .attr("height",HEIGHT)
+        .attr("xmlns:xlink","http://www.w3.org/1999/xlink");
 
 
     // distinct paddings -- to leave room for title, labels, and legend
@@ -96,12 +97,12 @@
       element. If it is a number, the axes will be port/port. If it
       is one of the pi|pp|ip|ii pairs, the axes expressed will be used.
     */
-    let showSubgraph = function(idx){
+    let subgraphURL = function(idx){
       let newpath='./'+idx+'/pp/index.html'
       if(window.location.pathname.startsWith('/index.html')){
         newpath = 'pp/'+newpath;
       }
-      window.location.href=newpath;
+      return newpath;
     }
 
     //todo: allow for src/dest to each be either ip or  port
@@ -138,9 +139,17 @@
       }
     }
 
-    svg.selectAll("rect.plot")
+    svg.selectAll("a.plot")
       .data(plotrix)
       .enter()
+      .append("a")
+      .each(function(d,idx){
+        if(d>0){
+          d3.select(this)
+            .attr("xlink:href",() => subgraphURL(idx))
+        }
+      })
+      .classed("plot",true)
       .append("rect")
       .classed("plot",true)
       .attr("width",UNIT_SIZE.x*(gapf))
@@ -150,6 +159,5 @@
       .attr("fill",d=>d==0?'white':d3.interpolateYlOrBr(scales.z(d)))
       .on("mouseover",function(){handleHover.call(this,true,...arguments)})
       .on("mouseout",function(){handleHover.call(this,false,...arguments)})
-      .on("click", (count,idx) => showSubgraph(idx))
     };
   })();
