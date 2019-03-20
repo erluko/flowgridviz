@@ -28,10 +28,16 @@
   }
 
   let porthasher = function(config){
+    this.config = config;
+    if(this.config.portmap instanceof Map) {
+      this.config.portmap = Array.from(this.config.portmap);
+    }
     // "known" is typically used for services loaded from
     //  /etc/services It maps port numbers to an ID other than
     //  the portnumber itself
     let known =  new Map(config.portmap);
+
+    //todo: re-evaluate the necessity of the sorting;
     //to be safe, order the portlist here
     let pl = Array.from((config.portlist || [] ));
     pl.sort((a,b)=>a-b);
@@ -57,9 +63,7 @@
       return JSON.stringify(
         this.toJSON())},
     toJSON: function(){
-      return {known: Array.from(this.known),
-              knownback: Array.from(this.knownback),
-              only: this.only};
+      return this.config;
     },
     hash: phash,
     backhash: function(h,max){

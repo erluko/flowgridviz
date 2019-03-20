@@ -17,16 +17,8 @@
 
   //todo: remove this hack and have express serve up this bit of js
   //based on the path
-  let ph;
   let phr = inNode?require('porthasher.js'):{porthasher: root.porthasher};
-  if(window.location.pathname.startsWith('/index.html')){
-    let slist = inNode?require('servicelist.js'):{servicemap: root.servicemap};
-    ph = new phr.porthasher({portmap: slist.servicemap,
-                             only:false});
-  } else {
-    ph = new phr.porthasher({portlist: pdata.sports.concat(pdata.dports),
-                             only: true})
-  }
+  let ph = new phr.porthasher(pdata.hashconfig);
 
   // first watch for any existing load events
   let oldload = null;

@@ -50,7 +50,8 @@
     return  {
       matrix: matrix,
       sports: Array.from(sports).sort((a,b)=>a-b),
-      dports: Array.from(dports).sort((a,b)=>a-b)
+      dports: Array.from(dports).sort((a,b)=>a-b),
+      hashconfig: ph.config
     };
   }
 
