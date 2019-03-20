@@ -111,7 +111,10 @@ function jsonWrap(n,d){
 }
 
 app.get('/',(req,res) => res.redirect('/pp/index.html'));
-
+app.get('/favicon.ico',function (req,res){
+  //thanks to http://transparent-favicon.info/favicon.ico
+  res.sendFile('favicon.ico',{root:'images'});
+});
 app.get('/js/:script.js',function (req,res){
   res.sendFile(req.params['script']+'.js',{root:'js'});
 });
@@ -119,8 +122,6 @@ app.get('/out/:script.js',function (req,res){
   res.sendFile(req.params['script']+'.js',{root:'out'});
 });
 app.get('*/index.html',function(req,res){
-  //todo: consider moving index.html to './static/'
-  //res.sendFile('views/index.html',{root:'.'});
   res.render('index',{
     key: 'index',
     render: function(window,sdone) {
