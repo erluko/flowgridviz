@@ -72,7 +72,7 @@ module.exports = function(config){
   config = config || (config = {cache: new DummyCache() });
   return function (filename, options, callback) {
     if(options.key && config.cache.has(options.key)){
-      return config.cache.get(options.key);
+      callback(null,config.cache.get(options.key));
     } else {
       let jdo = Promise.resolve(
         options.fromString?

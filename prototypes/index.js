@@ -120,8 +120,25 @@ app.get('/out/:script.js',function (req,res){
 });
 app.get('*/index.html',function(req,res){
   //todo: consider moving index.html to './static/'
-  res.sendFile('views/index.html',{root:'.'});
-});
+  //res.sendFile('views/index.html',{root:'.'});
+  res.render('index',{
+    key: 'index',
+    render: function(window,sdone) {
+      let document = window.document;
+      let svg = document.createElement("svg");
+      svg.setAttribute("xmlns:xlink","http://www.w3.org/1999/xlink");
+
+      document.body.appendChild(svg);
+      for(i=0;i<256*256;i++){
+        let a = document.createElement("a");
+        a.setAttribute("class","plot");
+        let r = document.createElement("rect");
+        r.setAttribute("class","plot");
+        a.appendChild(r);
+        svg.appendChild(a);
+      }
+    }})});
+
 app.get('*/matrix.json',function(req,res){
   let ps = req.params['0'];
   let pp = me.pathParser(ps);

@@ -41,12 +41,9 @@
 
     var SIZES = {x:WIDTH, y:HEIGHT};
 
-    let svg = d3.select("body")
-        .append("svg")
+    let svg = d3.select("svg")
         .attr("width",WIDTH)
         .attr("height",HEIGHT)
-        .attr("xmlns:xlink","http://www.w3.org/1999/xlink");
-
 
     // distinct paddings -- to leave room for title, labels, and legend
     let PADDINGS = {left: 0,
@@ -139,18 +136,23 @@
       }
     }
 
-    svg.selectAll("a.plot")
-      .data(plotrix)
-      .enter()
+    let as = svg.selectAll("a.plot")
+        .data(plotrix);
+
+    // next line not needed unless changing node counts
+    //as.exit().remove();
+
+    as.enter()
       .append("a")
+      .classed("plot",true)
+      .merge(as)
       .each(function(d,idx){
         if(d>0){
           d3.select(this)
             .attr("xlink:href",() => subgraphURL(idx))
         }
       })
-      .classed("plot",true)
-      .append("rect")
+      .select("rect")
       .classed("plot",true)
       .attr("width",UNIT_SIZE.x*(gapf))
       .attr("height",UNIT_SIZE.y*(gapf))
