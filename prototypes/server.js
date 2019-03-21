@@ -27,8 +27,8 @@ app.engine('html',require('./lib/jsdt')({cache: new LRU(30)}));
 app.set('view engine', 'html');
 
 
-const port = 3000;
-const ip = '127.17.96.39';
+const port = process.env.npm_package_config_port;
+const ip = process.env.npm_package_config_listen_ip;
 
 let mwcache = new LRU(80);
 
