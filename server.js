@@ -117,24 +117,8 @@ app.get('/js-ext/:script.js',function (req,res){
   res.sendFile(req.params['script']+'.js',{root:'js-ext'});
 });
 app.get('*/index.html',function(req,res){
-  res.render('index',{
-    key: 'index',
-    render: function(window,sdone) {
-      let document = window.document;
-      let svg = document.createElement("svg");
-      svg.setAttribute("xmlns:xlink","http://www.w3.org/1999/xlink");
-
-      document.body.appendChild(svg);
-      for(i=0;i<256*256;i++){
-        let a = document.createElement("a");
-        a.setAttribute("class","plot");
-        let r = document.createElement("rect");
-        r.setAttribute("class","plot");
-        a.appendChild(r);
-        svg.appendChild(a);
-      }
-    }})});
-
+  res.sendFile('index.html',{root:'views'});
+});
 app.get('*/matrix.json',function(req,res){
   let ps = req.params['0'];
   let pp = me.pathParser(ps);

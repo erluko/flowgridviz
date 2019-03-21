@@ -71,9 +71,12 @@
 
     var SIZES = {x:WIDTH, y:HEIGHT};
 
-    let svg = d3.select("svg")
+    let svg = d3.select("body")
+        .append("svg")
         .attr("width",WIDTH)
         .attr("height",HEIGHT)
+//todo: FIXME
+    svg.node().setAttribute("xmlns:xlink","http://www.w3.org/1999/xlink");
 
     // distinct paddings -- to leave room for title, labels, and legend
     let PADDINGS = {left: 40,
@@ -120,7 +123,7 @@
 
 
     scales.z = d3.scaleLog()
-      .domain([1,d3.max(plotrix)])
+      .domain([1,d3.max(plotrix.map(([i,v])=>v))])
       .range([0,1]);
 
     let gapf = 1;//0.03;
@@ -152,9 +155,9 @@
 
     let tip = d3.tip()
         .attr('class', 'port-tip')
-        .html(function([c,idx]){
+        .html(function([idx,c]){
           if(c>0){
-            let [sps,dps] = portsForIndex(idx);
+            let [sps,dps] = portsForIndex(+idx);
             return "count: "+c+"<br/>from: "+sps.join(' ')+
               "<br/>to: "+dps.join(' ');
           } else {
@@ -162,11 +165,11 @@
           }
         });
 
-    svg.call(tip)
+    svg.call(tip);
     function handleHover(mode,datum,index,nodes){
       if(mode){
-        if(datum>0){
-          tip.show([datum,index])
+        if(datum[1]>0){
+          tip.show(datum)
             .style("pointer-events","")//get from css
             .style("opacity","");//get from css
         }
@@ -179,25 +182,23 @@
         .data(plotrix);
 
     // next line not needed unless changing node counts
-    //as.exit().remove();
+    as.exit().remove();
 
-    as.enter()
-      .append("a")
-      .classed("plot",true)
-      .merge(as)
-      .each(function(d,idx){
-        if(d>0){
-          d3.select(this)
-            .attr("xlink:href",() => subgraphURL(idx))
-        }
-      })
+    let newAs=as.enter()
+        .append("a")
+        .classed("plot",true)
+
+    newAs.append("rect")
+        .classed("plot",true);
+
+    as.merge(newAs)
+      .attr("xlink:href",([idx,v]) => subgraphURL(+idx))
       .select("rect")
-      .classed("plot",true)
       .attr("width",UNIT_SIZE.x*(gapf))
       .attr("height",UNIT_SIZE.y*(gapf))
-      .attr("x",(d,i)=>scales.x(i % bcount)+UNIT_SIZE.x*(gapf/2))
-      .attr("y",(d,i)=>scales.y(Math.floor(i / bcount))+UNIT_SIZE.y*(gapf/2))
-      .attr("fill",d=>d==0?'white':d3.interpolateYlOrBr(scales.z(d)))
+      .attr("x",([idx,v])=>scales.x((+idx) % bcount)+UNIT_SIZE.x*(gapf/2))
+      .attr("y",([idx,v])=>scales.y(Math.floor((+idx) / bcount))+UNIT_SIZE.y*(gapf/2))
+      .attr("fill",([idx,v])=>v=0?'white':d3.interpolateYlOrBr(scales.z(v)))
       .on("mouseover",function(){handleHover.call(this,true,...arguments)})
       .on("mouseout",function(){handleHover.call(this,false,...arguments)});
 
