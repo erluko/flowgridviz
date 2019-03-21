@@ -37,11 +37,6 @@ Presumes the presence of `make`, `tr`, `sed`, `sort`, `gzip`,
 `/etc/services`, `thsark`, and `node`. A future version will eliminate
 dependencies all but the last two or three.
 
-Presumes that there's a pcap file at
-`~/Downloads/ISCX_Botnet-Training.pcap`. It's only used during initial
-installation. This will be fixed in a future release.
-
-
 
 Installing and Running
 ======================
@@ -57,10 +52,40 @@ Then go to the url displayed at the console.
 Configuration
 =============
 
+Install-time
+------------
+
+The following options affect the program's behavior at
+install-time. If you want to change them after running `npm install`,
+you can remove the contents of the `data/` directory and then execute `npm
+run make`.
+
+The source of the packet capture data is configurable. It defaults to
+`~/Downloads/ISCX_Botnet-Training.pcap`. Override it as follows:
+
+    npm config set pcapviz:pcap_file /path/to/file
+
+To select the number of packets processed, set `pcapviz:pcap_file` to a
+number. To process all packets in the pcap, set it to the empty string
+or "all".
+
+    npm config set pcapviz:num_packets "10000"  #process first 10k packets
+    npm config set pcapviz:num_packets "all"    #process all packets
+
+To choose an alternate mapping of known ports to service names, set
+`pcapviz:services_file`. It defaults to '/etc/services' but you can
+use another mapping:
+
+    npm config set pcapviz:services_file /path/to/file
+
+Runtime
+-------
+
 The IP and port to bind are now configurable:
 
     npm config set pcapviz:port 8080
     npm config set pcapviz:listen_ip 127.0.0.1
+
 
 License
 =======

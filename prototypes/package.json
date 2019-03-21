@@ -3,13 +3,17 @@
   "version": "0.2.0",
   "description": "Packet Capture Visualizer",
   "main": "server.js",
-  "config" : { "listen_ip": "127.17.96.39",
-               "port" : "3000" },
+  "config" : { "listen_ip": "127.0.0.1",
+               "port" : "8080",
+               "pcap_file": "~/Downloads/ISCX_Botnet-Training.pcap",
+               "num_packets": "all",
+               "services_file": "/etc/services"},
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "install": "make",
     "start": "node --max-old-space-size=8192 server.js",
-    "debug": "node --inspect --max-old-space-size=8192 server.js"
+    "debug": "node --inspect --max-old-space-size=8192 server.js",
+    "make": "make"
   },
   "dependencies": {
     "express": "^4.16.4",
