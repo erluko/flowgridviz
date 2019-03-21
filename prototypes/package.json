@@ -1,6 +1,6 @@
 {
   "name": "pcapviz",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Packet Capture Visualizer",
   "main": "server.js",
   "config" : { "listen_ip": "127.0.0.1",
@@ -16,9 +16,9 @@
     "make": "make"
   },
   "dependencies": {
-    "express": "^4.16.4",
-    "jsdom": "^14.0.0",
-    "lru-cache": "^5.1.1"
+    "express": ">=4.16.4",
+    "jsdom": ">=14.0.0",
+    "lru-cache": ">=5.1.1"
   },
   "repository": {
     "type": "git",
