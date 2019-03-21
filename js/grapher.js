@@ -14,9 +14,6 @@
   let dpmax = pdata.dports[pdata.dports.length-1];
   let plotrix = pdata.matrix;
 
-
-  //todo: remove this hack and have express serve up this bit of js
-  //based on the path
   let phr = inNode?require('porthasher.js'):{porthasher: root.porthasher};
   let ph = new phr.porthasher(pdata.hashconfig);
 
