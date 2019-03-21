@@ -152,6 +152,14 @@
       .attr("y",(d,i)=>scales.y(Math.floor(i / bcount))+UNIT_SIZE.y*(gapf/2))
       .attr("fill",d=>d==0?'white':d3.interpolateYlOrBr(scales.z(d)))
       .on("mouseover",function(){handleHover.call(this,true,...arguments)})
-      .on("mouseout",function(){handleHover.call(this,false,...arguments)})
+      .on("mouseout",function(){handleHover.call(this,false,...arguments)});
+
+    /* TODO: Consider putting the SVG into a div and using the DIV size
+       to adjust the page width. This would allow non-svg items to be added
+       to the div without overflowing the page width */
+
+    // Center the title on the page by changing the page width
+    d3.select("body")
+      .style("width",svg.node().getBBox().width+"px");
     };
   })();
