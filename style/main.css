@@ -1,5 +1,9 @@
 body {
-    font-family: sans-serif
+    font-family: sans-serif;
+    background-image: url('/images/loading.gif');
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    background-position: center;
 }
 
 text {
@@ -31,8 +35,3 @@ text.y-axis-label {
     text-anchor: middle;
 }
 
-#loader-image {
-    position: absolute;
-    top: 300px;
-    left: 300px;
-}

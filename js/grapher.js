@@ -49,11 +49,25 @@
     if(typeof(oldload) == 'function'){
       oldload.apply(this,arguments);
     }
-    //get a reference to the loading graphic
-    let loader = d3.select("#loader-image")
 
-    let WIDTH = 750;
-    let HEIGHT = 750;
+    let body = d3.select("body");
+
+    let bodywidth;
+    try{
+      bodywidth = +body.node().getBoundingClientRect().width;
+    } catch(e){}
+    if(isNaN(bodywidth)){
+      bodywidth = +body.attr("width").replace(/px/,'');
+    }
+    if(isNaN(bodywidth)){
+      bodywidth = +body.style("width").replace(/px/,'');
+    }
+    if(isNaN(bodywidth)){
+      bodywidth = 700;
+    }
+
+    let WIDTH = bodywidth - 50;
+    let HEIGHT = WIDTH;
 
     var SIZES = {x:WIDTH, y:HEIGHT};
 
@@ -187,15 +201,7 @@
       .on("mouseover",function(){handleHover.call(this,true,...arguments)})
       .on("mouseout",function(){handleHover.call(this,false,...arguments)});
 
-    /* TODO: Consider putting the SVG into a div and using the DIV size
-       to adjust the page width. This would allow non-svg items to be added
-       to the div without overflowing the page width */
-
-    // Center the title on the page by changing the page width
-    d3.select("body")
-      .style("width",svg.node().getBBox().width+"px");
-
     //remove loading graphic
-    loader.attr("style","display: none");
+    body.style("background-image","none");
   };
 })();
