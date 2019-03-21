@@ -49,6 +49,8 @@
     if(typeof(oldload) == 'function'){
       oldload.apply(this,arguments);
     }
+    //get a reference to the loading graphic
+    let loader = d3.select("#loader-image")
 
     let WIDTH = 750;
     let HEIGHT = 750;
@@ -192,5 +194,8 @@
     // Center the title on the page by changing the page width
     d3.select("body")
       .style("width",svg.node().getBBox().width+"px");
-    };
-  })();
+
+    //remove loading graphic
+    loader.attr("style","display: none");
+  };
+})();

@@ -4,6 +4,9 @@
     <meta charset="utf-8">
     <meta name="author" content="Eric Kobrin &lt;ekobrin@gatech.edu&gt;">
     <meta name="description" content="">
+
+    <link rel="stylesheet" type="text/css" href="/style/main.css">
+
     <script type="text/javascript" src="/js-ext/d3.min.js"></script>
     <script type="text/javascript" src="/js-ext/d3-tip.min.js"></script>
     <!-- Next line uses serverside js to generate JS for use in-broser
@@ -11,36 +14,9 @@
     <script type="text/javascript" src="pmatrix.js"></script>
     <script type="text/javascript" src="/js/porthasher.js"></script>
     <script type="text/javascript" src="/js/grapher.js"></script>
-    <style>
-     body {
-       font-family: sans-serif
-     }
-     text {
-       fill:black;
-       font-family: sans-serif
-     }
-     svg { display: block; }
-     rect { stroke: none }
-     h1 { text-align: center; font-size: 24px }
-     div.port-tip {
-      font-size: 10px;
-      background: lightblue;
-      padding: 5px;
-      pointer-events: none;
-      opacity: 0.9;
-       max-width: 200px;
-     }
-     text.x-axis-label {
-       dominant-baseline: hanging;
-       text-anchor: middle;
-     }
-     text.y-axis-label {
-       text-anchor: middle;
-     }
-    </style>
   </head>
   <body>
     <h1>Interactive PCap Visualization</h1>
-    <script>console.log("done")</script>
+    <img id="loader-image" src="/images/loading.gif">
   </body>
 </html>

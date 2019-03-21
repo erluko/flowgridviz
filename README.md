@@ -85,6 +85,20 @@ The IP and port to bind are now configurable:
     npm config set pcapviz:port 8080
     npm config set pcapviz:listen_ip 127.0.0.1
 
+Acknowledgments
+===============
+
+Loading graphic (images/loading.gif) was generated using
+http://www.ajaxload.info/
+
+Public domain transparent favicon is from
+http://transparent-favicon.info/favicon.ico
+
+Express template system for DOM manipulation (lib/jsdt.js) is inspired
+by https://github.com/AndersDJohnson/express-views-dom but shares no
+code with it.
+
+See package.json for a list of server-side dependencies.
 
 License
 =======

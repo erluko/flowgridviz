@@ -103,6 +103,13 @@ app.get('/favicon.ico',function (req,res){
   //thanks to http://transparent-favicon.info/favicon.ico
   res.sendFile('favicon.ico',{root:'images'});
 });
+app.get('/images/:imagefile',function (req,res){
+  //thanks to http://www.ajaxload.info/
+  res.sendFile(req.params['imagefile'],{root:'images'});
+});
+app.get('/style/:cssfile',function (req,res){
+  res.sendFile(req.params['cssfile'],{root:'style'});
+});
 app.get('/js/:script.js',function (req,res){
   res.sendFile(req.params['script']+'.js',{root:'js'});
 });

@@ -1,0 +1,38 @@
+body {
+    font-family: sans-serif
+}
+
+text {
+    fill:black;
+    font-family: sans-serif
+}
+
+svg { display: block; }
+
+rect { stroke: none }
+
+h1 { text-align: center; font-size: 24px }
+
+div.port-tip {
+    font-size: 10px;
+    background: lightblue;
+    padding: 5px;
+    pointer-events: none;
+    opacity: 0.9;
+    max-width: 200px;
+}
+
+text.x-axis-label {
+    dominant-baseline: hanging;
+    text-anchor: middle;
+}
+
+text.y-axis-label {
+    text-anchor: middle;
+}
+
+#loader-image {
+    position: absolute;
+    top: 300px;
+    left: 300px;
+}
