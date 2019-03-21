@@ -106,6 +106,9 @@ app.get('/favicon.ico',function (req,res){
 app.get('/js/:script.js',function (req,res){
   res.sendFile(req.params['script']+'.js',{root:'js'});
 });
+app.get('/js-ext/:script.js',function (req,res){
+  res.sendFile(req.params['script']+'.js',{root:'js-ext'});
+});
 app.get('/out/:script.js',function (req,res){
   res.sendFile(req.params['script']+'.js',{root:'out'});
 });
