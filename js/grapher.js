@@ -51,22 +51,23 @@
     }
 
     let body = d3.select("body");
+    let svgHolder = body;//.select("div.graph");
 
-    let bodywidth;
+    let svgHolderWidth;
     try{
-      bodywidth = +body.node().getBoundingClientRect().width;
+      svgHolderWidth = +svgHolder.node().getBoundingClientRect().width;
     } catch(e){}
-    if(isNaN(bodywidth)){
-      bodywidth = +body.attr("width").replace(/px/,'');
+    if(isNaN(svgHolderWidth)){
+      svgHolderWidth = +svgHolder.attr("width").replace(/px/,'');
     }
-    if(isNaN(bodywidth)){
-      bodywidth = +body.style("width").replace(/px/,'');
+    if(isNaN(svgHolderWidth)){
+      svgHolderWidth = +svgHolder.style("width").replace(/px/,'');
     }
-    if(isNaN(bodywidth)){
-      bodywidth = 700;
+    if(isNaN(svgHolderWidth)){
+      svgHolderWidth = 700;
     }
 
-    let WIDTH = bodywidth - 50;
+    let WIDTH = svgHolderWidth - 50;
     let HEIGHT = WIDTH;
 
     var SIZES = {x:WIDTH, y:HEIGHT};
@@ -153,28 +154,23 @@
       return [sps,dps];
     }
 
-    let tip = d3.tip()
-        .attr('class', 'port-tip')
-        .html(function([idx,c]){
-          if(c>0){
-            let [sps,dps] = portsForIndex(+idx);
-            return "count: "+c+"<br/>from: "+sps.join(' ')+
-              "<br/>to: "+dps.join(' ');
-          } else {
-            return "";
-          }
-        });
+    let tip_holder = d3.select("body")
+        .append("div")
+        .classed("port-tip",true);
 
-    svg.call(tip);
-    function handleHover(mode,datum,index,nodes){
+    let tip = {count: tip_holder.append("span"),
+               source: (tip_holder.append("br"),tip_holder.append("span")),
+               dest: (tip_holder.append("br"),tip_holder.append("span"))}
+
+    function handleHover(mode,[idx,c],index,nodes){
       if(mode){
-        if(datum[1]>0){
-          tip.show(datum)
-            .style("pointer-events","")//get from css
-            .style("opacity","");//get from css
-        }
+        let [sps,dps] = portsForIndex(+idx);
+        tip.count.text("count: "+c)
+        tip.source.text("from: "+sps.join(' '));
+        tip.dest.text("to: "+dps.join(' '));
+        tip_holder.style("display","inline-block");
       } else {
-        tip.hide();
+        //tip_holder.style("display","none");
       }
     }
 

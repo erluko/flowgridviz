@@ -11,7 +11,7 @@ text {
     font-family: sans-serif
 }
 
-svg { display: block; }
+svg { display: inline-block; }
 
 rect { stroke: none }
 
@@ -21,9 +21,8 @@ div.port-tip {
     font-size: 10px;
     background: lightblue;
     padding: 5px;
-    pointer-events: none;
-    opacity: 0.9;
-    max-width: 200px;
+    width: 600px;
+    display:inline-block;
 }
 
 text.x-axis-label {
