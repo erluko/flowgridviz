@@ -159,11 +159,17 @@ app.get('/*/pcap.json',function(req,res){
                           dports.has(r[3])))
 });
 
-
 console.log("Reading pcap data");
+let startTime=new Date().getTime();
+let dots = setInterval(()=>console.log("."), 5000);
+
 (require('./lib/pcsd')
   .fromFile('data/pcap.txt.gz')
   .then(function(p){
+    clearInterval(dots);
+    let readyTime = new Date().getTime();
+    let elapsedSecs = ((readyTime - startTime)/1000).toFixed(3);
+    console.log(`Loaded pcap in ${elapsedSecs} seconds.`);
     packets = p;
     matrix = me.getMatrix(ph0,packets);
     var server = http.createServer(app);
