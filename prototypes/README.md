@@ -54,11 +54,13 @@ Installing and Running
 
 Then go to the url displayed at the console.
 
-Caveats
-=======
+Configuration
+=============
 
-Currently the number of packets examined and the ip/port combo used
-for the server are hard-coded. This will change.
+The IP and port to bind are now configurable:
+
+    npm config set pcapviz:port 8080
+    npm config set pcapviz:listen_ip 127.0.0.1
 
 License
 =======
