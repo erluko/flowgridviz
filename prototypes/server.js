@@ -162,7 +162,7 @@ app.get('/*/pcap.json',function(req,res){
 
 console.log("Reading pcap data");
 (require('./lib/pcsd')
-  .fromFile('data/pcap.txt')
+  .fromFile('data/pcap.txt.gz')
   .then(function(p){
     packets = p;
     matrix = me.getMatrix(ph0,packets);

@@ -5,7 +5,9 @@
   "main": "server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "install": "make"
+    "install": "make",
+    "start": "node --max-old-space-size=8192 server.js",
+    "debug": "node --inspect --max-old-space-size=8192 server.js"
   },
   "dependencies": {
     "express": "^4.16.4",

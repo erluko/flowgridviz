@@ -1,5 +1,6 @@
 var readline = require('readline');
 var fs = require('fs');
+const zlib = require('zlib');
 
 function ipStrToInt(s){
   // ">>>0" thanks to http://2ality.com/2012/02/js-integers.html
@@ -20,8 +21,11 @@ module.exports.fromFile = function(fname){
       return reject(e)
     }
 
+    //gzip reading from:
+    // https://stackoverflow.com/questions/38074288/read-gzip-stream-line-by-line
+    var rs = fs.createReadStream(fname);
     var rl = readline.createInterface({
-      input: fs.createReadStream(fname)
+      input: fname.endsWith('.gz')?rs.pipe(zlib.createGunzip()):rs
     });
 
     rl.on('line', function(line){

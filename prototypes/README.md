@@ -33,9 +33,9 @@ Installation requires an internet connection for the node.js
 prerequisite download. No connection is needed once `npm install` is
 complete.
 
-Presumes the presence of `make`, `tr`, `sed`, `sort`, `/etc/services`,
-`thsark`, and `node`. A future version will eliminate dependencies all
-but the last two or three.
+Presumes the presence of `make`, `tr`, `sed`, `sort`, `gzip`,
+`/etc/services`, `thsark`, and `node`. A future version will eliminate
+dependencies all but the last two or three.
 
 Presumes that there's a pcap file at
 `~/Downloads/ISCX_Botnet-Training.pcap`. It's only used during initial
