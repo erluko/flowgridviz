@@ -42,7 +42,6 @@ Installing and Running
 ======================
 
     git clone https://github.gatech.edu/ekobrin3/2019-Spring-CSE6242-pcapviz.git
-    cd pcapviz/prototypes
     npm install
     npm start
 
