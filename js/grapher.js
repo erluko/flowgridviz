@@ -27,14 +27,31 @@
     return {x:f("x"),y:f("y")}
   }
 
+  /*
+    makeVertical is to be called with selection.call() on a text
+    node THAT DOES NOT HAVE x OR y SET
+   */
+  function makeVertical(s,x=0,y=0){
+    let fx = typeof x == 'function'?x:(_=> x);
+    let fy = typeof y == 'function'?y:(_=> y);
+
+    return s
+      .attr("style","writing-mode: tb")
+      .attr("transform", (d,i) => "matrix(-1 0 0 -1 "
+            + fx(d,i)
+            + " "
+            + fy(d,i)
+            +")");
+  }
+
   //here's the setup: try to play nice with exisiting onLoads, if any
   window.onload = function(){
     if(typeof(oldload) == 'function'){
       oldload.apply(this,arguments);
     }
 
-    let WIDTH = 600;
-    let HEIGHT = 600;
+    let WIDTH = 750;
+    let HEIGHT = 750;
 
     var SIZES = {x:WIDTH, y:HEIGHT};
 
@@ -43,16 +60,30 @@
         .attr("height",HEIGHT)
 
     // distinct paddings -- to leave room for title, labels, and legend
-    let PADDINGS = {left: 0,
+    let PADDINGS = {left: 40,
                     right: 0,
                     top: 0,
-                    bottom: 0}
+                    bottom: 30}
 
     // pre-calculating common padding operations
     PADDINGS.x = PADDINGS.left + PADDINGS.right;
     PADDINGS.y = PADDINGS.top + PADDINGS.bottom;
     PADDINGS.a = {x: PADDINGS.left, y: PADDINGS.top};
     PADDINGS.b = {x: PADDINGS.right, y: PADDINGS.bottom};
+
+
+    svg.append("g")
+      .classed("y-axis-label",true)
+      .append("text")
+      .call(makeVertical,PADDINGS.left-8,HEIGHT/2)
+      .text("Source Port")
+
+    svg.append("g")
+      .classed("x-axis-label",true)
+      .append("text")
+      .attr("x",WIDTH/2)
+      .attr("y",HEIGHT-PADDINGS.bottom+8)
+      .text("Destination Port")
 
     let squareSideMax = callxy(xy=>(SIZES[xy]-PADDINGS[xy])/
                                (bcount+1));
