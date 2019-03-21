@@ -1,4 +1,5 @@
 Interactive Packet Capture Visualization
+========================================
 
 This is an early version of a packet capture explorer.  It maps the
 source ports and destination ports of tcp and udp traffic in a .pcap
@@ -43,10 +44,10 @@ installation. This will be fixed in a future release.
 Installing and Running
 ======================
 
-git clone https://github.gatech.edu/ekobrin3/2019-Spring-CSE6242-pcapviz.git
-cd pcapviz/prototypes
-npm install
-npm start
+    git clone https://github.gatech.edu/ekobrin3/2019-Spring-CSE6242-pcapviz.git
+    cd pcapviz/prototypes
+    npm install
+    npm start
 
 
 
