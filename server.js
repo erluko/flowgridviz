@@ -6,7 +6,7 @@ const { JSDOM } = jsdom;
 const LRU = require("lru-cache")
 const me = require('./lib/matrixexplorer');
 
-const slist = require('./js/servicelist.js');
+const slist = require('./lib/servicelist.js');
 const phr = require('./js/porthasher.js');
 let ph0 = new phr.porthasher({portmap: slist.servicemap,
                              only:false});
