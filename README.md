@@ -134,6 +134,14 @@ Express template system for DOM manipulation (lib/jsdt.js) is inspired
 by https://github.com/AndersDJohnson/express-views-dom but shares no
 code with it.
 
+nginx configuration guidance from
+https://www.digitalocean.com/community/tutorials/how-to-set-up-a-node-js-application-for-production-on-ubuntu-16-04
+was helpful. It took some tweaking to make it work on Amazon Linux 2.
+
+Pre-deployment testing was made possible by Amazon's guide to running
+an EC2-like Linux image in VirtualBox:
+https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/amazon-linux-2-virtual-machine.html
+
 See package.json for a list of server-side dependencies.
 
 License
