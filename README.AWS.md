@@ -91,11 +91,24 @@ Amazon Linux 2. They are not guaranteed to be reproducible.
     sudo yum install -y ./epel-release-latest-7.noarch.rpm
     sudo yum install -y certbot python2-certbot-nginx
 
+
 # The next bit is interactive:
 
     sudo certbot --nginx
 
-# Consider redirecting from / to the pcapviz dir
 
-    #in /etc/nginx.conf, look for the "location / {}" block, add:
-    return 301 https://$host/pcv/ ;
+# Optional: redirect from / to the pcapviz dir
+
+    # in /etc/nginx.conf, look for the "location / {}" block that has
+    # your cert name as server_name, add:
+    #    return 301 https://$host/pcv/ ;
+    # Note: if you have pcapviz installed somewhere other than /pcv/
+    # make sure you use the same value as you used for pcapviz:url_root
+
+
+# Optional: Replace old default site with redirect to TLS site
+
+    #remove:    include /etc/nginx/default.d/*.conf;
+    #remove:    location / {
+    #add:       return 301 https://[YOUR_CERT_DOMAIN]$request_uri;
+    #remove:    }
