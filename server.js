@@ -29,6 +29,9 @@ app.set('view engine', 'html');
 
 const port = process.env.npm_package_config_port;
 const ip = process.env.npm_package_config_listen_ip;
+let url_root = process.env.npm_package_config_url_root || '/';
+if(!url_root.endsWith("/")) url_root=url_root+'/';
+if(!url_root.startsWith("/")) url_root='/'+url_root;
 
 let mwcache = new LRU(80);
 
@@ -98,40 +101,60 @@ function jsonWrap(n,d){
 `;
 }
 
-app.get('/',(req,res) => res.redirect('/pp/index.html'));
+app.get(url_root,(req,res) => res.redirect(url_root+'pp/index.html'));
+app.get(url_root+'index.html',(req,res) => res.redirect(url_root+'pp/index.html'));
+
+// The favicon route intentionally does not use url_root, it is only used if url_root == '/'
 app.get('/favicon.ico',function (req,res){
   //thanks to http://transparent-favicon.info/favicon.ico
   res.sendFile('favicon.ico',{root:'images'});
 });
-app.get('/images/:imagefile',function (req,res){
+
+app.get(url_root+'images/:imagefile',function (req,res){
   //thanks to http://www.ajaxload.info/
   res.sendFile(req.params['imagefile'],{root:'images'});
 });
-app.get('/style/:cssfile',function (req,res){
+app.get(url_root+'style/:cssfile',function (req,res){
   res.sendFile(req.params['cssfile'],{root:'style'});
 });
-app.get('/js/:script.js',function (req,res){
+app.get(url_root+'js/:script.js',function (req,res){
   res.sendFile(req.params['script']+'.js',{root:'js'});
 });
-app.get('/js-ext/:script.js',function (req,res){
+app.get(url_root+'js-ext/:script.js',function (req,res){
   res.sendFile(req.params['script']+'.js',{root:'js-ext'});
 });
-app.get('*/index.html',function(req,res){
-  res.sendFile('index.html',{root:'views'});
+
+function reroot(attr){
+   return function(n){
+     let old=n.getAttribute(attr);
+     if(old.startsWith("/")){
+       n.setAttribute(attr,url_root+old.substr(1))
+     }
+   }
+}
+
+app.get(url_root+'*/index.html',function(req,res){
+  res.render('index',{
+    key: 'index',
+    render: function(window,sdone) {
+      let document = window.document;
+      Array.from(document.getElementsByTagName("script")).forEach(reroot("src"));
+      Array.from(document.getElementsByTagName("link")).forEach(reroot("href"));
+    }});
 });
-app.get('*/matrix.json',function(req,res){
+app.get(url_root+'*/matrix.json',function(req,res){
   let ps = req.params['0'];
   let pp = me.pathParser(ps);
   let lmat = mwalk(pp);
   res.json(lmat);
 });
-app.get('*/pmatrix.js',function(req,res){
+app.get(url_root+'*/pmatrix.js',function(req,res){
   let ps = req.params['0'];
   let pp = me.pathParser(ps);
   let lmat = mwalk(pp);
   res.send(jsonWrap('pmatrix',lmat));
 });
-app.get('*/viewhash.js',function(req,res){
+app.get(url_root+'*/viewhash.js',function(req,res){
   let ps = req.params['0'];
   let pp = me.pathParser(ps);
   let [sports,dports,lph] = phwalk(pp);
@@ -140,9 +163,9 @@ app.get('*/viewhash.js',function(req,res){
             ph:*/ lph/*}*/);
 });
 
-app.get('/pcap.json',(req,res)=>res.json(packets));
+app.get(url_root+'pcap.json',(req,res)=>res.json(packets));
 
-app.get('/*/pcap.json',function(req,res){
+app.get(url_root+'*/pcap.json',function(req,res){
   let ps = req.params['0'];
   let pp = me.pathParser(ps);
   let [sports,dports,lph] = phwalk(pp);
@@ -165,6 +188,6 @@ let dots = setInterval(()=>console.log("."), 5000);
     matrix = me.getMatrix(ph0,packets);
     var server = http.createServer(app);
     server.on("error", e =>console.log(`Unable to start server: ${e}`));
-    server.listen(port, ip, () => console.log(`Packet capture visualization app listening on http://${ip}:${port}!`));
+    server.listen(port, ip, () => console.log(`Packet capture visualization app listening on http://${ip}:${port}${url_root}!`));
   }));
 

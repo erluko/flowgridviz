@@ -80,10 +80,46 @@ use another mapping:
 Runtime
 -------
 
-The IP and port to bind are now configurable:
+The IP and port to bind, and the URL root are configurable.
+For example:
 
     npm config set pcapviz:port 8080
     npm config set pcapviz:listen_ip 127.0.0.1
+    npm config set pcapviz:url_root pcv
+
+Will make the application available at: http://127.0.0.1:8080/pcv/
+
+Setting `url_root` to the empty string or to `/` will serve it from '/'.
+
+Running Under NGINX
+-------------------
+
+Execute `npm run conf_nginx` to put a reasonable nginx confg file in
+`nginx/pcapviz.conf`. This file is suitable for inclusion in a
+`server{}` block in your nginx configuration.
+
+For example, if your nginx config contains the following (which is
+default from Amazon Linux 2):
+    server {
+        listen       80 default_server;
+        listen       [::]:80 default_server;
+        server_name  _;
+        root         /usr/share/nginx/html;
+
+        # Load configuration files for the default server block.
+        include /etc/nginx/default.d/*.conf;
+        ...
+    }
+
+Then you can configure nginx by running the following, assuming you've
+already enabled nginx (`sudo systemctl enable nginx`):
+
+    npm config set pcapviz:url_root pcv
+    npm run conf_nginx
+    sudo cp nginx/pcapviz.conf /etc/nginx/default.d/
+    sudo systemctl restart nginx
+
+Now pcapviz is running at http://*your_hostname*/pcv/
 
 Acknowledgments
 ===============

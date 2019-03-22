@@ -1,6 +1,6 @@
 body {
     font-family: sans-serif;
-    background-image: url('/images/loading.gif');
+    background-image: url('../images/loading.gif');
     background-repeat: no-repeat;
     background-attachment: fixed;
     background-position: center;
