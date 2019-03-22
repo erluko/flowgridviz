@@ -130,9 +130,10 @@ PM2
 ---
 
 If [PM2](https://pm2.io) is installed, you can get process management
-for pcapviz. Use `pm2 start pcapviz` instead of `npm start`. Use `pm2
-status` to see process status and `pm2 stop pcapviz` to stop the
-server. This all works particularly well with nginx.
+for pcapviz. Use `pm2 start` instead of `npm start`. Use `pm2 status`
+to see process status and `pm2 stop pcapviz` to stop the server. This
+all works particularly well with nginx.
+
 
 Acknowledgments
 ===============

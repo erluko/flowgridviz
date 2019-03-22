@@ -15,7 +15,7 @@ Amazon Linux 2. They are not guaranteed to be reproducible.
 
 # install nginx
 
-    sudo amazon-linux-extras install nginx1.12
+    sudo amazon-linux-extras install -y nginx1.12
     sudo systemctl enable nginx
 
 
@@ -32,12 +32,12 @@ Amazon Linux 2. They are not guaranteed to be reproducible.
 
 # install git
 
-    sudo yum install git
+    sudo yum install -y git
 
 
 # install wireshark to get tshark
 
-    sudo yum install wireshark
+    sudo yum install -y wireshark
 
 
 # set up repo
@@ -50,7 +50,8 @@ Amazon Linux 2. They are not guaranteed to be reproducible.
 
 # On your own machine run:
 
-    #git remote add aws ssh://[user@host]/home/~/pcapviz.git
+    #git remote add aws ssh://[user@host]/~/pcapviz.git
+    #git push aws master
 
 
 # Back on AWS, clone the repo:
@@ -67,9 +68,7 @@ Amazon Linux 2. They are not guaranteed to be reproducible.
     cd pcapviz
     npm config set pcapviz:num_packets "all"
     npm config set pcapviz:url_root pcv
-    npm config set pcapviz:pcap_file $(pwd)../ISCX_Botnet-Training.pcap
-    npm install
-    pm2 start pcapviz #if you skipped pm2 installation, run npm start
+    npm config set pcapviz:pcap_file $(pwd)/../ISCX_Botnet-Training.pcap
 
 
 # Configure nginx
@@ -77,3 +76,10 @@ Amazon Linux 2. They are not guaranteed to be reproducible.
     npm run conf_nginx
     sudo cp nginx/pcapviz.conf /etc/nginx/default.d/
     sudo systemctl start nginx
+
+
+# Final repository setup (depends on giant pcap download)
+
+    wait %1 #wait for pcap download to complete
+    npm install
+    pm2 start #if you skipped pm2 installation, run npm start
