@@ -137,6 +137,9 @@ server. This all works particularly well with nginx.
 Acknowledgments
 ===============
 
+PCAP sample data is from
+https://iscxdownloads.cs.unb.ca/iscxdownloads/ISCX-Bot-2014/ISCX_Botnet-Training.pcap
+
 Loading graphic (images/loading.gif) was generated using
 http://www.ajaxload.info/
 
