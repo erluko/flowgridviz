@@ -45,8 +45,11 @@ Installing and Running
     npm install
     npm start
 
-
 Then go to the url displayed at the console.
+
+If you want a more robust setup, use nginx as a reverse proxy and pm2
+for process management, as described below.
+
 
 Configuration
 =============
@@ -118,8 +121,18 @@ already enabled nginx (`sudo systemctl enable nginx`):
     npm run conf_nginx
     sudo cp nginx/pcapviz.conf /etc/nginx/default.d/
     sudo systemctl restart nginx
+    npm start #consider using pm2 instead (see below)
 
 Now pcapviz is running at http://*your_hostname*/pcv/
+
+
+PM2
+---
+
+If [PM2](https://pm2.io) is installed, you can get process management
+for pcapviz. Use `pm2 start pcapviz` instead of `npm start`. Use `pm2
+status` to see process status and `pm2 stop pcapviz` to stop the
+server. This all works particularly well with nginx.
 
 Acknowledgments
 ===============
