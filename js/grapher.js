@@ -51,7 +51,7 @@
     }
 
     let body = d3.select("body");
-    let svgHolder = body;//.select("div.graph");
+    let svgHolder = body.select("div.graph");
 
     let svgHolderWidth;
     try{
@@ -67,13 +67,12 @@
       svgHolderWidth = 700;
     }
 
-    let WIDTH = svgHolderWidth - 50;
+    let WIDTH = svgHolderWidth - 8
     let HEIGHT = WIDTH;
 
     var SIZES = {x:WIDTH, y:HEIGHT};
 
-    let svg = d3.select("body")
-        .append("svg")
+    let svg = svgHolder.append("svg")
         .attr("width",WIDTH)
         .attr("height",HEIGHT)
 //todo: FIXME
@@ -121,10 +120,15 @@
     };
 
 
-
+    let totalPackets = 0;
+    let maxCount = 0;
+    plotrix.forEach(function ([i,v]) {
+      maxCount = Math.max(maxCount,v);
+      totalPackets += v;
+    });
 
     scales.z = d3.scaleLog()
-      .domain([1,d3.max(plotrix.map(([i,v])=>v))])
+      .domain([1,maxCount])
       .range([0,1]);
 
     let gapf = 1;//0.03;
@@ -154,25 +158,28 @@
       return [sps,dps];
     }
 
-    let tip_holder = d3.select("body")
-        .append("div")
-        .classed("port-tip",true);
+    let tipHolder = body.select("div.port-tip");
 
-    let tip = {count: tip_holder.append("span"),
-               source: (tip_holder.append("br"),tip_holder.append("span")),
-               dest: (tip_holder.append("br"),tip_holder.append("span"))}
+    let tip = {count: tipHolder.append("span"),
+               source: (tipHolder.append("br"),tipHolder.append("span")),
+               dest: (tipHolder.append("br"),tipHolder.append("span"))}
 
+    function showTotals(){
+      tip.count.text("Total Count: "+totalPackets)
+      tip.source.text("from: "+pdata.sports.join(' '));
+      tip.dest.text("to: "+pdata.dports.join(' '));
+    }
     function handleHover(mode,[idx,c],index,nodes){
       if(mode){
         let [sps,dps] = portsForIndex(+idx);
         tip.count.text("count: "+c)
         tip.source.text("from: "+sps.join(' '));
         tip.dest.text("to: "+dps.join(' '));
-        tip_holder.style("display","inline-block");
       } else {
-        //tip_holder.style("display","none");
+        showTotals()
       }
     }
+    showTotals();
 
     let as = svg.selectAll("a.plot")
         .data(plotrix);
