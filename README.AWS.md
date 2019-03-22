@@ -83,3 +83,19 @@ Amazon Linux 2. They are not guaranteed to be reproducible.
     wait %1 #wait for pcap download to complete
     npm install
     pm2 start #if you skipped pm2 installation, run npm start
+
+
+# Now for TLS
+
+    curl -sLO  https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
+    sudo yum install -y ./epel-release-latest-7.noarch.rpm
+    sudo yum install -y certbot python2-certbot-nginx
+
+# The next bit is interactive:
+
+    sudo certbot --nginx
+
+# Consider redirecting from / to the pcapviz dir
+
+    #in /etc/nginx.conf, look for the "location / {}" block, add:
+    return 301 https://$host/pcv/ ;
