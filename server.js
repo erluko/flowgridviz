@@ -4,8 +4,9 @@ const app = express();
 const jsdom = require("jsdom");
 const { JSDOM } = jsdom;
 const LRU = require("lru-cache")
-const me = require('./lib/matrixexplorer');
 
+const me = require('./lib/matrixexplorer');
+const tsf = require('./js/filtermaker');
 const slist = require('./lib/servicelist.js');
 const phr = require('./js/porthasher.js');
 let ph0 = new phr.porthasher({portmap: slist.servicemap,
@@ -155,13 +156,17 @@ app.get(url_root+'*/pmatrix.js',function(req,res){
   let lmat = mwalk(pp);
   res.send(jsonWrap('pmatrix',lmat));
 });
-app.get(url_root+'*/viewhash.js',function(req,res){
+
+app.get(url_root+'*/filter.txt',function(req,res){
   let ps = req.params['0'];
   let pp = me.pathParser(ps);
   let [sports,dports,lph] = phwalk(pp);
-  res.json(/*{sports:Array.from(sports),
-            dports:Array.from(dports),
-            ph:*/ lph/*}*/);
+  res.type("text/plain")
+  res.send(tsf.tsDisplayFilter(sports,dports)+"\n");
+});
+app.get(url_root+'filter.txt',function(req,res){
+  res.type("text/plain")
+  res.send("tcp or udp\n");
 });
 
 app.get(url_root+'pcap.json',(req,res)=>res.json(packets));
