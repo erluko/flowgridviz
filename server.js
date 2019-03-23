@@ -44,8 +44,9 @@ let phwalk = function(pth){
   let dports = new Set(matrix.dports);
   let dpmax = matrix.dports[matrix.dports.length-1];
 
+  let bcount = phr.porthasher.getBucketCount();
   let lph = ph0;
-  let bcount = ph0.bcount;
+
   let mwk = [];
   for(let [[xt,yt],idx] of pth) {
     //xt and yt are either 'p' meaning port of 'i' meaning ip

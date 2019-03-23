@@ -4,7 +4,7 @@
 
   var root = inNode?module.exports:this;
 
-  let bcount = 64;
+  const bcount = 64;
   let bigp = 4295012789;
   let lilp = 4295021
   let bpm = bigp % bcount;
@@ -28,7 +28,6 @@
   }
 
   let porthasher = function(config){
-    this.bcount = bcount;
     this.config = config;
     if(this.config.portmap instanceof Map) {
       this.config.portmap = Array.from(this.config.portmap);
@@ -59,7 +58,9 @@
     this.knownback = knownback;
   }
 
+  porthasher.getBucketCount = _ => bcount;
   porthasher.prototype = {
+    getBucketCount: porthasher.getBucketCount,
     toString: function(){
       return JSON.stringify(
         this.toJSON())},

@@ -3,11 +3,10 @@ Interactive Packet Capture Visualization
 
 This is an early version of a packet capture explorer.  It maps the
 source ports and destination ports of tcp and udp traffic in a .pcap
-file into a 256x256 grid. Each grid point represents the intersection
-of src and dest port. The darkness of each point is based on the
-number of such pairs present in the packet capture. Future versions
-will make it possible to have either axis represent ports or IP
-addresses.
+file into a 64x64 grid. Each grid point represents the intersection of
+src and dest port. The darkness of each point is based on the number
+of such pairs present in the packet capture. Future versions will make
+it possible to have either axis represent ports or IP addresses.
 
 The hashing function used to make the initial reduction down to an
 8-bit space is intentionally reversible so that the list of actually
