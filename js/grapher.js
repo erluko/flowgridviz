@@ -6,7 +6,6 @@
   let importData = inNode?n=>require('../out/'+n+'.js').IMPORT_DATA.get(n):n=>IMPORT_DATA.get(n);
 
 
-  let bcount = 256;
   pdata = importData('pmatrix');
   let sports = new Set(pdata.sports);
   let spmax = pdata.sports[pdata.sports.length-1];
@@ -16,6 +15,7 @@
 
   let phr = inNode?require('porthasher.js'):{porthasher: root.porthasher};
   let ph = new phr.porthasher(pdata.hashconfig);
+  let bcount = ph.bcount;
 
   // first watch for any existing load events
   let oldload = null;

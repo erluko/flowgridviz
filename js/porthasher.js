@@ -4,7 +4,7 @@
 
   var root = inNode?module.exports:this;
 
-  let bcount = 256;
+  let bcount = 64;
   let bigp = 4295012789;
   let lilp = 4295021
   let bpm = bigp % bcount;
@@ -28,6 +28,7 @@
   }
 
   let porthasher = function(config){
+    this.bcount = bcount;
     this.config = config;
     if(this.config.portmap instanceof Map) {
       this.config.portmap = Array.from(this.config.portmap);
@@ -91,7 +92,7 @@
         return list;
       }
 
-      for(p=start;p<=max;p+=256){
+      for(p=start;p<=max;p+=bcount){
         if(!this.known.has(p)){
           list.push(p);
         }

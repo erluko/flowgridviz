@@ -39,13 +39,13 @@ let phwalk = function(pth){
   if(typeof matrix === 'undefined'){
     return [];
   }
-  let bcount = 256
   let sports = new Set(matrix.sports);
   let spmax = matrix.sports[matrix.sports.length-1];
   let dports = new Set(matrix.dports);
   let dpmax = matrix.dports[matrix.dports.length-1];
 
   let lph = ph0;
+  let bcount = ph0.bcount;
   let mwk = [];
   for(let [[xt,yt],idx] of pth) {
     //xt and yt are either 'p' meaning port of 'i' meaning ip
