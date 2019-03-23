@@ -41,3 +41,12 @@ text.y-axis-label {
     text-anchor: middle;
 }
 
+.hidden { display:none }
+div.tsharkfilter {
+    clear: both;
+    width: 80%;
+}
+
+.tfilter {
+    font-size: 10px;
+}

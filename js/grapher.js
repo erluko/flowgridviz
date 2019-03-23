@@ -158,18 +158,35 @@
       return [sps,dps];
     }
 
+    let tsharkfilter = body.select(".tsharkfilter");
+    let tsa = tsharkfilter.append("a")
+        .attr("href","#")
+        .text("Show filter");
+
+    let tfilter = tsharkfilter.append("div")
+        .classed("tfilter", true)
+        .classed("hidden", true);
+
+    function toggleFilter(){
+      let showNow = tfilter.classed("hidden");
+      if(tfilter.text() == ''){
+        tfilter.text(filtermaker.tsDisplayFilter(pdata.sports,pdata.dports));
+      }
+      tsa.text(showNow?"Hide filter":"Show filter");
+      tfilter.classed("hidden",!showNow);
+    }
+    tsa.on("click",toggleFilter)
+
     let tipHolder = body.select("div.port-tip");
 
     let tip = {count: tipHolder.append("span"),
                source: (tipHolder.append("br"),tipHolder.append("span")),
-               dest: (tipHolder.append("br"),tipHolder.append("span")),
-               tfilter: (tipHolder.append("br"),tipHolder.append("span"))}
+               dest: (tipHolder.append("br"),tipHolder.append("span"))}
 
     function showTotals(){
       tip.count.text("Total Count: "+totalPackets)
       tip.source.text("from: "+pdata.sports.join(' '));
       tip.dest.text("to: "+pdata.dports.join(' '));
-      tip.tfilter.text(filtermaker.tsDisplayFilter(pdata.sports,pdata.dports));
     }
     function handleHover(mode,[idx,c],index,nodes){
       if(mode){
@@ -177,7 +194,6 @@
         tip.count.text("count: "+c)
         tip.source.text("from: "+sps.join(' '));
         tip.dest.text("to: "+dps.join(' '));
-        tip.tfilter.text("");
       } else {
         showTotals()
       }
