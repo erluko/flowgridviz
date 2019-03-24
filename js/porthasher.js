@@ -4,7 +4,7 @@
 
   var root = inNode?module.exports:this;
 
-  const bcount = 64;
+  const bcount = 53;
   let bigp = 4295012789;
   let lilp = 4295021
   let bpm = bigp % bcount;
