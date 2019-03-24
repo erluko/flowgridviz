@@ -52,7 +52,22 @@
     let pathParts = pathutil.pathParser(window.location.pathname);
     let top_level = pathutil.isTopLevel(pathParts);
 
+    let chunks = pathParts.flatMap(x=>x);
+    let numparts = chunks.length - (chunks[chunks.length-1]==null?2:1);
+    let dots = Array.from({length:numparts},x=>'../');
+
     let body = d3.select("body");
+     body.select("div.nav")
+      .selectAll("span.uplink")
+      .data(chunks)
+      .enter()
+      .append("span")
+      .classed("uplink",true)
+      .text(" / ")
+      .append("a")
+      .attr("href",(d,i,a)=>numparts-i>1?dots.slice(i).join(''):null)
+      .text(v=>v instanceof Array?v.join(''):v)
+
     let svgHolder = body.select("div.graph");
 
     let svgHolderWidth;
