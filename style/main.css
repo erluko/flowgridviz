@@ -27,9 +27,8 @@ div.port-tip {
     background: lightblue;
     padding: 5px;
     width: 300px;
-    min-height: 600px;
     display:inline-block;
-    vertical-algign: top;
+    overflow: scroll;
 }
 
 text.x-axis-label {
