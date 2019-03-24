@@ -49,7 +49,8 @@
     if(typeof(oldload) == 'function'){
       oldload.apply(this,arguments);
     }
-    let top_level = ! /\d+\/[pi]{2}\/index.html$/.test(window.location.pathname);
+    let pathParts = pathutil.pathParser(window.location.pathname);
+    let top_level = pathutil.isTopLevel(pathParts);
 
     let body = d3.select("body");
     let svgHolder = body.select("div.graph");
