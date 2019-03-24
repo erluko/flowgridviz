@@ -49,6 +49,7 @@
     if(typeof(oldload) == 'function'){
       oldload.apply(this,arguments);
     }
+    let top_level = ! /\d+\/[pi]{2}\/index.html$/.test(window.location.pathname);
 
     let body = d3.select("body");
     let svgHolder = body.select("div.graph");
@@ -160,24 +161,26 @@
 
     let tsharkfilter = body.select(".tsharkfilter");
     let tsa = tsharkfilter.append("a")
-        .attr("href","#")
+        .attr("href","#tfilter")
         .text("Show filter");
 
     let tfilter = tsharkfilter.append("div")
         .classed("tfilter", true)
+        .attr("id","tfilter")
         .classed("hidden", true);
 
     function toggleFilter(){
       let showNow = tfilter.classed("hidden");
       if(tfilter.text() == ''){
-        tfilter.text(filtermaker.tsDisplayFilter(pdata.sports,pdata.dports));
+        tfilter.text(top_level?'tcp or udp':filtermaker.tsDisplayFilter(pdata.sports,pdata.dports));
       }
       tsa.text(showNow?"Hide filter":"Show filter");
       tfilter.classed("hidden",!showNow);
     }
     tsa.on("click",toggleFilter)
 
-    let tipHolder = body.select("div.port-tip");
+    let tipHolder = body.select("div.port-tip")
+        .style("height",scales.y(bcount)+"px");
 
     let tip = {count: tipHolder.append("span"),
                source: (tipHolder.append("br"),tipHolder.append("span")),
