@@ -54,7 +54,7 @@ let phwalk = function(pth){
     //xt and yt are either 'p' meaning port of 'i' meaning ip
     //ignoring xt and yt for now. Treating both as 'p'
     if(idx != null){
-      mwk.push(idx);
+      mwk.push(xt+yt+idx);
       [sports,dports,lph] = mwcache
         .getOrSet(JSON.stringify(mwk), function(){
           let x = idx % bcount;
