@@ -1,6 +1,6 @@
 {
   "name": "pcapviz",
-  "version": "0.7.2",
+  "version": "0.7.3",
   "description": "Packet Capture Visualizer",
   "main": "server.js",
   "config": {

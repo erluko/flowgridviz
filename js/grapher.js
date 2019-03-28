@@ -65,7 +65,7 @@
       .classed("uplink",true)
       .text(" / ")
       .append("a")
-      .attr("href",(d,i,a)=>numparts-i>1?dots.slice(i).join(''):null)
+      .attr("href",(d,i,a)=>numparts-i>1?dots.slice(i).join('')+'index.html':null)
       .text(v=>v instanceof Array?v.join(''):v)
 
     let svgHolder = body.select("div.graph");
