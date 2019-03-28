@@ -6,6 +6,7 @@ const { JSDOM } = jsdom;
 const LRU = require("lru-cache")
 
 const me = require('./lib/matrixexplorer');
+const pu = require('./js/pathutil');
 const tsf = require('./js/filtermaker');
 const slist = require('./lib/servicelist.js');
 const phr = require('./js/porthasher.js');
@@ -53,7 +54,7 @@ let phwalk = function(pth){
     //xt and yt are either 'p' meaning port of 'i' meaning ip
     //ignoring xt and yt for now. Treating both as 'p'
     if(idx != null){
-      mwk.push(idx);
+      mwk.push(xt+yt+idx);
       [sports,dports,lph] = mwcache
         .getOrSet(JSON.stringify(mwk), function(){
           let x = idx % bcount;
@@ -146,20 +147,20 @@ app.get(url_root+'*/index.html',function(req,res){
 });
 app.get(url_root+'*/matrix.json',function(req,res){
   let ps = req.params['0'];
-  let pp = me.pathParser(ps);
+  let pp = pu.pathParser(ps);
   let lmat = mwalk(pp);
   res.json(lmat);
 });
 app.get(url_root+'*/pmatrix.js',function(req,res){
   let ps = req.params['0'];
-  let pp = me.pathParser(ps);
+  let pp = pu.pathParser(ps);
   let lmat = mwalk(pp);
   res.send(jsonWrap('pmatrix',lmat));
 });
 
 app.get(url_root+'*/filter.txt',function(req,res){
   let ps = req.params['0'];
-  let pp = me.pathParser(ps);
+  let pp = pu.pathParser(ps);
   let [sports,dports,lph] = phwalk(pp);
   res.type("text/plain")
   res.send(tsf.tsDisplayFilter(sports,dports)+"\n");
@@ -173,7 +174,7 @@ app.get(url_root+'pcap.json',(req,res)=>res.json(packets));
 
 app.get(url_root+'*/pcap.json',function(req,res){
   let ps = req.params['0'];
-  let pp = me.pathParser(ps);
+  let pp = pu.pathParser(ps);
   let [sports,dports,lph] = phwalk(pp);
   res.json(packets.filter(r=>sports.has(r[2]) &&
                           dports.has(r[3])))
