@@ -60,6 +60,10 @@
 
   porthasher.getBucketCount = _ => bcount;
   porthasher.prototype = {
+    serializeForPorts: function(portSet){
+      return {only: this.only,
+              portmap: Array.from(this.known).filter(([p,i])=>portSet.has(p))}
+    },
     getBucketCount: porthasher.getBucketCount,
     toString: function(){
       return JSON.stringify(
