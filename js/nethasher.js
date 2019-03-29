@@ -27,7 +27,7 @@
     }
   }
 
-  let porthasher = function(config){
+  let nethasher = function(config){
     this.config = config;
     if(this.config.portmap instanceof Map) {
       this.config.portmap = Array.from(this.config.portmap);
@@ -58,13 +58,13 @@
     this.knownback = knownback;
   }
 
-  porthasher.getBucketCount = _ => bcount;
-  porthasher.prototype = {
+  nethasher.getBucketCount = _ => bcount;
+  nethasher.prototype = {
     serializeForPorts: function(portSet){
       return {only: this.only,
               portmap: Array.from(this.known).filter(([p,i])=>portSet.has(p))}
     },
-    getBucketCount: porthasher.getBucketCount,
+    getBucketCount: nethasher.getBucketCount,
     toString: function(){
       return JSON.stringify(
         this.toJSON())},
@@ -108,6 +108,6 @@
     },
   }
 
-  root.porthasher=porthasher;
+  root.nethasher=nethasher;
 
 })()

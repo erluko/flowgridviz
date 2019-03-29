@@ -13,9 +13,9 @@
   let dpmax = pdata.dports[pdata.dports.length-1];
   let plotrix = pdata.matrix;
 
-  let phr = inNode?require('porthasher.js'):{porthasher: root.porthasher};
-  let bcount = phr.porthasher.getBucketCount();
-  let ph = new phr.porthasher(pdata.hashconfig);
+  let phr = inNode?require('nethasher.js'):{nethasher: root.nethasher};
+  let bcount = phr.nethasher.getBucketCount();
+  let ph = new phr.nethasher(pdata.hashconfig);
 
   // first watch for any existing load events
   let oldload = null;

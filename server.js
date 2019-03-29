@@ -9,8 +9,8 @@ const me = require('./lib/matrixexplorer');
 const pu = require('./js/pathutil');
 const tsf = require('./js/filtermaker');
 const slist = require('./lib/servicelist.js');
-const phr = require('./js/porthasher.js');
-let ph0 = new phr.porthasher({portmap: slist.servicemap,
+const phr = require('./js/nethasher.js');
+let ph0 = new phr.nethasher({portmap: slist.servicemap,
                              only:false});
 let packets = null;
 let matrix = null;
@@ -46,7 +46,7 @@ let phwalk = function(pth){
   let dports = new Set(matrix.dports);
   let dpmax = matrix.dports[matrix.dports.length-1];
 
-  let bcount = phr.porthasher.getBucketCount();
+  let bcount = phr.nethasher.getBucketCount();
   let lph = ph0;
 
   let mwk = [];
@@ -63,7 +63,7 @@ let phwalk = function(pth){
           let dps = lph.backhash(x,dpmax).filter(p=>dports.has(p));
           return [new Set(sps),
                   new Set(dps),
-                  new phr.porthasher({portlist: sps.concat(dps),
+                  new phr.nethasher({portlist: sps.concat(dps),
                                       only: true})]
         });
       spmax = undefined;
