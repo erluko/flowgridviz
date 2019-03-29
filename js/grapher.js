@@ -7,10 +7,10 @@
 
 
   pdata = importData('pmatrix');
-  let sports = new Set(pdata.sports);
-  let spmax = pdata.sports[pdata.sports.length-1];
-  let dports = new Set(pdata.dports);
-  let dpmax = pdata.dports[pdata.dports.length-1];
+  let sources = new Set(pdata.sources);
+  let spmax = pdata.sources[pdata.sources.length-1];
+  let dests = new Set(pdata.dests);
+  let dpmax = pdata.dests[pdata.dests.length-1];
   let plotrix = pdata.matrix;
 
   let phr = inNode?require('nethasher.js'):{nethasher: root.nethasher};
@@ -170,8 +170,8 @@
     let portsForIndex = function(idx){
       let x = idx % bcount;
       let y = Math.floor(idx / bcount);
-      let sps = ph.backhash(y,spmax).filter(p=>sports.has(p));
-      let dps = ph.backhash(x,dpmax).filter(p=>dports.has(p));
+      let sps = ph.backhash(y,spmax).filter(p=>sources.has(p));
+      let dps = ph.backhash(x,dpmax).filter(p=>dests.has(p));
       return [sps,dps];
     }
 
@@ -188,7 +188,7 @@
     function toggleFilter(){
       let showNow = tfilter.classed("hidden");
       if(tfilter.text() == ''){
-        tfilter.text(top_level?'tcp or udp':filtermaker.tsDisplayFilter(pdata.sports,pdata.dports));
+        tfilter.text(top_level?'tcp or udp':filtermaker.tsDisplayFilter(pdata.sources,pdata.dests));
       }
       tsa.text(showNow?"Hide filter":"Show filter");
       tfilter.classed("hidden",!showNow);
@@ -204,8 +204,8 @@
 
     function showTotals(){
       tip.count.text("Total Count: "+totalPackets)
-      tip.source.text("from: "+pdata.sports.join(' '));
-      tip.dest.text("to: "+pdata.dports.join(' '));
+      tip.source.text("from: "+pdata.sources.join(' '));
+      tip.dest.text("to: "+pdata.dests.join(' '));
     }
     function handleHover(mode,[idx,c],index,nodes){
       if(mode){

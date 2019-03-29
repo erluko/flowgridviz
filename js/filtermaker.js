@@ -3,7 +3,7 @@
                  Window.prototype.isPrototypeOf(this));
 
   var root = inNode?module.exports:(this.filtermaker={});
-
+  //FIXME: assumes sources and dests are ports
   root.tsDisplayFilter = function(sports,dports) {
     sports = Array.from(sports);
     dports = Array.from(dports);

@@ -41,10 +41,10 @@ let phwalk = function(pth){
   if(typeof matrix === 'undefined'){
     return [];
   }
-  let sports = new Set(matrix.sports);
-  let spmax = matrix.sports[matrix.sports.length-1];
-  let dports = new Set(matrix.dports);
-  let dpmax = matrix.dports[matrix.dports.length-1];
+  let sources = new Set(matrix.sources);
+  let spmax = matrix.sources[matrix.sources.length-1];
+  let dests = new Set(matrix.dests);
+  let dpmax = matrix.dests[matrix.dests.length-1];
 
   let bcount = phr.nethasher.getBucketCount();
   let lph = ph0;
@@ -55,12 +55,12 @@ let phwalk = function(pth){
     //ignoring xt and yt for now. Treating both as 'p'
     if(idx != null){
       mwk.push(xt+yt+idx);
-      [sports,dports,lph] = mwcache
+      [sources,dests,lph] = mwcache
         .getOrSet(JSON.stringify(mwk), function(){
           let x = idx % bcount;
           let y = Math.floor(idx / bcount);
-          let sps = lph.backhash(y,spmax).filter(p=>sports.has(p));
-          let dps = lph.backhash(x,dpmax).filter(p=>dports.has(p));
+          let sps = lph.backhash(y,spmax).filter(p=>sources.has(p));
+          let dps = lph.backhash(x,dpmax).filter(p=>dests.has(p));
           return [new Set(sps),
                   new Set(dps),
                   new phr.nethasher({portlist: sps.concat(dps),
@@ -70,13 +70,13 @@ let phwalk = function(pth){
       dpmax = undefined;
     }
   }
-  return [sports,dports,lph];
+  return [sources,dests,lph];
 };
 
 let mwalk = function(pth){
-  let [sports,dports,lph] = phwalk(pth);
-  return me.getMatrix(lph,packets.filter(r=>sports.has(r[2]) &&
-                                          dports.has(r[3])));
+  let [sources,dests,lph] = phwalk(pth);
+  return me.getMatrix(lph,packets.filter(r=>sources.has(r[2]) &&
+                                          dests.has(r[3])));
 }
 
 
@@ -161,9 +161,9 @@ app.get(url_root+'*/pmatrix.js',function(req,res){
 app.get(url_root+'*/filter.txt',function(req,res){
   let ps = req.params['0'];
   let pp = pu.pathParser(ps);
-  let [sports,dports,lph] = phwalk(pp);
+  let [sources,dests,lph] = phwalk(pp);
   res.type("text/plain")
-  res.send(tsf.tsDisplayFilter(sports,dports)+"\n");
+  res.send(tsf.tsDisplayFilter(sources,dests)+"\n");
 });
 app.get(url_root+'filter.txt',function(req,res){
   res.type("text/plain")
@@ -175,9 +175,9 @@ app.get(url_root+'pcap.json',(req,res)=>res.json(packets));
 app.get(url_root+'*/pcap.json',function(req,res){
   let ps = req.params['0'];
   let pp = pu.pathParser(ps);
-  let [sports,dports,lph] = phwalk(pp);
-  res.json(packets.filter(r=>sports.has(r[2]) &&
-                          dports.has(r[3])))
+  let [sources,dests,lph] = phwalk(pp);
+  res.json(packets.filter(r=>sources.has(r[2]) &&
+                          dests.has(r[3])))
 });
 
 console.log("Reading pcap data");
