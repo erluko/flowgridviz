@@ -51,11 +51,14 @@ let phwalk = function(pth){
 
   let bcount = phr.nethasher.getBucketCount();
   let lph = ph0;
-
+  let stype = 'p';
+  let dtype = 'p';
   let mwk = [];
   for(let [[xt,yt],idx] of pth) {
     //xt and yt are either 'p' meaning port of 'i' meaning ip
     //ignoring xt and yt for now. Treating both as 'p'
+    stype = yt;
+    dtype = xt;
     if(idx != null){
       mwk.push(xt+yt+idx);
       [sources,dests,lph] = mwcache
@@ -73,13 +76,14 @@ let phwalk = function(pth){
       dpmax = undefined;
     }
   }
-  return [sources,dests,lph];
+  return [sources,dests,stype,dtype,lph];
 };
 
 let mwalk = function(pth){
-  let [sources,dests,lph] = phwalk(pth);
-  return me.getMatrix(lph,packets.filter(r=>sources.has(r[2]) &&
-                                          dests.has(r[3])));
+  let [sources,dests,stype,dtype,lph] = phwalk(pth);
+  //FIXME: change [2] [3] to something based on stype/dtype
+  return me.getMatrix(lph,stype,dtype,packets.filter(r=>sources.has(r[2]) &&
+                                                     dests.has(r[3])));
 }
 
 
@@ -164,9 +168,9 @@ app.get(url_root+'*/pmatrix.js',function(req,res){
 app.get(url_root+'*/filter.txt',function(req,res){
   let ps = req.params['0'];
   let pp = pu.pathParser(ps);
-  let [sources,dests,lph] = phwalk(pp);
+  let [sources,dests,stype,dtype,lph] = phwalk(pp);
   res.type("text/plain")
-  res.send(tsf.tsDisplayFilter(sources,dests)+"\n");
+  res.send(tsf.tsDisplayFilter(sources,dests,stype,dtype)+"\n");
 });
 app.get(url_root+'filter.txt',function(req,res){
   res.type("text/plain")
@@ -178,7 +182,8 @@ app.get(url_root+'pcap.json',(req,res)=>res.json(packets));
 app.get(url_root+'*/pcap.json',function(req,res){
   let ps = req.params['0'];
   let pp = pu.pathParser(ps);
-  let [sources,dests,lph] = phwalk(pp);
+  let [sources,dests,stype,dtype,lph] = phwalk(pp);
+  //FIXME: change [2] [3] to something based on stype/dtype
   res.json(packets.filter(r=>sources.has(r[2]) &&
                           dests.has(r[3])))
 });
@@ -195,7 +200,9 @@ let dots = setInterval(()=>console.log("."), 5000);
     let elapsedSecs = ((readyTime - startTime)/1000).toFixed(3);
     console.log(`Loaded pcap in ${elapsedSecs} seconds.`);
     packets = p;
-    matrix = me.getMatrix(ph0,packets);
+    let stype = 'p';
+    let dtype = 'p';
+    matrix = me.getMatrix(ph0,stype,dtype,packets);
     var server = http.createServer(app);
     server.on("error", e =>console.log(`Unable to start server: ${e}`));
     server.listen(port, ip, () => console.log(`Packet capture visualization app listening on http://${ip}:${port}${url_root}!`));

@@ -4,7 +4,7 @@
 
   var root = inNode?module.exports:(this.filtermaker={});
   //FIXME: assumes sources and dests are ports
-  root.tsDisplayFilter = function(sports,dports) {
+  root.tsDisplayFilter = function(sports,dports,stype,dtype) {
     sports = Array.from(sports);
     dports = Array.from(dports);
     return "(" +
