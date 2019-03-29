@@ -29,13 +29,13 @@
 
   let nethasher = function(config){
     this.config = config;
-    if(this.config.portmap instanceof Map) {
-      this.config.portmap = Array.from(this.config.portmap);
+    if(this.config.valuemap instanceof Map) {
+      this.config.valuemap = Array.from(this.config.valuemap);
     }
     // "known" is typically used for services loaded from
     //  /etc/services It maps port numbers to an ID other than
     //  the portnumber itself
-    let known =  new Map(config.portmap);
+    let known =  new Map(config.valuemap);
 
     //todo: re-evaluate the necessity of the sorting;
     //to be safe, order the portlist here
@@ -62,7 +62,7 @@
   nethasher.prototype = {
     serializeForPorts: function(portSet){
       return {only: this.only,
-              portmap: Array.from(this.known).filter(([p,i])=>portSet.has(p))}
+              valuemap: Array.from(this.known).filter(([p,i])=>portSet.has(p))}
     },
     getBucketCount: nethasher.getBucketCount,
     toString: function(){

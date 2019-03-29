@@ -10,7 +10,7 @@ const pu = require('./js/pathutil');
 const tsf = require('./js/filtermaker');
 const slist = require('./lib/servicelist.js');
 const phr = require('./js/nethasher.js');
-let ph0 = new phr.nethasher({portmap: slist.servicemap,
+let ph0 = new phr.nethasher({valuemap: slist.servicemap,
                              only:false});
 let packets = null;
 let matrix = null;
