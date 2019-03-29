@@ -10,6 +10,9 @@ const pu = require('./js/pathutil');
 const tsf = require('./js/filtermaker');
 const slist = require('./lib/servicelist.js');
 const phr = require('./js/nethasher.js');
+
+//FIXME: Using servicemap here will affect ip hashing. Is there some
+//       way to distinguish ports from ips for just the first view?
 let ph0 = new phr.nethasher({valuemap: slist.servicemap,
                              only:false});
 let packets = null;
