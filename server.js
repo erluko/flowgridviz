@@ -54,8 +54,7 @@ let phwalk = function(pth){
   let matrix;
   //todo: use stype/dtype instead of xt,yt -- they are reversed
   for(let [[stype,dtype],idx] of pth) {
-    //xt and yt are either 'p' meaning port of 'i' meaning ip
-    //ignoring xt and yt for now. Treating both as 'p'
+    //stype and dtype are either 'p' meaning port of 'i' meaning ip
     matrix = me.getMatrix(lph,stype,dtype,pkts)
     let sources = new Set(matrix.sources);
     let dests = new Set(matrix.dests);
