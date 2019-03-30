@@ -46,28 +46,22 @@ let phwalk = function(pth){
   }
   //FIXME: this applies the service list to IPs:
   let lph = ph0;
-
-  //FIXME: this is a mess:
-  let stype = pth[0][0][0];
-  let dtype = pth[0][0][1];
-
-  //FIXME: switching between stype and dtypes breaks because the loop
-  //       reuses the source/dest sets
-
-  let matrix = mwcache //bad idea to reuse mwcache here
-      .getOrSet(('-'+stype+dtype),function(){
-        return me.getMatrix(lph,stype,dtype,packets)
-      });
-  let sources = new Set(matrix.sources);
-  let dests = new Set(matrix.dests);
+  let pkts = packets;
 
   let bcount = phr.nethasher.getBucketCount();
   let mwk = [];
+
+  let matrix, sources,dests,stype,dtype;
+  //todo: use stype/dtype instead of xt,yt -- they are reversed
   for(let [[xt,yt],idx] of pth) {
     //xt and yt are either 'p' meaning port of 'i' meaning ip
     //ignoring xt and yt for now. Treating both as 'p'
     stype = yt;
     dtype = xt;
+    matrix = me.getMatrix(lph,stype,dtype,pkts)
+    sources = new Set(matrix.sources);
+    dests = new Set(matrix.dests);
+    let idxs = me.idxsForTypes(stype,dtype);
     if(idx != null){
       mwk.push(''+xt+yt+idx);
       [sources,dests,lph] = mwcache
@@ -77,13 +71,17 @@ let phwalk = function(pth){
           let sps = lph.backhash(y,sources);
           let dps = lph.backhash(x,dests);
           return [new Set(sps),
-                  new Set(dps),
+                  new Set(dps),//todo: change portlist to some other name
                   new phr.nethasher({portlist: sps.concat(dps),
                                       only: true})]
         });
+      pkts = pkts.filter(r=>sources.has(r[idxs[0]]) &&
+                         dests.has(r[idxs[1]]));
+
     }
   }
-  return [sources,dests,stype,dtype,lph];
+  //TODO: make callers use the matrix argument
+  return [sources,dests,stype,dtype,lph,matrix];
 };
 
 let mwalk = function(pth){

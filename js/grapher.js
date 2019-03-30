@@ -157,6 +157,7 @@
        the selected index.
      */
     let subgraphURL = function(idx){
+      //FIXME: don't make next view 'pp' by default. Use the current s&dtypes.
       let newpath='./'+idx+'/pp/index.html'
       if(window.location.pathname.startsWith('/index.html')){
         newpath = 'pp/'+newpath;
