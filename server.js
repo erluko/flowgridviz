@@ -51,6 +51,7 @@ let phwalk = function(pth){
   let bcount = phr.nethasher.getBucketCount();
   let mwk = [];
 
+  //todo: change var list to only include things used out
   let matrix, sources,dests,stype,dtype;
   //todo: use stype/dtype instead of xt,yt -- they are reversed
   for(let [[xt,yt],idx] of pth) {
@@ -80,15 +81,12 @@ let phwalk = function(pth){
 
     }
   }
-  //TODO: make callers use the matrix argument
-  return [sources,dests,stype,dtype,lph,matrix];
+  return [matrix,pkts];
 };
 
 let mwalk = function(pth){
-  let [sources,dests,stype,dtype,lph] = phwalk(pth);
-  let idxs = me.idxsForTypes(stype,dtype);
-  return me.getMatrix(lph,stype,dtype,packets.filter(r=>sources.has(r[idxs[0]]) &&
-                                                     dests.has(r[idxs[1]])));
+  let [matrix,pkts] = phwalk(pth);
+  return matrix;
 }
 
 
@@ -173,9 +171,12 @@ app.get(url_root+'*/pmatrix.js',function(req,res){
 app.get(url_root+'*/filter.txt',function(req,res){
   let ps = req.params['0'];
   let pp = pu.pathParser(ps);
-  let [sources,dests,stype,dtype,lph] = phwalk(pp);
+  let matrix = mwalk(pp);
   res.type("text/plain")
-  res.send(tsf.tsDisplayFilter(sources,dests,stype,dtype)+"\n");
+  res.send(tsf.tsDisplayFilter(matrix.sources,
+                               matrix.dests,
+                               matrix.stype,
+                               matrix.dtype)+"\n");
 });
 app.get(url_root+'filter.txt',function(req,res){
   res.type("text/plain")
@@ -187,10 +188,8 @@ app.get(url_root+'pcap.json',(req,res)=>res.json(packets));
 app.get(url_root+'*/pcap.json',function(req,res){
   let ps = req.params['0'];
   let pp = pu.pathParser(ps);
-  let [sources,dests,stype,dtype,lph] = phwalk(pp);
-  let idxs = me.idxsForTypes(stype,dtype);
-  res.json(packets.filter(r=>sources.has(r[idxs[0]]) &&
-                          dests.has(r[idxs[1]])))
+  let [matrix,pkts] = phwalk(pp);
+  res.json(pkts);
 });
 
 console.log("Reading pcap data");
