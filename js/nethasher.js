@@ -38,8 +38,8 @@
     let known =  new Map(config.valuemap);
 
     //todo: re-evaluate the necessity of the sorting;
-    //to be safe, order the portlist here
-    let pl = Array.from((config.portlist || [] ));
+    //to be safe, order the inputvalues here
+    let pl = Array.from((config.inputvalues || [] ));
     pl.sort((a,b)=>a-b);
     pl.forEach((p,i) => known.set(p,i));
 

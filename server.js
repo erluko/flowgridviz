@@ -68,8 +68,8 @@ let phwalk = function(pth){
           let sps = lph.backhash(y,sources);
           let dps = lph.backhash(x,dests);
           return [new Set(sps),
-                  new Set(dps),//todo: change portlist to some other name
-                  new phr.nethasher({portlist: sps.concat(dps),
+                  new Set(dps),
+                  new phr.nethasher({inputvalues: sps.concat(dps),
                                       only: true})]
         });
       pkts = pkts.filter(r=>sources.has(r[idxs[0]]) &&
