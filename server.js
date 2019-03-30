@@ -51,6 +51,9 @@ let phwalk = function(pth){
   let stype = pth[0][0][0];
   let dtype = pth[0][0][1];
 
+  //FIXME: switching between stype and dtypes breaks because the loop
+  //       reuses the source/dest sets
+
   let matrix = mwcache //bad idea to reuse mwcache here
       .getOrSet(('-'+stype+dtype),function(){
         return me.getMatrix(lph,stype,dtype,packets)
