@@ -15,8 +15,8 @@ const phr = require('./js/nethasher.js');
 //       way to distinguish ports from ips for just the first view?
 let ph0 = new phr.nethasher({valuemap: slist.servicemap,
                              only:false});
+let pth0 = pu.pathParser("/pp/");
 let packets = null;
-let matrix = null;
 
 LRU.prototype.getOrSet = function(k,f){
   let v = this.get(k);
@@ -41,18 +41,26 @@ if(!url_root.startsWith("/")) url_root='/'+url_root;
 let mwcache = new LRU(80);
 
 let phwalk = function(pth){
-  if(typeof matrix === 'undefined'){
-    return [];
+  if(pth == null || pth.length <1){
+    pth = pth0;
   }
+  //FIXME: this applies the service list to IPs:
+  let lph = ph0;
+
+  //FIXME: this is a mess:
+  let stype = pth[0][0][0];
+  let dtype = pth[0][0][1];
+
+  let matrix = mwcache //bad idea to reuse mwcache here
+      .getOrSet(('-'+stype+dtype),function(){
+        return me.getMatrix(lph,stype,dtype,packets)
+      });
   let sources = new Set(matrix.sources);
   let spmax = matrix.sources[matrix.sources.length-1];
   let dests = new Set(matrix.dests);
   let dpmax = matrix.dests[matrix.dests.length-1];
 
   let bcount = phr.nethasher.getBucketCount();
-  let lph = ph0;
-  let stype = 'p';
-  let dtype = 'p';
   let mwk = [];
   for(let [[xt,yt],idx] of pth) {
     //xt and yt are either 'p' meaning port of 'i' meaning ip
@@ -60,7 +68,7 @@ let phwalk = function(pth){
     stype = yt;
     dtype = xt;
     if(idx != null){
-      mwk.push(xt+yt+idx);
+      mwk.push(''+xt+yt+idx);
       [sources,dests,lph] = mwcache
         .getOrSet(JSON.stringify(mwk), function(){
           let x = idx % bcount;
@@ -81,9 +89,9 @@ let phwalk = function(pth){
 
 let mwalk = function(pth){
   let [sources,dests,stype,dtype,lph] = phwalk(pth);
-  //FIXME: change [2] [3] to something based on stype/dtype
-  return me.getMatrix(lph,stype,dtype,packets.filter(r=>sources.has(r[2]) &&
-                                                     dests.has(r[3])));
+  let idxs = me.idxsForTypes(stype,dtype);
+  return me.getMatrix(lph,stype,dtype,packets.filter(r=>sources.has(r[idxs[0]]) &&
+                                                     dests.has(r[idxs[1]])));
 }
 
 
@@ -183,9 +191,9 @@ app.get(url_root+'*/pcap.json',function(req,res){
   let ps = req.params['0'];
   let pp = pu.pathParser(ps);
   let [sources,dests,stype,dtype,lph] = phwalk(pp);
-  //FIXME: change [2] [3] to something based on stype/dtype
-  res.json(packets.filter(r=>sources.has(r[2]) &&
-                          dests.has(r[3])))
+  let idxs = me.idxsForTypes(stype,dtype);
+  res.json(packets.filter(r=>sources.has(r[idxs[0]]) &&
+                          dests.has(r[idxs[1]])))
 });
 
 console.log("Reading pcap data");
@@ -200,10 +208,8 @@ let dots = setInterval(()=>console.log("."), 5000);
     let elapsedSecs = ((readyTime - startTime)/1000).toFixed(3);
     console.log(`Loaded pcap in ${elapsedSecs} seconds.`);
     packets = p;
-    let stype = 'p';
-    let dtype = 'p';
-    matrix = me.getMatrix(ph0,stype,dtype,packets);
     var server = http.createServer(app);
+    phwalk(pth0) //initialize matrix cache
     server.on("error", e =>console.log(`Unable to start server: ${e}`));
     server.listen(port, ip, () => console.log(`Packet capture visualization app listening on http://${ip}:${port}${url_root}!`));
   }));

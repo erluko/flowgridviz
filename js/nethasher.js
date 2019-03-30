@@ -86,7 +86,7 @@
       }
 
       if(typeof max == 'undefined'){
-        max = 2**16;
+        max = 2**32;//2**16;
         list = list.filter(x=>x<=max);
       }
 
