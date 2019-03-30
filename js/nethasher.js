@@ -72,7 +72,46 @@
       return this.config;
     },
     hash: phash,
-    backhash: function(h,max){
+    backhash: function(h, acceptableSet){
+      /* There are two approaches possible for backhash:
+         1. The origninal approach was to generate a list of all
+            values (up to a limit) that hash to the target "h".
+            This worked fine for port numbers (max=2**16), but
+            failed for IPs (max=2**32).
+         2. The second approach is to start with a set of values
+            and filter them by their hash outcome being equal
+            to "h". This approach fits how backhash has been used
+            so far; all call sites filtered the backhash output
+            using a set membership test.
+      */
+
+      let list = (this.knownback.has(h)?
+                  Array.from(this.knownback.get(h)):
+                  []).filter(v=>acceptableSet.has(v));
+
+      if(! this.only){
+        for(v of acceptableSet){
+          if((!this.known.has(v)) && this.hash(v) == h){
+            list.push(v);
+          }
+        }
+      }
+
+
+      /* This is a much simpler version that should be evaluated for performance:
+      let list = [];
+
+      for(v of acceptableSet){
+        if(this.hash(v) == h){
+          list.push(v);
+        }
+      }*/
+      list.sort((a,b)=>(a-b)); //it would be faster to do insertion correctly
+      return list;
+    },
+    //TODO: convert the old backhash function into something usable with
+    //      the iteration protocol
+    old_backhash: function(h,max){
       let list = (this.knownback.has(h)?
                   Array.from(this.knownback.get(h)):
                   []);

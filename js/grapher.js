@@ -8,9 +8,7 @@
 
   pdata = importData('pmatrix');
   let sources = new Set(pdata.sources);
-  let spmax = pdata.sources[pdata.sources.length-1];
   let dests = new Set(pdata.dests);
-  let dpmax = pdata.dests[pdata.dests.length-1];
   let plotrix = pdata.matrix;
 
   let phr = inNode?require('nethasher.js'):{nethasher: root.nethasher};
@@ -170,8 +168,8 @@
     let portsForIndex = function(idx){
       let x = idx % bcount;
       let y = Math.floor(idx / bcount);
-      let sps = ph.backhash(y,spmax).filter(p=>sources.has(p));
-      let dps = ph.backhash(x,dpmax).filter(p=>dests.has(p));
+      let sps = ph.backhash(y,sources);
+      let dps = ph.backhash(x,dests);
       return [sps,dps];
     }
 

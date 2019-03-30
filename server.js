@@ -56,9 +56,7 @@ let phwalk = function(pth){
         return me.getMatrix(lph,stype,dtype,packets)
       });
   let sources = new Set(matrix.sources);
-  let spmax = matrix.sources[matrix.sources.length-1];
   let dests = new Set(matrix.dests);
-  let dpmax = matrix.dests[matrix.dests.length-1];
 
   let bcount = phr.nethasher.getBucketCount();
   let mwk = [];
@@ -73,15 +71,13 @@ let phwalk = function(pth){
         .getOrSet(JSON.stringify(mwk), function(){
           let x = idx % bcount;
           let y = Math.floor(idx / bcount);
-          let sps = lph.backhash(y,spmax).filter(p=>sources.has(p));
-          let dps = lph.backhash(x,dpmax).filter(p=>dests.has(p));
+          let sps = lph.backhash(y,sources);
+          let dps = lph.backhash(x,dests);
           return [new Set(sps),
                   new Set(dps),
                   new phr.nethasher({portlist: sps.concat(dps),
                                       only: true})]
         });
-      spmax = undefined;
-      dpmax = undefined;
     }
   }
   return [sources,dests,stype,dtype,lph];
