@@ -51,20 +51,17 @@ let phwalk = function(pth){
   let bcount = phr.nethasher.getBucketCount();
   let mwk = [];
 
-  //todo: change var list to only include things used out
-  let matrix, sources,dests,stype,dtype;
+  let matrix;
   //todo: use stype/dtype instead of xt,yt -- they are reversed
-  for(let [[xt,yt],idx] of pth) {
+  for(let [[stype,dtype],idx] of pth) {
     //xt and yt are either 'p' meaning port of 'i' meaning ip
     //ignoring xt and yt for now. Treating both as 'p'
-    stype = yt;
-    dtype = xt;
     matrix = me.getMatrix(lph,stype,dtype,pkts)
-    sources = new Set(matrix.sources);
-    dests = new Set(matrix.dests);
+    let sources = new Set(matrix.sources);
+    let dests = new Set(matrix.dests);
     let idxs = me.idxsForTypes(stype,dtype);
     if(idx != null){
-      mwk.push(''+xt+yt+idx);
+      mwk.push(''+stype+dtype+idx);
       [sources,dests,lph] = mwcache
         .getOrSet(JSON.stringify(mwk), function(){
           let x = idx % bcount;
