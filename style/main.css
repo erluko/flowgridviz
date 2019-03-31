@@ -31,6 +31,16 @@ div.port-tip {
     overflow: scroll;
 }
 
+.types a {
+    display: block;
+    float: left;
+    width: 24px;
+    height: 24px;
+    text-align: center;
+}
+
+.ip_link { clear: left}
+
 text.x-axis-label {
     dominant-baseline: hanging;
     text-anchor: middle;

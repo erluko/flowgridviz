@@ -66,6 +66,15 @@
       .attr("href",(d,i,a)=>numparts-i>1?dots.slice(i).join('')+'index.html':null)
       .text(v=>v instanceof Array?v.join(''):v)
 
+    body.select("div.types")
+      .selectAll("a.type")
+      .data("pp pi ip ii".split(" "))
+      .enter()
+      .append("a")
+      .attr("href",d=>'../'+d+'/index.html')
+      .attr("class",d=>d+"_link")
+      .text(d=>d)
+
     let svgHolder = body.select("div.graph");
 
     let svgHolderWidth;
