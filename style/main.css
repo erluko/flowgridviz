@@ -31,15 +31,25 @@ div.port-tip {
     overflow: scroll;
 }
 
+div.types {
+    padding-top: 10px;
+}
 .types a {
     display: block;
     float: left;
     width: 24px;
     height: 24px;
     text-align: center;
+    font-family: monospace;
 }
 
-.ip_link { clear: left}
+.pp_link { background: lightblue}
+.pi_link { background: greenyellow}
+.ip_link { clear: left;
+           background: yellowgreen }
+.ii_link { background: lightgreen}
+
+a.types_selected { font-weight: bold }
 
 text.x-axis-label {
     dominant-baseline: hanging;
