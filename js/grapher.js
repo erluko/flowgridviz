@@ -11,6 +11,12 @@
   let dests = new Set(pdata.dests);
   let plotrix = pdata.matrix;
   let type_labels = {p: 'Port',i: "IP"};
+  let type_display = {p: x=>x,
+                      i: x=> ((x >> 24 & 0x0FF)+'.'+
+                              (x >> 16 & 0x0FF)+'.'+
+                              (x >>  8 & 0x0FF)+'.'+
+                              (x       & 0x0FF))};
+
 
   let phr = inNode?require('nethasher.js'):{nethasher: root.nethasher};
   let bcount = phr.nethasher.getBucketCount();
@@ -212,15 +218,15 @@
 
     function showTotals(){
       tip.count.text("Total Count: "+totalPackets)
-      tip.source.text("from: "+pdata.sources.join(' '));
-      tip.dest.text("to: "+pdata.dests.join(' '));
+      tip.source.text("from: "+pdata.sources.map(type_display[pdata.stype]).join(' '));
+      tip.dest.text("to: "+pdata.dests.map(type_display[pdata.dtype]).join(' '));
     }
     function handleHover(mode,[idx,c],index,nodes){
       if(mode){
         let [sps,dps] = portsForIndex(+idx);
         tip.count.text("count: "+c)
-        tip.source.text("from: "+sps.join(' '));
-        tip.dest.text("to: "+dps.join(' '));
+        tip.source.text("from: "+sps.map(type_display[pdata.stype]).join(' '));
+        tip.dest.text("to: "+dps.map(type_display[pdata.dtype]).join(' '));
       } else {
         showTotals()
       }
