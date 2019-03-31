@@ -4,13 +4,22 @@
 
   var root = inNode?module.exports:(this.filtermaker={});
   //FIXME: assumes sources and dests are ports
-  root.tsDisplayFilter = function(sports,dports,stype,dtype) {
-    sports = Array.from(sports);
-    dports = Array.from(dports);
+  root.tsDisplayFilter = function(sources,dests,stype,dtype) {
+    sources = Array.from(sources);
+    dests = Array.from(dests);
+    'ip.src in {147.32.84.180 60.190.222.139}'
+    let typefns = {p: dir => function(ps){
+      let pss = ps.join(' ');
+      return 'tcp.'+dir+'port in {'+pss+'} or udp.'+dir+'port in {'+pss+'}';
+    },
+                   i: dir => is => 'ip.'+dir+' in {'+is.join(' ')+'}'
+                  }
+    let sfn = typefns[stype]('src');
+    let dfn = typefns[dtype]('dst');
     return "(" +
-      sports.map(p=>'tcp.srcport == '+p + ' or udp.srcport == ' +p ).join(' or ') +
+      sfn(sources) +
       ') and (' +
-      dports.map(p=>'tcp.dstport == '+p + ' or udp.dstport == ' +p ).join(' or ') +
+      dfn(dests) +
       ')';
   }
 })()

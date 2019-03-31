@@ -202,7 +202,10 @@
     function toggleFilter(){
       let showNow = tfilter.classed("hidden");
       if(tfilter.text() == ''){
-        tfilter.text(top_level?'tcp or udp':filtermaker.tsDisplayFilter(pdata.sources,pdata.dests));
+        tfilter.text(top_level?'tcp or udp':filtermaker.tsDisplayFilter(
+          pdata.sources.map(type_display[pdata.stype]),
+          pdata.dests.map(type_display[pdata.dtype]),
+          pdata.stype,pdata.dtype));
       }
       tsa.text(showNow?"Hide filter":"Show filter");
       tfilter.classed("hidden",!showNow);
