@@ -12,6 +12,7 @@ const slist = require('./lib/servicelist.js');
 const phr = require('./js/nethasher.js');
 
 let ph0 = new phr.nethasher();
+let ph0_servs = new phr.nethasher(slist.servicemap);
 let pth0 = pu.pathParser("/pp/");
 let packets = null;
 
@@ -41,8 +42,11 @@ let phwalk = function(pth){
   if(pth == null || pth.length <1){
     pth = pth0;
   }
-  //FIXME: this applies the service list to IPs:
-  let lph = ph0;
+  //Apply the service list only at top level and only if showing ports
+  //on at least one axis:
+  let lph = (pth.length==1 &&
+             (pth[0][0][0]=='p' ||
+              pth[0][0][1]=='p'))?ph0_servs:ph0;
   let pkts = packets;
 
   let bcount = phr.nethasher.getBucketCount();
