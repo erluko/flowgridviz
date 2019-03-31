@@ -15,134 +15,54 @@
 
   let simphash = function(p) {
     return ((p + lpm) * bpm) % bcount;
-    // == ((p*bpm % bcount) +  lpm * bpm) % bcount
-    // == ((p % bcount * bpm) +  lpm * bpm) % bcount
   }
 
   let phash = function(p){
-    if(this.known.has(p)){
-      return (this.known.get(p) + bpm) % bcount;
-    } else {
-      return simphash(p);
-    }
+    return simphash(this.valuemap.get(p) || p);
   }
 
-  let nethasher = function(config){
-    this.config = config;
-    if(this.config.valuemap instanceof Map) {
-      this.config.valuemap = Array.from(this.config.valuemap);
+  let nethasher = function(valuemap){
+    if(typeof valuemap === 'undefined') {
+      valuemap = [];
     }
-    // "known" is typically used for services loaded from
-    //  /etc/services It maps port numbers to an ID other than
-    //  the portnumber itself
-    let known =  new Map(config.valuemap);
 
-    //todo: re-evaluate the necessity of the sorting;
-    //to be safe, order the inputvalues here
-    let pl = Array.from((config.inputvalues || [] ));
-    pl.sort((a,b)=>a-b);
-    pl.forEach((p,i) => known.set(p,i));
-
-    let knownback = new Map();
-    // the use of 'call' bellow is a major hack
-    known.forEach(function(v,k){
-      let h = phash.call({known: known},k);
-      knownback.has(h)?
-          knownback.get(h).push(k):
-        knownback.set(h,[k])
-    });
-    // since knownback will enforce only we don't need:
-    // thisonly = new Set(known.keys())
-    this.only = config.only;
-    this.known = known;
-    this.knownback = knownback;
+    if(!(valuemap instanceof Map)) {
+      valuemap = new Map(valuemap);
+    }
+    this.valuemap = valuemap;
   }
 
-  nethasher.getBucketCount = _ => bcount;
+  nethasher.getBucketCount= _ => bcount;
+
   nethasher.prototype = {
-    serializeForPorts: function(portSet){
-      return {only: this.only,
-              valuemap: Array.from(this.known).filter(([p,i])=>portSet.has(p))}
+    serializeForValues: function(valueSet){
+      let vm = [];
+      for(v of valueSet){
+        if(this.valuemap.has(v)){
+          vm.push([v,this.valuemap.get(v)]);
+        } else {
+          let h = simphash(v);
+          let bh = (h * bdp % bcount + bcount - lpm) % bcount;
+          vm.push([v,bh]);
+        }
+      }
+      return vm;
     },
     getBucketCount: nethasher.getBucketCount,
     toString: function(){
       return JSON.stringify(
         this.toJSON())},
     toJSON: function(){
-      return this.config;
+      return this.valuemap;
     },
     hash: phash,
     backhash: function(h, acceptableSet){
-      /* There are two approaches possible for backhash:
-         1. The origninal approach was to generate a list of all
-            values (up to a limit) that hash to the target "h".
-            This worked fine for port numbers (max=2**16), but
-            failed for IPs (max=2**32).
-         2. The second approach is to start with a set of values
-            and filter them by their hash outcome being equal
-            to "h". This approach fits how backhash has been used
-            so far; all call sites filtered the backhash output
-            using a set membership test.
-      */
-
-      let list = (this.knownback.has(h)?
-                  Array.from(this.knownback.get(h)):
-                  []).filter(v=>acceptableSet.has(v));
-
-      if(! this.only){
-        for(v of acceptableSet){
-          if((!this.known.has(v)) && this.hash(v) == h){
-            list.push(v);
-          }
-        }
-      }
-
-
-      /* This is a much simpler version that should be evaluated for performance:
       let list = [];
-
       for(v of acceptableSet){
         if(this.hash(v) == h){
           list.push(v);
         }
-      }*/
-      list.sort((a,b)=>(a-b)); //it would be faster to do insertion correctly
-      return list;
-    },
-    //TODO: convert the old backhash function into something usable with
-    //      the iteration protocol
-    old_backhash: function(h,max){
-      let list = (this.knownback.has(h)?
-                  Array.from(this.knownback.get(h)):
-                  []);
-
-      if(typeof max !== 'undefined'){
-        list = list.filter(x=>x<=max);
       }
-
-      if(this.only){
-        return list;
-      }
-
-      if(typeof max == 'undefined'){
-        max = 2**32;//2**16;
-        list = list.filter(x=>x<=max);
-      }
-
-      //P == h * bdp % bcount + bcount - lpm |!known(P)
-      let start = (h * bdp % bcount + bcount - lpm) % bcount;
-
-      if(start > max){
-        return list;
-      }
-
-      for(p=start;p<=max;p+=bcount){
-        if(!this.known.has(p)){
-          list.push(p);
-        }
-      }
-
-      list.sort((a,b)=>(a-b)); //it would be faster to do insertion correctly
       return list;
     },
   }
