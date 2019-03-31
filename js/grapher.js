@@ -10,6 +10,7 @@
   let sources = new Set(pdata.sources);
   let dests = new Set(pdata.dests);
   let plotrix = pdata.matrix;
+  let type_labels = {p: 'Port',i: "IP"};
 
   let phr = inNode?require('nethasher.js'):{nethasher: root.nethasher};
   let bcount = phr.nethasher.getBucketCount();
@@ -119,14 +120,14 @@
       .classed("y-axis-label",true)
       .append("text")
       .call(makeVertical,PADDINGS.left-8,HEIGHT/2)
-      .text("Source Port")
+      .text("Source "+type_labels[pdata.stype])
 
     svg.append("g")
       .classed("x-axis-label",true)
       .append("text")
       .attr("x",WIDTH/2)
       .attr("y",HEIGHT-PADDINGS.bottom+8)
-      .text("Destination Port")
+      .text("Destination "+type_labels[pdata.dtype])
 
     let squareSideMax = callxy(xy=>(SIZES[xy]-PADDINGS[xy])/
                                (bcount+1));
