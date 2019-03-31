@@ -182,8 +182,7 @@
       return newpath;
     }
 
-    //todo: allow for src/dest to each be either ip or  port
-    let portsForIndex = function(idx){
+    let valuesForIndex = function(idx){
       let x = idx % bcount;
       let y = Math.floor(idx / bcount);
       let sps = ph.backhash(y,sources);
@@ -228,7 +227,7 @@
     }
     function handleHover(mode,[idx,c],index,nodes){
       if(mode){
-        let [sps,dps] = portsForIndex(+idx);
+        let [sps,dps] = valuesForIndex(+idx);
         tip.count.text("count: "+c)
         tip.source.text("from: "+sps.map(type_display[pdata.stype]).join(' '));
         tip.dest.text("to: "+dps.map(type_display[pdata.dtype]).join(' '));
