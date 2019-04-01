@@ -14,7 +14,7 @@
   let bdp = Array.from({length:bcount},(x,i)=>(bpm*i%bcount==1?i:0)).filter(x=>x)[0];
 
   let simphash = function(p) {
-    return ((p + lpm) * bpm) % bcount;
+    return ((p>>>0 + lpm) * bpm) % bcount;
   }
 
   let phash = function(p){
