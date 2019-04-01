@@ -44,9 +44,8 @@ let phwalk = function(pth){
   }
   //Apply the service list only at top level and only if showing ports
   //on at least one axis:
-  let lph = (pth.length==1 &&
-             (pth[0][0][0]=='p' ||
-              pth[0][0][1]=='p'))?ph0_servs:ph0;
+  let lph = (pth[0][0][0]=='p' ||
+             pth[0][0][1]=='p')?ph0_servs:ph0;
   let pkts = packets;
 
   let bcount = phr.nethasher.getBucketCount();
