@@ -12,10 +12,10 @@
   let plotrix = pdata.matrix;
   let type_labels = {p: 'Port',i: "IP"};
   let type_display = {p: x=>x,
-                      i: x=> ((x >> 24 & 0x0FF)+'.'+
-                              (x >> 16 & 0x0FF)+'.'+
-                              (x >>  8 & 0x0FF)+'.'+
-                              (x       & 0x0FF))};
+                      i: x=> ((x >>> 24 & 0x0FF)+'.'+
+                              (x >>> 16 & 0x0FF)+'.'+
+                              (x >>>  8 & 0x0FF)+'.'+
+                              (x >>>  0 & 0x0FF))};
 
 
   let phr = inNode?require('nethasher.js'):{nethasher: root.nethasher};
