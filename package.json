@@ -7,7 +7,7 @@
     "listen_ip": "127.0.0.1",
     "port": "8080",
     "url_root": "/",
-    "pcap_file": "~/Downloads/ISCX_Botnet-Training.pcap",
+    "labeled_flows_file": "input/flows.gz",
     "num_packets": "all",
     "services_file": "/etc/services"
   },

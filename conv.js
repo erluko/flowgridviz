@@ -1,11 +1,25 @@
 #!/usr/bin/env node
 
-var readline = require('readline');
+let readline = require('readline');
+let fs = require('fs');
+const zlib = require('zlib');
 
+let input = process.stdin;
 
-let cols = ['Src IP','Dst IP','Src Port','Dst Port','Label','Flow ID']
+if(process.argv.length>=3){
+  let ifname = process.argv[2];
+  if(ifname != '-'){
+    let gzipped = ifname.endsWith('.gz');
+    let rs = fs.createReadStream(ifname);
+    input = gzipped?rs.pipe(zlib.createGunzip()):rs
+  }
+}
+
+let output = process.stdout; //todo eventually add gzipped output support
+
+let cols = ['Src IP','Dst IP','Src Port','Dst Port','Tot Fwd Pkts','Label','Flow ID']
 let rl = readline.createInterface({
-  input: process.stdin
+  input: input
 });
 let colidx;
 let headers = null;
@@ -14,13 +28,12 @@ rl.on('line', function(line){
   if(headers == null){
     headers = new Map(parts.map((k,i)=>[k,i]));
     colidx = cols.map(k=>headers.get(k));
-    console.log(colidx);
   } else {
     let comma = '';
     for(let i of colidx){
-      process.stdout.write(comma+parts[i]);
+      output.write(comma+parts[i]);
       comma = ',';
     }
-    process.stdout.write("\n");
+    output.write("\n");
   }
 })
