@@ -19,7 +19,7 @@ out/%.js: templates/jsonwrapper.js data/%.json
 
 
 data/flows-munged.gz:  $(npm_package_config_labeled_flows_file)
-	./conv.js $(npm_package_config_labeled_flows_file) | gzip -c > $@
+	./util/conv.js $(npm_package_config_labeled_flows_file) | gzip -c > $@
 
 data/services.json: $(npm_package_config_services_file)
 	tr '\t' ' ' < $< | sed -n -e 's/^\([^#][^ $(TAB)]\{1,\}\)[ $(TAB)]\{1,\}\([0-9]\{1,\}\)\/.*$$/[\2,"\1"],/p' | sort -unk1.2 > $@

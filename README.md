@@ -40,9 +40,14 @@ The input data format is:
     source_ip,dest_ip,source_port,dest_port[,weight,label,identifier]
 
 If not specified, the weight defaults to 1, the label and the
-identifier default to the empty string.
+identifier default to the empty string. The weight is used as a
+multiplier when constructing the visualization matrix. The labels are
+used to highlight particular cells in the matrix, and the identifier
+is an arbitrary string of your choice, useful for referencing
+particular packets or flows in the source data.
 
-For packet captures, this can be generated using `tshark` and `tr`:
+For packet captures, the appropriate format can be generated using
+`tshark` and `tr`:
 
      tshark -r YOUR_FILE.pcap -Tfields -E occurrence=f -Eseparator=/s \
      -e ip.src -e ip.dst -e udp.srcport -e udp.dstport -e tcp.srcport \
@@ -50,7 +55,8 @@ For packet captures, this can be generated using `tshark` and `tr`:
 
 For network flows, the output of `pcaplabel` or `cicflowmeter` can be
 used.  The output of either of these tools can be filtered down to the
-appropriate format using `utils/conf.js`.
+appropriate format using `util/conf.js`. That utility defaults to
+setting the weight to the value of `Tot Fwd Pkts`.
 
 
 Prerequisites
