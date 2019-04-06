@@ -15,6 +15,7 @@ let ph0 = new phr.nethasher();
 let ph0_servs = new phr.nethasher(slist.servicemap);
 let pth0 = pu.pathParser("/pp/");
 let packets = null;
+let labels  = null;
 
 LRU.prototype.getOrSet = function(k,f){
   let v = this.get(k);
@@ -149,6 +150,12 @@ app.get(url_root+'*/index.html',function(req,res){
       Array.from(document.getElementsByTagName("link")).forEach(reroot("href"));
     }});
 });
+app.get(url_root+'labels.json',function(req,res){
+  res.json(Array.from(labels));
+});
+app.get(url_root+'labels.js',function(req,res){
+  res.send(jsonWrap("labels",Array.from(labels)));
+});
 app.get(url_root+'*/matrix.json',function(req,res){
   let ps = req.params['0'];
   let pp = pu.pathParser(ps);
@@ -192,12 +199,13 @@ let dots = setInterval(()=>console.log("."), 5000);
 
 (require('./lib/pcsd')
  .fromFile('data/input.gz')
- .then(function(p){
+ .then(function([p,l]){
    clearInterval(dots);
    let readyTime = new Date().getTime();
    let elapsedSecs = ((readyTime - startTime)/1000).toFixed(3);
    console.log(`Loaded ${p.length} records in ${elapsedSecs} seconds.`);
    packets = p;
+   labels = l;
    var server = http.createServer(app);
    phwalk(pth0) //initialize matrix cache
    server.on("error", e =>console.log(`Unable to start server: ${e}`));
