@@ -1,17 +1,17 @@
 Interactive Packet Capture Visualization
 ========================================
 
-This is an early version of a packet capture or net flow explorer[1].  It
-maps the source ports and destination ports of tcp and udp traffic in
-a into a 53x53 grid. Each grid point represents the intersection of
-src and dest port or IP. The darkness of each point is based on the
-number of such pairs present in the input data.
+This is web-based packet capture or net flow explorer[1].  It maps the
+sources and destinations of tcp and udp traffic onto a 53x53 grid.
+Sources and destinations are either port numbers or IP addresses. Each
+grid point represents the intersection of source and destination. The
+darkness of each point is based on the number of such pairs present in
+the input data.
 
 The hashing function used to make the initial reduction down to the
 coordinate space is intentionally reversible so that the list of
 actually observed ports or IPs for a point can be calculated after the
-fact without having to store a complete bidirectional mapping in RAM
-on the client.
+fact without having to store a complete bidirectional mapping.
 
 When examining the totality of the traffic, the system applies its
 awareness of special ports that are part of the same protocol (e.g. 20
@@ -20,26 +20,24 @@ value. When investigating a subset of traffic, the list of applicable
 ports is intended to spread for best visual separation.
 
 For any given graph point, mousing over will reveal details of the
-traffic that might have led to that point being illuminated and
+traffic that *might* have led to that point being illuminated and
 clicking will cause the graph to redraw, including only elements that
-actually caused that point to illuminate.
-
+*actually* caused that point to illuminate.
 
 [*]: Not as currently implemented. This will be configurable.
-
 
 Input Data
 ==========
 
-Input data is read from a file on disk. pcapviz can read gzipped input
-data and this is highly recommended. The input data file location is
-configurable. See CONFIGURATION below for details.
+Input data is read from a file on disk at startup time. pcapviz can
+read gzipped input data and this is highly recommended. The input data
+file location is configurable. See CONFIGURATION below for details.
 
 The input data format is:
 
     source_ip,dest_ip,source_port,dest_port[,weight,label,identifier]
 
-If not specified, the weight defaults to 1, the label and the
+If not specified, the weight defaults to 1 and both the label and the
 identifier default to the empty string. The weight is used as a
 multiplier when constructing the visualization matrix. The labels are
 used to highlight particular cells in the matrix, and the identifier
@@ -54,7 +52,7 @@ For packet captures, the appropriate format can be generated using
      -e tcp.dstport 'tcp or udp' |tr -s ' ' , |gzip -c > data_file.gz
 
 For network flows, the output of `pcaplabel` or `cicflowmeter` can be
-used.  The output of either of these tools can be filtered down to the
+used.  The output of either of these tools can be converted to the
 appropriate format using `util/conf.js`. That utility defaults to
 setting the weight to the value of `Tot Fwd Pkts`.
 
@@ -62,13 +60,14 @@ setting the weight to the value of `Tot Fwd Pkts`.
 Prerequisites
 =============
 
-Installation requires an internet connection for the node.js
-prerequisite download. No connection is needed once `npm install` is
-complete.
+Installation requires an Internet connection for the node.js
+prerequisite download. No Internet connection is needed once `npm
+install` is complete.
 
 Presumes the presence of `make`, `tr`, `sed`, `sort`, `gzip`,
-`/etc/services`, and `node`. A project goal is to reduce these
-dependencies over time.
+`/etc/services`, and `node`. If reading from a pcap, `tshark` is
+required as well. A project goal is to reduce these dependencies over
+time.
 
 
 Installing and Running
@@ -80,8 +79,8 @@ Installing and Running
 
 Then go to the url displayed at the console.
 
-If you want a more robust setup, use nginx as a reverse proxy and pm2
-for process management, as described below.
+If you want a more robust setup, use `nginx` as a reverse proxy and
+`pm2` for process management, as described below.
 
 
 Configuration
