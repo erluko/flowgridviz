@@ -155,7 +155,8 @@
 
     let totalPackets = 0;
     let maxCount = 0;
-    plotrix.forEach(function ([i,v]) {
+    plotrix.forEach(function ([i,[v,l]]) {
+      //todo: do something with "l"
       maxCount = Math.max(maxCount,v);
       totalPackets += v;
     });
@@ -225,7 +226,8 @@
       tip.source.text("from: "+pdata.sources.map(type_display[pdata.stype]).join(' '));
       tip.dest.text("to: "+pdata.dests.map(type_display[pdata.dtype]).join(' '));
     }
-    function handleHover(mode,[idx,c],index,nodes){
+    function handleHover(mode,[idx,[c,l]],index,nodes){
+      //todo: do something with "l"
       if(mode){
         let [sps,dps] = valuesForIndex(+idx);
         tip.count.text("count: "+c)
@@ -255,9 +257,10 @@
       .select("rect")
       .attr("width",UNIT_SIZE.x*(gapf))
       .attr("height",UNIT_SIZE.y*(gapf))
-      .attr("x",([idx,v])=>scales.x((+idx) % bcount)+UNIT_SIZE.x*(gapf/2))
-      .attr("y",([idx,v])=>scales.y(Math.floor((+idx) / bcount))+UNIT_SIZE.y*(gapf/2))
-      .attr("fill",([idx,v])=>v=0?'white':d3.interpolateYlOrBr(scales.z(v)))
+      .attr("x",([idx,[v,l]])=>scales.x((+idx) % bcount)+UNIT_SIZE.x*(gapf/2))
+      .attr("y",([idx,[v,l]])=>scales.y(Math.floor((+idx) / bcount))+UNIT_SIZE.y*(gapf/2))
+      .attr("fill",([idx,[v,l]])=>v=0?'white':d3.interpolateYlOrBr(scales.z(v)))
+      .classed("labeled",([idx,[v,l]])=>l==0)
       .on("mouseover",function(){handleHover.call(this,true,...arguments)})
       .on("mouseout",function(){handleHover.call(this,false,...arguments)});
 
