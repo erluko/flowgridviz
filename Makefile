@@ -21,6 +21,9 @@ out/%.js: templates/jsonwrapper.js data/%.json
 data/flows-munged.gz:  $(npm_package_config_labeled_flows_file)
 	./util/conv.js $(npm_package_config_labeled_flows_file) | gzip -c > $@
 
+data/pcap.txt.gz: $(npm_package_config_pcap_file)
+       tshark -r $< -Tfields -E occurrence=f -Eseparator=/s -e ip.src -e ip.dst -e udp.srcport -e udp.dstport -e tcp.srcport -e tcp.dstport $(NUM_PACKETS_PRE) $(npm_package_config_num_packets) 'tcp or udp' |gzip -c > $@
+
 data/services.json: $(npm_package_config_services_file)
 	tr '\t' ' ' < $< | sed -n -e 's/^\([^#][^ $(TAB)]\{1,\}\)[ $(TAB)]\{1,\}\([0-9]\{1,\}\)\/.*$$/[\2,"\1"],/p' | sort -unk1.2 > $@
 
