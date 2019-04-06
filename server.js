@@ -151,10 +151,10 @@ app.get(url_root+'*/index.html',function(req,res){
     }});
 });
 app.get(url_root+'labels.json',function(req,res){
-  res.json(Array.from(labels));
+  res.json(labels);
 });
 app.get(url_root+'labels.js',function(req,res){
-  res.send(jsonWrap("labels",Array.from(labels)));
+  res.send(jsonWrap("labels",labels));
 });
 app.get(url_root+'*/matrix.json',function(req,res){
   let ps = req.params['0'];

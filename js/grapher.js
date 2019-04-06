@@ -10,6 +10,7 @@
   let sources = new Set(pdata.sources);
   let dests = new Set(pdata.dests);
   let plotrix = pdata.matrix;
+  let labels = importData('labels');
   let type_labels = {p: 'Port',i: "IP"};
   let type_display = {p: x=>x,
                       i: x=> ((x >>> 24 & 0x0FF)+'.'+
@@ -155,8 +156,9 @@
 
     let totalPackets = 0;
     let maxCount = 0;
+    let usedL = 0;
     plotrix.forEach(function ([i,[v,l]]) {
-      //todo: do something with "l"
+      usedL = usedL | l;
       maxCount = Math.max(maxCount,v);
       totalPackets += v;
     });
@@ -219,20 +221,23 @@
 
     let tip = {count: tipHolder.append("span"),
                source: (tipHolder.append("br"),tipHolder.append("span")),
-               dest: (tipHolder.append("br"),tipHolder.append("span"))}
+               dest: (tipHolder.append("br"),tipHolder.append("span")),
+               label: (tipHolder.append("br"),tipHolder.append("span")),
+              }
 
     function showTotals(){
       tip.count.text("Total Count: "+totalPackets)
       tip.source.text("from: "+pdata.sources.map(type_display[pdata.stype]).join(' '));
       tip.dest.text("to: "+pdata.dests.map(type_display[pdata.dtype]).join(' '));
+      tip.label.text("label(s): "+(usedL==0?'None':labels.filter((n,i)=>usedL & 1<<i)));
     }
     function handleHover(mode,[idx,[c,l]],index,nodes){
-      //todo: do something with "l"
       if(mode){
         let [sps,dps] = valuesForIndex(+idx);
         tip.count.text("count: "+c)
         tip.source.text("from: "+sps.map(type_display[pdata.stype]).join(' '));
         tip.dest.text("to: "+dps.map(type_display[pdata.dtype]).join(' '));
+        tip.label.text("label(s): "+(l==0?'None':labels.filter((n,i)=>l & 1<<i)));
       } else {
         showTotals()
       }
@@ -260,7 +265,7 @@
       .attr("x",([idx,[v,l]])=>scales.x((+idx) % bcount)+UNIT_SIZE.x*(gapf/2))
       .attr("y",([idx,[v,l]])=>scales.y(Math.floor((+idx) / bcount))+UNIT_SIZE.y*(gapf/2))
       .attr("fill",([idx,[v,l]])=>v=0?'white':d3.interpolateYlOrBr(scales.z(v)))
-      .classed("labeled",([idx,[v,l]])=>l==0)
+      .classed("labeled",([idx,[v,l]])=>l!=0)
       .on("mouseover",function(){handleHover.call(this,true,...arguments)})
       .on("mouseout",function(){handleHover.call(this,false,...arguments)});
 
