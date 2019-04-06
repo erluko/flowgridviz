@@ -227,9 +227,9 @@
         .style("left",getSize(svgHolder,"right", svgHolderWidth)+"px")
 
     let tip = {count: tipHolder.append("span"),
+               label: (tipHolder.append("br"),tipHolder.append("span")),
                source: (tipHolder.append("br"),tipHolder.append("span")),
                dest: (tipHolder.append("br"),tipHolder.append("span")),
-               label: (tipHolder.append("br"),tipHolder.append("span")),
               }
 
     function showTotals(){
