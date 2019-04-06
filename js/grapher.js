@@ -29,6 +29,22 @@
     oldload=window.onload;
   }
 
+
+  function getSize(sel,name,def){
+    try{
+      s = +sel.node().getBoundingClientRect()[name];
+    } catch(e){}
+    if(isNaN(s)){
+      s = +sel.attr("name").replace(/px/,'');
+    }
+    if(isNaN(s)){
+      s = +sel.style("name").replace(/px/,'');
+    }
+    if(isNaN(s)){
+      s = def;
+    }
+    return s;
+  }
   function callxy(f){
     return {x:f("x"),y:f("y")}
   }
@@ -87,19 +103,7 @@
 
     let svgHolder = body.select("div.graph");
 
-    let svgHolderWidth;
-    try{
-      svgHolderWidth = +svgHolder.node().getBoundingClientRect().width;
-    } catch(e){}
-    if(isNaN(svgHolderWidth)){
-      svgHolderWidth = +svgHolder.attr("width").replace(/px/,'');
-    }
-    if(isNaN(svgHolderWidth)){
-      svgHolderWidth = +svgHolder.style("width").replace(/px/,'');
-    }
-    if(isNaN(svgHolderWidth)){
-      svgHolderWidth = 700;
-    }
+    let svgHolderWidth = getSize(svgHolder,"width", 700)
 
     let WIDTH = svgHolderWidth - 8
     let HEIGHT = WIDTH;
@@ -217,7 +221,10 @@
     tsa.on("click",toggleFilter)
 
     let tipHolder = body.select("div.port-tip")
-        .style("height",scales.y(bcount)+"px");
+        .style("height",scales.y(bcount)+"px")
+        .style("position","absolute")
+        .style("top",getSize(svgHolder,"top", 50)+"px")
+        .style("left",getSize(svgHolder,"right", svgHolderWidth)+"px")
 
     let tip = {count: tipHolder.append("span"),
                source: (tipHolder.append("br"),tipHolder.append("span")),

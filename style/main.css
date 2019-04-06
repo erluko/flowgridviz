@@ -30,7 +30,6 @@ div.port-tip {
     background: lightblue;
     padding: 5px;
     width: 300px;
-    display:inline-block;
     overflow: scroll;
 }
 
