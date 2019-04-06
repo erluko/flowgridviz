@@ -227,7 +227,7 @@
         .style("left",getSize(svgHolder,"right", svgHolderWidth)+"px")
 
     let tip = {count: tipHolder.append("span"),
-               label: (tipHolder.append("br"),tipHolder.append("span")),
+               label: labels.length>0?(tipHolder.append("br"),tipHolder.append("span")):{text:_=>null},
                source: (tipHolder.append("br"),tipHolder.append("span")),
                dest: (tipHolder.append("br"),tipHolder.append("span")),
               }
