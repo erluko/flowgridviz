@@ -1,7 +1,7 @@
 Interactive Packet Capture Visualization
 ========================================
 
-This is web-based packet capture or net flow explorer[1].  It maps the
+This is web-based packet capture or net flow explorer.  It maps the
 sources and destinations of tcp and udp traffic onto a 53x53 grid.
 Sources and destinations are either port numbers or IP addresses. Each
 grid point represents the intersection of source and destination. The
@@ -31,7 +31,8 @@ Input Data
 
 Input data is read from a file on disk at startup time. pcapviz can
 read gzipped input data and this is highly recommended. The input data
-file location is configurable. See CONFIGURATION below for details.
+file location is configurable. See CONFIGURATION below for
+details.
 
 The input data format is:
 
@@ -91,26 +92,38 @@ Install-time
 
 The following options affect the program's behavior at
 install-time. If you want to change them after running `npm install`,
-you can remove the contents of the `data/` directory and then execute `npm
-run make`.
-
-The source of the packet capture data is configurable. It defaults to
-`~/Downloads/ISCX_Botnet-Training.pcap`. Override it as follows:
-
-    npm config set pcapviz:pcap_file /path/to/file
-
-To select the number of packets processed, set `pcapviz:pcap_file` to a
-number. To process all packets in the pcap, set it to the empty string
-or "all".
-
-    npm config set pcapviz:num_packets "10000"  #process first 10k packets
-    npm config set pcapviz:num_packets "all"    #process all packets
+run: `npm run make -- -B input` to regenerate the input file or run
+`npm run make -- -B services` to regenerate the services file.
 
 To choose an alternate mapping of known ports to service names, set
 `pcapviz:services_file`. It defaults to '/etc/services' but you can
 use another mapping:
 
     npm config set pcapviz:services_file /path/to/file
+
+The source of the network data is configurable. It can either be a
+file with labeled network flows or a pcap file.
+
+To use a list of labeled flows, set `pcapviz:labeled_flows_file`. To
+use a pcap file for input, set `pcapviz:pcap_file`.
+
+If neither is explicitly set, the default is to use labeled flow data
+from `input/flows.gz`.
+
+You can set these values as follows:
+
+    npm config set pcapviz:pcap_file /path/to/file
+
+or
+
+    npm config set pcapviz:labeled_flows_file /path/to/file
+
+To select the number of records processed, set `pcapviz:num_records` to a
+number. To process all records in the pcap, set it to the empty string
+or "all".
+
+    npm config set pcapviz:num_records "10000"  #process first 10k records
+    npm config set pcapviz:num_records "all"    #process all records
 
 Runtime
 -------

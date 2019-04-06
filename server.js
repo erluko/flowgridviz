@@ -191,7 +191,7 @@ let startTime=new Date().getTime();
 let dots = setInterval(()=>console.log("."), 5000);
 
 (require('./lib/pcsd')
-  .fromFile('data/flows-munged.gz')
+  .fromFile('data/input.gz')
   .then(function(p){
     clearInterval(dots);
     let readyTime = new Date().getTime();
