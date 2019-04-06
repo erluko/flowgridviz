@@ -87,7 +87,7 @@
       .classed("uplink",true)
       .text(" / ")
       .append("a")
-      .attr("href",(d,i,a)=>numparts-i>1?dots.slice(i).join('')+'index.html':null)
+      .attr("href",(d,i,a)=>numparts-i>1 ?dots.slice(i+i%2).join('')+'index.html':null)
       .text(v=>v instanceof Array?v.join(''):v)
 
     let sel = pdata.stype+pdata.dtype;
