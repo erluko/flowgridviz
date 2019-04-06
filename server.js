@@ -191,16 +191,16 @@ let startTime=new Date().getTime();
 let dots = setInterval(()=>console.log("."), 5000);
 
 (require('./lib/pcsd')
-  .fromFile('data/input.gz')
-  .then(function(p){
-    clearInterval(dots);
-    let readyTime = new Date().getTime();
-    let elapsedSecs = ((readyTime - startTime)/1000).toFixed(3);
-    console.log(`Loaded ${p.length} records in ${elapsedSecs} seconds.`);
-    packets = p;
-    var server = http.createServer(app);
-    phwalk(pth0) //initialize matrix cache
-    server.on("error", e =>console.log(`Unable to start server: ${e}`));
-    server.listen(port, ip, () => console.log(`pcapviz listening on http://${ip}:${port}${url_root}!`));
-  }));
+ .fromFile('data/input.gz')
+ .then(function(p){
+   clearInterval(dots);
+   let readyTime = new Date().getTime();
+   let elapsedSecs = ((readyTime - startTime)/1000).toFixed(3);
+   console.log(`Loaded ${p.length} records in ${elapsedSecs} seconds.`);
+   packets = p;
+   var server = http.createServer(app);
+   phwalk(pth0) //initialize matrix cache
+   server.on("error", e =>console.log(`Unable to start server: ${e}`));
+   server.listen(port, ip, () => console.log(`pcapviz listening on http://${ip}:${port}${url_root}!`));
+ }));
 
