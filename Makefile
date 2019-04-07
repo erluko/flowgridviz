@@ -15,7 +15,7 @@ data/inputs.json: input/sample-inputs.json data/sample-flows.gz
 	cp -n $< $@
 
 data/sample-flows.gz: input/sample-flows.gz
-	cp $< $@
+	./util/convert-flows.js $< | gzip -c > $@
 
 data/services.json: $(npm_package_config_services_file)
 	tr '\t' ' ' < $< | sed -n -e 's/^\([^#][^ $(TAB)]\{1,\}\)[ $(TAB)]\{1,\}\([0-9]\{1,\}\)\/.*$$/[\2,"\1"],/p' | sort -unk1.2 > $@
