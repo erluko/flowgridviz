@@ -17,6 +17,8 @@ let pth0 = pu.pathParser("/pp/");
 let labels  = new Map();
 let records = new Map();
 
+let dyn_root = 'viz/';
+
 LRU.prototype.getOrSet = function(k,f){
   let v = this.get(k);
   if(typeof v === 'undefined'){
@@ -140,10 +142,14 @@ app.get(url_root+'inputs.html',function(req,res){
       let document = window.document;
       let holder = document.getElementById("sources");
       for(name of records.keys()){
-        let a = document.createElement("a");
-        a.setAttribute("href",name+"/");
-        a.appendChild(document.createTextNode(name));
-        holder.appendChild(a);
+        if(name.indexOf('/') == -1){
+          let a = document.createElement("a");
+          a.setAttribute("href",dyn_root + name+"/");
+          a.appendChild(document.createTextNode(name));
+          holder.appendChild(a);
+        } else {
+          console.log("Bad data source name");
+        }
       }
     }});
 });
@@ -154,7 +160,7 @@ function forceValidRedirect(pp,req,res){
     return false;
   }
   pp = pu.makeValidFinalPath(pp);
-  let l=Object.entries(req.params).reduce((a,[k,v])=>a+v.length+1,0);
+  let l=Object.entries(req.params).reduce((a,[k,v])=>a+v.length+1,dyn_root.length);
   let fname = req.path.substr(l);
   newpath = url_root+req.params['input']+"/"+pu.toPathStr(pp)+fname;
   res.redirect(newpath);
@@ -167,24 +173,24 @@ function reroot(rname,attr){
      if(s.startsWith("/")){
        s = s.substr(1);
        if(s.lastIndexOf("/")<1){
-         s = rname +"/"+s;
+         s = dyn_root+rname +"/"+s;
        }
        n.setAttribute(attr,url_root+s)
      }
    }
 }
 
-app.get(url_root+':input/',function(req,res){
+app.get(url_root+dyn_root+':input/',function(req,res){
   let rname = req.params['input'];
-  res.redirect(url_root+rname+'/pp/index.html');
+  res.redirect(url_root+dyn_root+rname+'/pp/index.html');
 });
 
-app.get(url_root+':input/index.html',function(req,res){
+app.get(url_root+dyn_root+':input/index.html',function(req,res){
   let rname = req.params['input'];
-  res.redirect(url_root+rname+'/pp/index.html');
+  res.redirect(url_root+dyn_root+rname+'/pp/index.html');
 });
 
-app.get(url_root+':input/*/index.html',function(req,res){
+app.get(url_root+dyn_root+':input/*/index.html',function(req,res){
   let rname = req.params['input'];
   let ps = req.params['0'];
   let pp = pu.pathParser(ps);
@@ -197,18 +203,18 @@ app.get(url_root+':input/*/index.html',function(req,res){
       Array.from(document.getElementsByTagName("link")).forEach(reroot(rname,"href"));
     }});
 });
-app.get(url_root+':input/labels.json',function(req,res){
+app.get(url_root+dyn_root+':input/labels.json',function(req,res){
   let rname = req.params['input'];
   let ls = labels.get(rname);
   res.json(ls);
 });
-app.get(url_root+':input/labels.js',function(req,res){
+app.get(url_root+dyn_root+':input/labels.js',function(req,res){
   let rname = req.params['input'];
   let ls = labels.get(rname);
   res.type("text/javascript");
   res.send(jsonWrap("labels",ls));
 });
-app.get(url_root+':input/*/matrix.json',function(req,res){
+app.get(url_root+dyn_root+':input/*/matrix.json',function(req,res){
   let rname = req.params['input'];
   let ps = req.params['0'];
   let pp = pu.pathParser(ps);
@@ -216,7 +222,7 @@ app.get(url_root+':input/*/matrix.json',function(req,res){
   let lmat = mwalk(rname,pp);
   res.json(lmat);
 });
-app.get(url_root+':input/*/pmatrix.js',function(req,res){
+app.get(url_root+dyn_root+':input/*/pmatrix.js',function(req,res){
   let rname = req.params['input'];
   let ps = req.params['0'];
   let pp = pu.pathParser(ps);
@@ -226,7 +232,7 @@ app.get(url_root+':input/*/pmatrix.js',function(req,res){
   res.send(jsonWrap('pmatrix',lmat));
 });
 
-app.get(url_root+':input/*/filter.txt',function(req,res){
+app.get(url_root+dyn_root+':input/*/filter.txt',function(req,res){
   let rname = req.params['input'];
   let ps = req.params['0'];
   let pp = pu.pathParser(ps);
@@ -238,18 +244,18 @@ app.get(url_root+':input/*/filter.txt',function(req,res){
                                matrix.stype,
                                matrix.dtype)+"\n");
 });
-app.get(url_root+':input/filter.txt',function(req,res){
+app.get(url_root+dyn_root+':input/filter.txt',function(req,res){
   res.type("text/plain")
   res.send("tcp or udp\n");
 });
 
-app.get(url_root+':input/pcap.json',function(req,res){
+app.get(url_root+dyn_root+':input/pcap.json',function(req,res){
   let rname = req.params['input'];
   let recs = records.get(rname);
   res.json(recs);
 });
 
-app.get(url_root+':input/*/pcap.json',function(req,res){
+app.get(url_root+dyn_root+':input/*/pcap.json',function(req,res){
   let rname = req.params['input'];
   let ps = req.params['0'];
   let pp = pu.pathParser(ps);
