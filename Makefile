@@ -6,12 +6,12 @@ endif
 
 all: input services
 services: out/services.js
-input: data/input.json
+input: data/inputs.json
 
 out/%.js: templates/jsonwrapper.js data/%.json
 	sed -n -e 's/INSERT_KEY_NAME_HERE/$(notdir $(basename $@))/' -e '/^ *\/\/INSERT_DATA_HERE$$/! p' -e '/^ *\/\/INSERT_DATA_HERE$$/ r $(filter-out %.js,$^)' < $< >$@
 
-data/input.json: input/sample-input.json data/sample-flows.gz
+data/inputs.json: input/sample-inputs.json data/sample-flows.gz
 	cp $< $@
 
 data/sample-flows.gz: input/sample-flows.gz
