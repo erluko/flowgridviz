@@ -132,6 +132,16 @@ app.get(url_root+'js-ext/:script.js',function (req,res){
   res.sendFile(req.params['script']+'.js',{root:'js-ext'});
 });
 
+function forceValidRedirect(pp,fname,res){
+  if(pu.isValidFinalPath(pp)){
+    return false;
+  }
+  pp = pu.makeValidFinalPath(pp);
+  newpath = url_root+pu.toPathStr(pp)+fname;
+  res.redirect(newpath);
+  return true;
+}
+
 function reroot(attr){
    return function(n){
      let old=n.getAttribute(attr);
@@ -142,6 +152,9 @@ function reroot(attr){
 }
 
 app.get(url_root+'*/index.html',function(req,res){
+  let ps = req.params['0'];
+  let pp = pu.pathParser(ps);
+  if(forceValidRedirect(pp,req.url.substr(url_root.length+ps.length),res)) return;
   res.render('index',{
     key: 'index',
     render: function(window,sdone) {
@@ -159,12 +172,14 @@ app.get(url_root+'labels.js',function(req,res){
 app.get(url_root+'*/matrix.json',function(req,res){
   let ps = req.params['0'];
   let pp = pu.pathParser(ps);
+  if(forceValidRedirect(pp,req.url.substr(url_root.length+ps.length),res)) return;
   let lmat = mwalk(pp);
   res.json(lmat);
 });
 app.get(url_root+'*/pmatrix.js',function(req,res){
   let ps = req.params['0'];
   let pp = pu.pathParser(ps);
+  if(forceValidRedirect(pp,req.url.substr(url_root.length+ps.length),res)) return;
   let lmat = mwalk(pp);
   res.send(jsonWrap('pmatrix',lmat));
 });
@@ -172,6 +187,7 @@ app.get(url_root+'*/pmatrix.js',function(req,res){
 app.get(url_root+'*/filter.txt',function(req,res){
   let ps = req.params['0'];
   let pp = pu.pathParser(ps);
+  if(forceValidRedirect(pp,req.url.substr(url_root.length+ps.length),res)) return;
   let matrix = mwalk(pp);
   res.type("text/plain")
   res.send(tsf.tsDisplayFilter(matrix.sources,
@@ -189,6 +205,7 @@ app.get(url_root+'pcap.json',(req,res)=>res.json(packets));
 app.get(url_root+'*/pcap.json',function(req,res){
   let ps = req.params['0'];
   let pp = pu.pathParser(ps);
+  if(forceValidRedirect(pp,req.url.substr(url_root.length+ps.length),res)) return;
   let [matrix,pkts] = phwalk(pp);
   res.json(pkts);
 });

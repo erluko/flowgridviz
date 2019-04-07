@@ -18,8 +18,7 @@
 
   root.pathParser = function (s){
     let instr = s.split('/');
-    while(!/^[pi]{2}$/.test(instr[0])) instr.shift();
-    if(!/^(?:[pi]{2}|\d+)$/.test(instr[instr.length-1])) instr.pop();
+    while(instr.length>0 && !/^[pi]{2}$/.test(instr[0])) instr.shift();
     instr=instr.filter(g => g.length > 0)
         .map((p,i)=>i%2?
              (/^\d+$/.test(p)?+p:null):
@@ -33,4 +32,34 @@
       pathParts[0].length<2 ||
       pathParts[0][1] == null;
   }
+  root.isValidFinalPath = function(pathParts){
+    return pathParts != null &&
+      pathParts.length >=1 &&
+      pathParts[pathParts.length-1][1] == null;
+  }
+  root.makeValidFinalPath = function(pathParts){
+    if(pathParts == null ||
+       pathParts.length == 0 ||
+       pathParts[0][0] == null ||
+       pathParts[0][0] == '') {
+      pathParts = root.pathParser("/pp/");
+    }
+    let last = pathParts[pathParts.length-1];
+
+    if(last[1] == null) {
+      return pathParts;
+    } else {
+      return pathParts.concat([[last[0],null]]);
+    }
+  }
+  root.toPathStr = function(pathParts){
+    if(pathParts == null ||
+       pathParts.length == 0 ||
+       pathParts[0][0] == null ||
+       pathParts[0][0] == '') {
+      pathParts = root.pathParser("/pp/");
+    }
+    return pathParts.map(([[s,d],i])=>s+d+(i?('/'+i):'')).join('/')
+  }
+
 })()

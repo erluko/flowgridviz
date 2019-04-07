@@ -71,7 +71,8 @@
     if(typeof(oldload) == 'function'){
       oldload.apply(this,arguments);
     }
-    let pathParts = pathutil.pathParser(window.location.pathname);
+    let pathParts = pathutil.pathParser(window.location.pathname
+                                        .substring(0,window.location.pathname.length-"index.html".length));
     let top_level = pathutil.isTopLevel(pathParts);
 
     let chunks = pathParts.flatMap(x=>x);
