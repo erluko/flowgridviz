@@ -65,8 +65,8 @@ For packet captures, the appropriate format can be generated using
 
 For network flows, the output of `pcaplabel` or `cicflowmeter` can be
 used.  The output of either of these tools can be converted to the
-appropriate format using `util/conf.js`. That utility defaults to
-setting the weight to the value of `Tot Fwd Pkts`.
+appropriate format using `util/convert-flows.js`. That utility
+defaults to setting the weight to the value of `Tot Fwd Pkts`.
 
 
 Prerequisites
