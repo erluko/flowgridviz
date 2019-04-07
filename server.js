@@ -167,6 +167,7 @@ app.get(url_root+'labels.json',function(req,res){
   res.json(labels);
 });
 app.get(url_root+'labels.js',function(req,res){
+  res.type("text/javascript");
   res.send(jsonWrap("labels",labels));
 });
 app.get(url_root+'*/matrix.json',function(req,res){
@@ -181,6 +182,7 @@ app.get(url_root+'*/pmatrix.js',function(req,res){
   let pp = pu.pathParser(ps);
   if(forceValidRedirect(pp,req.url.substr(url_root.length+ps.length),res)) return;
   let lmat = mwalk(pp);
+  res.type("text/javascript");
   res.send(jsonWrap('pmatrix',lmat));
 });
 
