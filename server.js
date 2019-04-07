@@ -289,6 +289,8 @@ for([key,input] of inputs){
       records.set(key,p);
       phwalk(key, pth0); //initialize matrix cache
   }).bind(null,key,input));
+  //above use of bind inspired by:
+  // https://stackoverflow.com/questions/32912459/promises-pass-additional-parameters-to-then-chain
 }
 
 //TODO: switch to promise.race, show loading icon for not-yet-loaded data
