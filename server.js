@@ -14,8 +14,8 @@ const phr = require('./js/nethasher.js');
 let ph0 = new phr.nethasher();
 let ph0_servs = new phr.nethasher(slist.servicemap);
 let pth0 = pu.pathParser("/pp/");
-let packets = null;
-let labels  = null;
+let labels  = new Map();
+let records = new Map();
 
 LRU.prototype.getOrSet = function(k,f){
   let v = this.get(k);
@@ -39,7 +39,7 @@ if(!url_root.startsWith("/")) url_root='/'+url_root;
 
 let mwcache = new LRU(80);
 
-let phwalk = function(pth){
+let phwalk = function(rname,pth){
   if(pth == null || pth.length <1){
     pth = pth0;
   }
@@ -47,10 +47,10 @@ let phwalk = function(pth){
   //on at least one axis:
   let lph = (pth[0][0][0]=='p' ||
              pth[0][0][1]=='p')?ph0_servs:ph0;
-  let pkts = packets;
+  let pkts = records.get(rname);
 
   let bcount = phr.nethasher.getBucketCount();
-  let mwk = [];
+  let mwk = [rname];
 
   let matrix;
   for(let [[stype,dtype],idx] of pth) {
@@ -79,8 +79,8 @@ let phwalk = function(pth){
   return [matrix,pkts];
 };
 
-let mwalk = function(pth){
-  let [matrix,pkts] = phwalk(pth);
+let mwalk = function(rname,pth){
+  let [matrix,pkts] = phwalk(rname,pth);
   return matrix;
 }
 
@@ -109,8 +109,8 @@ function jsonWrap(n,d){
 `;
 }
 
-app.get(url_root,(req,res) => res.redirect(url_root+'pp/index.html'));
-app.get(url_root+'index.html',(req,res) => res.redirect(url_root+'pp/index.html'));
+app.get(url_root,(req,res) => res.redirect(url_root+'inputs.html'));
+app.get(url_root+'index.html',(req,res) => res.redirect(url_root+'inputs.html'));
 
 // The favicon route intentionally does not use url_root, it is only used if url_root == '/'
 app.get('/favicon.ico',function (req,res){
@@ -132,83 +132,123 @@ app.get(url_root+'js-ext/:script.js',function (req,res){
   res.sendFile(req.params['script']+'.js',{root:'js-ext'});
 });
 
-function forceValidRedirect(pp,fname,res){
+
+app.get(url_root+'inputs.html',function(req,res){
+  res.render('inputs',{
+    key: 'inputs',
+    render: function(window,sdone) {
+      let document = window.document;
+      //TODO: do something here
+    }});
+});
+
+function forceValidRedirect(pp,req,res){
+  //FIXME: this whole function is a hack to fix bad urls
   if(pu.isValidFinalPath(pp)){
     return false;
   }
   pp = pu.makeValidFinalPath(pp);
-  newpath = url_root+pu.toPathStr(pp)+fname;
+  let l=Object.entries(req.params).reduce((a,[k,v])=>a+v.length+1,0);
+  let fname = req.path.substr(l);
+  newpath = url_root+req.params['input']+"/"+pu.toPathStr(pp)+fname;
   res.redirect(newpath);
   return true;
 }
 
-function reroot(attr){
+function reroot(rname,attr){
    return function(n){
-     let old=n.getAttribute(attr);
-     if(old.startsWith("/")){
-       n.setAttribute(attr,url_root+old.substr(1))
+     let s=n.getAttribute(attr);
+     if(s.startsWith("/")){
+       s = s.substr(1);
+       if(s.lastIndexOf("/")<1){
+         s = rname +"/"+s;
+       }
+       n.setAttribute(attr,url_root+s)
      }
    }
 }
 
-app.get(url_root+'*/index.html',function(req,res){
+app.get(url_root+':input/',function(req,res){
+  let rname = req.params['input'];
+  res.redirect(url_root+rname+'/pp/index.html');
+});
+
+app.get(url_root+':input/index.html',function(req,res){
+  let rname = req.params['input'];
+  res.redirect(url_root+rname+'/pp/index.html');
+});
+
+app.get(url_root+':input/*/index.html',function(req,res){
+  let rname = req.params['input'];
   let ps = req.params['0'];
   let pp = pu.pathParser(ps);
-  if(forceValidRedirect(pp,req.url.substr(url_root.length+ps.length),res)) return;
+  if(forceValidRedirect(pp,req,res)) return;
   res.render('index',{
     key: 'index',
     render: function(window,sdone) {
       let document = window.document;
-      Array.from(document.getElementsByTagName("script")).forEach(reroot("src"));
-      Array.from(document.getElementsByTagName("link")).forEach(reroot("href"));
+      Array.from(document.getElementsByTagName("script")).forEach(reroot(rname,"src"));
+      Array.from(document.getElementsByTagName("link")).forEach(reroot(rname,"href"));
     }});
 });
-app.get(url_root+'labels.json',function(req,res){
-  res.json(labels);
+app.get(url_root+':input/labels.json',function(req,res){
+  let rname = req.params['input'];
+  let ls = labels.get(rname);
+  res.json(ls);
 });
-app.get(url_root+'labels.js',function(req,res){
+app.get(url_root+':input/labels.js',function(req,res){
+  let rname = req.params['input'];
+  let ls = labels.get(rname);
   res.type("text/javascript");
-  res.send(jsonWrap("labels",labels));
+  res.send(jsonWrap("labels",ls));
 });
-app.get(url_root+'*/matrix.json',function(req,res){
+app.get(url_root+':input/*/matrix.json',function(req,res){
+  let rname = req.params['input'];
   let ps = req.params['0'];
   let pp = pu.pathParser(ps);
-  if(forceValidRedirect(pp,req.url.substr(url_root.length+ps.length),res)) return;
-  let lmat = mwalk(pp);
+  if(forceValidRedirect(pp,req,res)) return;
+  let lmat = mwalk(rname,pp);
   res.json(lmat);
 });
-app.get(url_root+'*/pmatrix.js',function(req,res){
+app.get(url_root+':input/*/pmatrix.js',function(req,res){
+  let rname = req.params['input'];
   let ps = req.params['0'];
   let pp = pu.pathParser(ps);
-  if(forceValidRedirect(pp,req.url.substr(url_root.length+ps.length),res)) return;
-  let lmat = mwalk(pp);
+  if(forceValidRedirect(pp,req,res)) return;
+  let lmat = mwalk(rname,pp);
   res.type("text/javascript");
   res.send(jsonWrap('pmatrix',lmat));
 });
 
-app.get(url_root+'*/filter.txt',function(req,res){
+app.get(url_root+':input/*/filter.txt',function(req,res){
+  let rname = req.params['input'];
   let ps = req.params['0'];
   let pp = pu.pathParser(ps);
-  if(forceValidRedirect(pp,req.url.substr(url_root.length+ps.length),res)) return;
-  let matrix = mwalk(pp);
+  if(forceValidRedirect(pp,req,res)) return;
+  let matrix = mwalk(rname,pp);
   res.type("text/plain")
   res.send(tsf.tsDisplayFilter(matrix.sources,
                                matrix.dests,
                                matrix.stype,
                                matrix.dtype)+"\n");
 });
-app.get(url_root+'filter.txt',function(req,res){
+app.get(url_root+':input/filter.txt',function(req,res){
   res.type("text/plain")
   res.send("tcp or udp\n");
 });
 
-app.get(url_root+'pcap.json',(req,res)=>res.json(packets));
+app.get(url_root+':input/pcap.json',function(req,res){
+  let rname = req.params['input'];
+  let recs = records.get(rname);
+  res.json(recs);
+});
 
-app.get(url_root+'*/pcap.json',function(req,res){
+app.get(url_root+':input/*/pcap.json',function(req,res){
+  let rname = req.params['input'];
   let ps = req.params['0'];
   let pp = pu.pathParser(ps);
-  if(forceValidRedirect(pp,req.url.substr(url_root.length+ps.length),res)) return;
-  let [matrix,pkts] = phwalk(pp);
+  if(forceValidRedirect(pp,req,res)) return;
+  let [matrix,pkts] = phwalk(rname,pp);
   res.json(pkts);
 });
 
@@ -223,10 +263,10 @@ let dots = setInterval(()=>console.log("."), 5000);
    let readyTime = new Date().getTime();
    let elapsedSecs = ((readyTime - startTime)/1000).toFixed(3);
    console.log(`Loaded ${p.length} records in ${elapsedSecs} seconds.`);
-   packets = p;
-   labels = l;
+   labels.set("main",l);
+   records.set("main",p);
    var server = http.createServer(app);
-   phwalk(pth0) //initialize matrix cache
+   phwalk("main", pth0) //initialize matrix cache
    server.on("error", e =>console.log(`Unable to start server: ${e}`));
    server.listen(port, ip, () => console.log(`pcapviz listening on http://${ip}:${port}${url_root}!`));
  }));
