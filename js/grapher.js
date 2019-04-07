@@ -11,6 +11,9 @@
   let dests = new Set(pdata.dests);
   let plotrix = pdata.matrix;
   let labels = importData('labels');
+  let inp = importData('input');
+  let input_key = inp[0];
+  let input_rec = inp[1];
   let type_labels = {p: 'Port',i: "IP"};
   let type_display = {p: x=>x,
                       i: x=> ((x >>> 24 & 0x0FF)+'.'+
@@ -75,12 +78,16 @@
                                         .substring(0,window.location.pathname.length-"index.html".length));
     let top_level = pathutil.isTopLevel(pathParts);
 
-    let chunks = pathParts.flatMap(x=>x);
+    let chunks = ["inputs",input_key,].concat(pathParts.flatMap(x=>x));
     let numparts = chunks.length - (chunks[chunks.length-1]==null?2:1);
     let dots = Array.from({length:numparts},x=>'../');
 
     let body = d3.select("body");
-     body.select("div.nav")
+    body.select("h1")
+      .node()
+      .appendChild(document.createTextNode(": "+input_rec.title||''));
+
+    body.select("div.nav")
       .selectAll("span.uplink")
       .data(chunks)
       .enter()
@@ -88,7 +95,16 @@
       .classed("uplink",true)
       .text(" / ")
       .append("a")
-      .attr("href",(d,i,a)=>numparts-i>1 ?dots.slice(i+i%2).join('')+'index.html':null)
+      .attr("href",function(d,i,a) {
+        if(i==1){
+          return null;
+        } else if(i==0){
+          return dots.slice(i+i%2).join('');
+        } else if(numparts-i>1){
+          return dots.slice(i+i%2).join('')+'index.html';
+        }
+        return null;
+      })
       .text(v=>v instanceof Array?v.join(''):v)
 
     let sel = pdata.stype+pdata.dtype;

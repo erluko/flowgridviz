@@ -115,6 +115,7 @@ function jsonWrap(n,d){
 `;
 }
 
+app.get(url_root+dyn_root,(req,res) => res.redirect(url_root+'inputs.html'));
 app.get(url_root,(req,res) => res.redirect(url_root+'inputs.html'));
 app.get(url_root+'index.html',(req,res) => res.redirect(url_root+'inputs.html'));
 
@@ -201,7 +202,7 @@ app.get(url_root+dyn_root+':input/*/index.html',function(req,res){
   let pp = pu.pathParser(ps);
   if(forceValidRedirect(pp,req,res)) return;
   res.render('index',{
-    key: 'index',
+    key: rname+'/index',
     render: function(window,sdone) {
       let document = window.document;
       Array.from(document.getElementsByTagName("script")).forEach(reroot(rname,"src"));
@@ -218,6 +219,17 @@ app.get(url_root+dyn_root+':input/labels.js',function(req,res){
   let ls = labels.get(rname);
   res.type("text/javascript");
   res.send(jsonWrap("labels",ls));
+});
+app.get(url_root+dyn_root+':input/input.json',function(req,res){
+  let rname = req.params['input'];
+  let inp= inputs.get(rname);
+  res.json([rname,inp]);
+});
+app.get(url_root+dyn_root+':input/input.js',function(req,res){
+  let rname = req.params['input'];
+  let inp = inputs.get(rname);
+  res.type("text/javascript");
+  res.send(jsonWrap("input",[rname,inp]));
 });
 app.get(url_root+dyn_root+':input/*/matrix.json',function(req,res){
   let rname = req.params['input'];
