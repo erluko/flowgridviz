@@ -138,7 +138,13 @@ app.get(url_root+'inputs.html',function(req,res){
     key: 'inputs',
     render: function(window,sdone) {
       let document = window.document;
-      //TODO: do something here
+      let holder = document.getElementById("sources");
+      for(name of records.keys()){
+        let a = document.createElement("a");
+        a.setAttribute("href",name+"/");
+        a.appendChild(document.createTextNode(name));
+        holder.appendChild(a);
+      }
     }});
 });
 
