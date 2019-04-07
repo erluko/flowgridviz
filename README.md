@@ -29,11 +29,11 @@ clicking will cause the graph to redraw, including only elements that
 Input Data
 ==========
 
-The file `inputs/inputs.json` describes the list of available
-inputs. It is read from disk at startup time. It is a JSON array that
-contains one element per input source. Each input source is an array
-containing two elements, a key and an object. The objects must carry
-values for `file` and `title`:
+The file `data/inputs.json` describes the list of available inputs. It
+is read from disk at startup time. It is a JSON array that contains
+one element per input source. Each input source is an array containing
+two elements, a key and an object. The objects must carry values for
+`file` and `title`:
 
     ["key", {file: "file-name", title: "title-text"}]
 
@@ -57,17 +57,30 @@ is an arbitrary string of your choice, useful for referencing
 particular packets or flows in the source data.
 
 For packet captures, the appropriate format can be generated using
-`tshark` and `tr`:
+`util/convert-pcap.js` as follows:
 
-     tshark -r YOUR_FILE.pcap -Tfields -E occurrence=f -Eseparator=/s \
-     -e ip.src -e ip.dst -e udp.srcport -e udp.dstport -e tcp.srcport \
-     -e tcp.dstport 'tcp or udp' |tr -s ' ' , |gzip -c > data_file.gz
+    util/convert-pcap.sh /path/to/file.pcap | \
+      gzip -c > data/my-pcap.gz
+
+To convert fewer packets, try:
+
+    util/convert-pcap.sh /path/to/file.pcap -c NUM_PACKETS | \
+      gzip -c > data/my-pcap.gz
 
 For network flows, the output of `pcaplabel` or `cicflowmeter` can be
-used.  The output of either of these tools can be converted to the
-appropriate format using `util/convert-flows.js`. That utility
-defaults to setting the weight to the value of `Tot Fwd Pkts`.
+used. The output of either of these tools can be converted to the
+appropriate format using `util/convert-flows.js` as follows:
 
+    util/convert-flows.js /path/to/file.gz | \
+      gzip -c > data/my-flows.gz
+
+The `convert-flows.js` utility defaults to setting the weight of each
+flow to the value of `Tot Fwd Pkts`.
+
+Sample content for `inputs.json` and a sample labeled flow file are
+present in the `input/` directory. The default install will copy these
+files into the `data/` directory. Please edit the `data/inputs.json` file
+to point at the correct data sources.
 
 Prerequisites
 =============
@@ -89,7 +102,9 @@ Installing and Running
     npm install
     npm start
 
-Then go to the url displayed at the console.
+Then go to the url displayed at the console to see sample data.
+
+See INPUTS above to adjust which network data files are processed.
 
 If you want a more robust setup, use `nginx` as a reverse proxy and
 `pm2` for process management, as described below.
@@ -101,33 +116,17 @@ Configuration
 Install-time
 ------------
 
-The following options affect the program's behavior at
-install-time. If you want to change them after running `npm install`,
-run: `npm run make -- -B input` to regenerate the input file or run
-`npm run make -- -B services` to regenerate the services file.
+The following option affects the program's behavior at
+install-time. If you want to change it after running `npm install`,
+run: `npm run make -- -B services` to regenerate the services file.
 
-To choose an alternate mapping of known ports to service names, set
-`pcapviz:services_file`. It defaults to '/etc/services' but you can
-use another mapping:
+   npm config set pcapviz:services_file "/path/to/servces"
 
-    npm config set pcapviz:services_file /path/to/file
+The default value is '/etc/services'
 
-The source of the network data is configurable. It can either be a
-file with labeled network flows or a pcap file.
 
-To use a list of labeled flows, set `pcapviz:labeled_flows_file`. To
-use a pcap file for input, set `pcapviz:pcap_file`.
-
-If neither is explicitly set, the default is to use labeled flow data
-from `input/flows.gz`.
-
-You can set these values as follows:
-
-    npm config set pcapviz:pcap_file /path/to/file
-
-or
-
-    npm config set pcapviz:labeled_flows_file /path/to/file
+Runtime
+-------
 
 To select the number of records processed, set `pcapviz:num_records` to a
 number. To process all records in the pcap, set it to the empty string
@@ -135,9 +134,6 @@ or "all".
 
     npm config set pcapviz:num_records "10000"  #process first 10k records
     npm config set pcapviz:num_records "all"    #process all records
-
-Runtime
--------
 
 The IP and port to bind, and the URL root are configurable.
 For example:

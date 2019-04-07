@@ -12,7 +12,7 @@ const tsf = require('./js/filtermaker');
 const slist = require('./lib/servicelist.js');
 const phr = require('./js/nethasher.js');
 
-let inputs = new Map(JSON.parse(fs.readFileSync("./input/inputs.json")));
+let inputs = new Map(JSON.parse(fs.readFileSync("./data/inputs.json")));
 
 let ph0 = new phr.nethasher();
 let ph0_servs = new phr.nethasher(slist.servicemap);
