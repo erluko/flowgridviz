@@ -1,6 +1,6 @@
 .PHONY: tidy clean
 
-ifndef input_mode
+ifndef npm_package_config_services_file
 $(error "Run this makefile via npm: 'npm run make' or 'npm install'")
 endif
 
@@ -12,7 +12,7 @@ out/%.js: templates/jsonwrapper.js data/%.json
 	sed -n -e 's/INSERT_KEY_NAME_HERE/$(notdir $(basename $@))/' -e '/^ *\/\/INSERT_DATA_HERE$$/! p' -e '/^ *\/\/INSERT_DATA_HERE$$/ r $(filter-out %.js,$^)' < $< >$@
 
 data/inputs.json: input/sample-inputs.json data/sample-flows.gz
-	cp $< $@
+	cp -n $< $@
 
 data/sample-flows.gz: input/sample-flows.gz
 	cp $< $@
