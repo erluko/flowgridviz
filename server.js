@@ -1,3 +1,4 @@
+const fs = require('fs');
 const http = require('http');
 const express = require('express');
 const app = express();
@@ -10,6 +11,8 @@ const pu = require('./js/pathutil');
 const tsf = require('./js/filtermaker');
 const slist = require('./lib/servicelist.js');
 const phr = require('./js/nethasher.js');
+
+let inputs = new Map(JSON.parse(fs.readFileSync("./input/inputs.json")));
 
 let ph0 = new phr.nethasher();
 let ph0_servs = new phr.nethasher(slist.servicemap);
@@ -141,12 +144,13 @@ app.get(url_root+'inputs.html',function(req,res){
     render: function(window,sdone) {
       let document = window.document;
       let holder = document.getElementById("sources");
-      for(name of records.keys()){
+      for(name of inputs.keys()){
         if(name.indexOf('/') == -1){
           let a = document.createElement("a");
           a.setAttribute("href",dyn_root + name+"/");
-          a.appendChild(document.createTextNode(name));
+          a.appendChild(document.createTextNode(inputs.get(name).title));
           holder.appendChild(a);
+          holder.appendChild(document.createElement("br"));
         } else {
           console.log("Bad data source name");
         }
@@ -268,18 +272,29 @@ console.log("Reading records");
 let startTime=new Date().getTime();
 let dots = setInterval(()=>console.log("."), 5000);
 
-(require('./lib/pcsd')
- .fromFile('data/input.gz')
- .then(function([p,l]){
-   clearInterval(dots);
-   let readyTime = new Date().getTime();
-   let elapsedSecs = ((readyTime - startTime)/1000).toFixed(3);
-   console.log(`Loaded ${p.length} records in ${elapsedSecs} seconds.`);
-   labels.set("main",l);
-   records.set("main",p);
-   var server = http.createServer(app);
-   phwalk("main", pth0) //initialize matrix cache
-   server.on("error", e =>console.log(`Unable to start server: ${e}`));
-   server.listen(port, ip, () => console.log(`pcapviz listening on http://${ip}:${port}${url_root}!`));
- }));
 
+let inputParser = require('./lib/pcsd');
+
+let proms = [];
+for([key,input] of inputs){
+  let f = input.file;
+  let prom = inputParser.fromFile('data/'+f);
+  proms.push(prom);
+  prom.then((function(key,input,[p,l]){
+    console.log(input)
+      let readyTime = new Date().getTime();
+      let elapsedSecs = ((readyTime - startTime)/1000).toFixed(3);
+      console.log(`Loaded ${p.length} records in ${elapsedSecs} seconds from ${input.file}`);
+      labels.set(key,l);
+      records.set(key,p);
+      phwalk(key, pth0); //initialize matrix cache
+  }).bind(null,key,input));
+}
+
+//TODO: switch to promise.race, show loading icon for not-yet-loaded data
+Promise.all(proms).then(function(){
+  clearInterval(dots);
+  var server = http.createServer(app);
+  server.on("error", e =>console.log(`Unable to start server: ${e}`));
+  server.listen(port, ip, () => console.log(`pcapviz listening on http://${ip}:${port}${url_root}!`));
+});
