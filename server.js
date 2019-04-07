@@ -279,7 +279,8 @@ let inputParser = require('./lib/pcsd');
 let proms = [];
 for([key,input] of inputs){
   let f = input.file;
-  let prom = inputParser.fromFile('data/'+f,{max: max_records});
+  let prom = inputParser.fromFile('data/'+f,{max: max_records,
+                                             no_label: input.no_label});
   proms.push(prom);
   prom.then((function(key,input,[p,l]){
     console.log(input)
