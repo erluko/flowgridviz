@@ -83,9 +83,21 @@
     let dots = Array.from({length:numparts},x=>'../');
 
     let body = d3.select("body");
-    body.select("h1")
-      .node()
-      .appendChild(document.createTextNode(": "+input_rec.title||''));
+
+    if(input_rec.title){
+      let titleDetail =document.createTextNode(input_rec.title);
+      let colon = document.createTextNode(": ");
+      if(input_rec.ref){
+        let text = titleDetail;
+        titleDetail = document.createElement("a");
+        titleDetail.setAttribute("href",input_rec.ref);
+        titleDetail.setAttribute("target","_blank");
+        titleDetail.appendChild(text);
+      }
+      let h1=body.select("h1").node();
+      h1.appendChild(colon);
+      h1.appendChild(titleDetail);
+    }
 
     body.select("div.nav")
       .selectAll("span.uplink")
