@@ -128,12 +128,12 @@ The default value is '/etc/services'
 Runtime
 -------
 
-To select the number of records processed, set `pcapviz:num_records` to a
-number. To process all records in the pcap, set it to the empty string
+To cap the number of records processed, set `pcapviz:max_records` to a
+number. To process all records in each input, set it to the empty string
 or "all".
 
-    npm config set pcapviz:num_records "10000"  #process first 10k records
-    npm config set pcapviz:num_records "all"    #process all records
+    npm config set pcapviz:max_records "10000"  #process first 10k records
+    npm config set pcapviz:max_records "all"    #process all records
 
 The IP and port to bind, and the URL root are configurable.
 For example:

@@ -38,6 +38,7 @@ app.set('view engine', 'html');
 
 const port = process.env.npm_package_config_port;
 const ip = process.env.npm_package_config_listen_ip;
+const max_records = (s=>s?(s.toLowerCase()=='all'?0:+s||0):0)(process.env.npm_package_config_max_records);
 let url_root = process.env.npm_package_config_url_root || '/';
 if(!url_root.endsWith("/")) url_root=url_root+'/';
 if(!url_root.startsWith("/")) url_root='/'+url_root;
@@ -278,7 +279,7 @@ let inputParser = require('./lib/pcsd');
 let proms = [];
 for([key,input] of inputs){
   let f = input.file;
-  let prom = inputParser.fromFile('data/'+f);
+  let prom = inputParser.fromFile('data/'+f,{max: max_records});
   proms.push(prom);
   prom.then((function(key,input,[p,l]){
     console.log(input)
