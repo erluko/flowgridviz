@@ -18,16 +18,21 @@ if(process.argv.length>=3){
 let output = process.stdout; //todo eventually add gzipped output support
 
 let cols = ['Src IP','Dst IP','Src Port','Dst Port','Tot Fwd Pkts','Label','Flow ID']
+let altcols = ['Source IP','Destination IP', 'Source Port','Destination Port', 'Total Fwd Packets', 'Label', 'Flow ID']
 let rl = readline.createInterface({
   input: input
 });
 let colidx;
 let headers = null;
 rl.on('line', function(line){
-  let parts = line.split(',');
+  let parts = line.split(/, */);
   if(headers == null){
     headers = new Map(parts.map((k,i)=>[k,i]));
     colidx = cols.map(k=>headers.get(k));
+    altidx = altcols.map(k=>headers.get(k));
+    if(colidx.includes(undefined)){
+      colidx = altidx;
+    }
   } else {
     let comma = '';
     for(let i of colidx){
