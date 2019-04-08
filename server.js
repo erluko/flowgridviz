@@ -122,6 +122,19 @@ function jsonWrap(n,d){
 `;
 }
 
+function reroot(rname,attr){
+   return function(n){
+     let s=n.getAttribute(attr);
+     if(s.startsWith("/")){
+       s = s.substr(1);
+       if(s.lastIndexOf("/")<1){
+         s = dyn_root+rname +"/"+s;
+       }
+       n.setAttribute(attr,url_root+s)
+     }
+   }
+}
+
 app.get(url_root+dyn_root,(req,res) => res.redirect(url_root+'inputs.html'));
 app.get(url_root,(req,res) => res.redirect(url_root+'inputs.html'));
 app.get(url_root+'index.html',(req,res) => res.redirect(url_root+'inputs.html'));
@@ -170,6 +183,8 @@ app.get(url_root+'inputs.html',function(req,res){
           console.log("Bad data source name");
         }
       }
+      Array.from(document.getElementsByTagName("script")).forEach(reroot('',"src"));
+      Array.from(document.getElementsByTagName("link")).forEach(reroot('',"href"));
     }});
 });
 
@@ -186,18 +201,7 @@ function forceValidRedirect(pp,req,res){
   return true;
 }
 
-function reroot(rname,attr){
-   return function(n){
-     let s=n.getAttribute(attr);
-     if(s.startsWith("/")){
-       s = s.substr(1);
-       if(s.lastIndexOf("/")<1){
-         s = dyn_root+rname +"/"+s;
-       }
-       n.setAttribute(attr,url_root+s)
-     }
-   }
-}
+
 
 app.get(url_root+dyn_root+':input/',function(req,res){
   let rname = req.params['input'];
