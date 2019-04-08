@@ -43,6 +43,10 @@ let url_root = process.env.npm_package_config_url_root || '/';
 if(!url_root.endsWith("/")) url_root=url_root+'/';
 if(!url_root.startsWith("/")) url_root='/'+url_root;
 
+function NotReadyException(thing) {
+  this.thing = thing;
+}
+
 let mwcache = new LRU(80);
 
 let phwalk = function(rname,pth){
@@ -54,7 +58,9 @@ let phwalk = function(rname,pth){
   let lph = (pth[0][0][0]=='p' ||
              pth[0][0][1]=='p')?ph0_servs:ph0;
   let pkts = records.get(rname);
-
+  if(!pkts){
+    throw new NotReadyException(rname);
+  }
   let bcount = phr.nethasher.getBucketCount();
   let mwk = [rname];
 
@@ -236,17 +242,34 @@ app.get(url_root+dyn_root+':input/*/matrix.json',function(req,res){
   let ps = req.params['0'];
   let pp = pu.pathParser(ps);
   if(forceValidRedirect(pp,req,res)) return;
-  let lmat = mwalk(rname,pp);
-  res.json(lmat);
+  try{
+    let lmat = mwalk(rname,pp);
+    res.json(lmat);
+  } catch(e) {
+    if(e instanceof NotReadyException){
+      res.status(409).json({error: "Resource not ready, try again later"})
+    } else {
+      throw e;
+    }
+  }
 });
 app.get(url_root+dyn_root+':input/*/pmatrix.js',function(req,res){
   let rname = req.params['input'];
   let ps = req.params['0'];
   let pp = pu.pathParser(ps);
   if(forceValidRedirect(pp,req,res)) return;
-  let lmat = mwalk(rname,pp);
-  res.type("text/javascript");
-  res.send(jsonWrap('pmatrix',lmat));
+  try{
+    let lmat = mwalk(rname,pp);
+    res.type("text/javascript");
+    res.send(jsonWrap('pmatrix',lmat));
+  } catch(e) {
+    if(e instanceof NotReadyException){
+      res.status(409).type("text/javascript").send(jsonWrap("pmatrix",{error: "Resource not ready, try again later"}));
+    } else {
+      throw e;
+    }
+  }
+
 });
 
 app.get(url_root+dyn_root+':input/*/filter.txt',function(req,res){
@@ -254,12 +277,20 @@ app.get(url_root+dyn_root+':input/*/filter.txt',function(req,res){
   let ps = req.params['0'];
   let pp = pu.pathParser(ps);
   if(forceValidRedirect(pp,req,res)) return;
-  let matrix = mwalk(rname,pp);
-  res.type("text/plain")
-  res.send(tsf.tsDisplayFilter(matrix.sources,
-                               matrix.dests,
-                               matrix.stype,
-                               matrix.dtype)+"\n");
+  try {
+    let matrix = mwalk(rname,pp);
+    res.type("text/plain")
+    res.send(tsf.tsDisplayFilter(matrix.sources,
+                                 matrix.dests,
+                                 matrix.stype,
+                                 matrix.dtype)+"\n");
+  } catch(e) {
+    if(e instanceof NotReadyException){
+      res.status(409).type("text/plain").send("error: Resource not ready, try again later");
+    } else {
+      throw e;
+    }
+  }
 });
 app.get(url_root+dyn_root+':input/filter.txt',function(req,res){
   res.type("text/plain")
@@ -269,7 +300,11 @@ app.get(url_root+dyn_root+':input/filter.txt',function(req,res){
 app.get(url_root+dyn_root+':input/pcap.json',function(req,res){
   let rname = req.params['input'];
   let recs = records.get(rname);
-  res.json(recs);
+  if(recs){
+    res.json(recs);
+  } else {
+    res.status(409).json({error: "Resource not ready, try again later"})
+  }
 });
 
 app.get(url_root+dyn_root+':input/*/pcap.json',function(req,res){
@@ -277,8 +312,16 @@ app.get(url_root+dyn_root+':input/*/pcap.json',function(req,res){
   let ps = req.params['0'];
   let pp = pu.pathParser(ps);
   if(forceValidRedirect(pp,req,res)) return;
-  let [matrix,pkts] = phwalk(rname,pp);
-  res.json(pkts);
+  try {
+    let [matrix,pkts] = phwalk(rname,pp);
+    res.json(pkts);
+  } catch(e) {
+    if(e instanceof NotReadyException){
+      res.status(409).json({error: "Resource not ready, try again later"})
+    } else {
+      throw e;
+    }
+  }
 });
 
 console.log("Reading records");
@@ -307,10 +350,11 @@ for([key,input] of inputs){
   // https://stackoverflow.com/questions/32912459/promises-pass-additional-parameters-to-then-chain
 }
 
-//TODO: switch to promise.race, show loading icon for not-yet-loaded data
 Promise.all(proms).then(function(){
   clearInterval(dots);
-  var server = http.createServer(app);
-  server.on("error", e =>console.log(`Unable to start server: ${e}`));
-  server.listen(port, ip, () => console.log(`pcapviz listening on http://${ip}:${port}${url_root}!`));
+  console.log('All inputs loaded');
 });
+
+var server = http.createServer(app);
+server.on("error", e =>console.log(`Unable to start server: ${e}`));
+server.listen(port, ip, () => console.log(`pcapviz listening on http://${ip}:${port}${url_root}!`));
