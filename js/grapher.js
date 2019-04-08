@@ -308,6 +308,22 @@
 
     as.merge(newAs)
       .attr("xlink:href",([idx,v]) => subgraphURL(+idx))
+      .on("click",function(){
+        let anchor = d3.select(this);
+        d3.event.preventDefault()
+        let crect = d3.select(svg.node()
+                              .appendChild(anchor.select("rect")
+                                           .node()
+                                           .cloneNode()));
+        crect.style('clip-path','none')
+          .transition()
+          .attr("width",WIDTH-PADDINGS.x)
+          .attr("height",HEIGHT-PADDINGS.y)
+          .attr('x',scales.x(0))
+          .attr('y',scales.y(0))
+          .style("opacity",0.7)
+          .on("end",_=>{window.location=anchor.attr("href")});
+      })
       .select("rect")
       .attr("width",UNIT_SIZE.x*(gapf))
       .attr("height",UNIT_SIZE.y*(gapf))
@@ -316,7 +332,7 @@
       .attr("fill",([idx,[v,l]])=>v=0?'white':d3.interpolateYlOrBr(scales.z(v)))
       .classed("labeled",([idx,[v,l]])=>l!=0)
       .on("mouseover",function(){handleHover.call(this,true,...arguments)})
-      .on("mouseout",function(){handleHover.call(this,false,...arguments)});
+      .on("mouseout",function(){handleHover.call(this,false,...arguments)})
 
     //remove loading graphic
     body.style("background-image","none");
