@@ -315,15 +315,21 @@
                               .appendChild(anchor.select("rect")
                                            .node()
                                            .cloneNode()));
+        let recs = d3.selectAll('rect.plot')
+          .transition()
+          .style("opacity",0.1);
+
         crect.style('clip-path','none')
+          .style("opacity",0.1)
           .transition()
           .attr("width",WIDTH-PADDINGS.x)
           .attr("height",HEIGHT-PADDINGS.y)
           .attr('x',scales.x(0))
           .attr('y',scales.y(0))
-          .style("opacity",0.7)
+          .style("opacity",1)
           .on("end",_=>{window.location=anchor.attr("href");
-                        crect.remove()});
+                        crect.remove();
+                        rects.style("opacity",1)});
       })
       .select("rect")
       .attr("width",UNIT_SIZE.x*(gapf))
