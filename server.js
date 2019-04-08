@@ -16,7 +16,6 @@ let inputs = new Map(JSON.parse(fs.readFileSync("./data/inputs.json")));
 
 let ph0 = new phr.nethasher();
 let ph0_servs = new phr.nethasher(slist.servicemap);
-let pth0 = pu.pathParser("/pp/");
 let labels  = new Map();
 let records = new Map();
 let all_ready = false;
@@ -52,7 +51,9 @@ let mwcache = new LRU(80);
 
 let phwalk = function(rname,pth){
   if(pth == null || pth.length <1){
-    pth = pth0;
+    let inp = inputs.get(rname);
+    let view = (inp?inp.initial:null) || 'pp';
+    pth = pu.pathParser('/'+view+'/');
   }
   //Apply the service list only at top level and only if showing ports
   //on at least one axis:
@@ -205,12 +206,16 @@ function forceValidRedirect(pp,req,res){
 
 app.get(url_root+dyn_root+':input/',function(req,res){
   let rname = req.params['input'];
-  res.redirect(url_root+dyn_root+rname+'/pp/index.html');
+  let inp = inputs.get(rname);
+  let view = (inp?inp.initial:null) || 'pp';
+  res.redirect(url_root+dyn_root+rname+'/'+view+'/index.html');
 });
 
 app.get(url_root+dyn_root+':input/index.html',function(req,res){
   let rname = req.params['input'];
-  res.redirect(url_root+dyn_root+rname+'/pp/index.html');
+  let inp = inputs.get(rname);
+  let view = (inp?inp.initial:null) || 'pp';
+  res.redirect(url_root+dyn_root+rname+'/'+view+'/index.html');
 });
 
 app.get(url_root+dyn_root+':input/*/index.html',function(req,res){
@@ -364,7 +369,7 @@ for([key,input] of inputs){
       console.log(`Loaded ${p.length} records in ${elapsedSecs} seconds from ${input.file}`);
       labels.set(key,l);
       records.set(key,p);
-      phwalk(key, pth0); //initialize matrix cache
+      phwalk(key, null); //initialize matrix cache
   }).bind(null,key,input));
   //above use of bind inspired by:
   // https://stackoverflow.com/questions/32912459/promises-pass-additional-parameters-to-then-chain
