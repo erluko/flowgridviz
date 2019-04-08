@@ -4,6 +4,7 @@ Amazon Linux 2. They are not guaranteed to be reproducible.
 
 # First, fetch the pcaps in the background. This will take a while.
 
+    # this is one example, you can use another
     curl -sO https://iscxdownloads.cs.unb.ca/iscxdownloads/ISCX-Bot-2014/ISCX_Botnet-Training.pcap &
 
 # Optional: install the mg editor
@@ -37,6 +38,7 @@ Amazon Linux 2. They are not guaranteed to be reproducible.
 
 # install wireshark to get tshark
 
+    #only if using actual pcaps and not just flows
     sudo yum install -y wireshark
 
 
@@ -68,8 +70,6 @@ Amazon Linux 2. They are not guaranteed to be reproducible.
     cd pcapviz
     npm config set pcapviz:num_packets "all"
     npm config set pcapviz:url_root pcv
-    npm config set pcapviz:pcap_file $(pwd)/../ISCX_Botnet-Training.pcap
-
 
 # Configure nginx
 
@@ -81,6 +81,11 @@ Amazon Linux 2. They are not guaranteed to be reproducible.
 # Final repository setup (depends on giant pcap download)
 
     wait %1 #wait for pcap download to complete
+    ./util/convert-pcap.sh $(pwd)/../ISCX_Botnet-Training.pcap | \
+      gzip -c > data/ISCX-Bot-2014.gz
+    echo '[["ISCX-Bot-2014",{"file": "ISCX-Bot-2014.gz",
+          "title": "Unabeled 9M packet ISCX_Botnet-Training.pcap"}]]' \
+       > data/inputs.json
     npm install
     pm2 start #if you skipped pm2 installation, run npm start
 
