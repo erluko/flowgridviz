@@ -7,6 +7,16 @@
 
 
   pdata = importData('pmatrix');
+  if(pdata.error){
+    window.onload=function(){
+      let body = d3.select("body");
+      body.selectAll('*').remove();
+      let h1=body.append("H1").text("Loading data. Please wait.");
+      window.setTimeout(_=>window.location=window.location,1000);
+      return;
+    }
+    return;
+  }
   let sources = new Set(pdata.sources);
   let dests = new Set(pdata.dests);
   let plotrix = pdata.matrix;
@@ -74,6 +84,7 @@
     if(typeof(oldload) == 'function'){
       oldload.apply(this,arguments);
     }
+
     let pathParts = pathutil.pathParser(window.location.pathname
                                         .substring(0,window.location.pathname.length-"index.html".length));
     let top_level = pathutil.isTopLevel(pathParts);

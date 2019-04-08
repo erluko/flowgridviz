@@ -264,7 +264,8 @@ app.get(url_root+dyn_root+':input/*/pmatrix.js',function(req,res){
     res.send(jsonWrap('pmatrix',lmat));
   } catch(e) {
     if(e instanceof NotReadyException){
-      res.status(409).type("text/javascript").send(jsonWrap("pmatrix",{error: "Resource not ready, try again later"}));
+      // this one returns 200 because grapher.js reads this error
+      res.status(200).type("text/javascript").send(jsonWrap("pmatrix",{error: "Resource not ready, try again later"}));
     } else {
       throw e;
     }
