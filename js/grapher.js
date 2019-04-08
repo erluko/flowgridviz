@@ -317,7 +317,7 @@
                                            .cloneNode()));
         let recs = d3.selectAll('rect.plot')
           .transition()
-          .style("opacity",0.1);
+          .style("opacity",0);
 
         crect.style('clip-path','none')
           .style("opacity",0.1)
@@ -328,8 +328,9 @@
           .attr('y',scales.y(0))
           .style("opacity",1)
           .on("end",_=>{window.location=anchor.attr("href");
-                        crect.remove();
-                        rects.style("opacity",1)});
+                        svg.style("opacity",0);
+                        body.style("background-image",null);
+                       });
       })
       .select("rect")
       .attr("width",UNIT_SIZE.x*(gapf))
