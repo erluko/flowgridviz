@@ -45,7 +45,10 @@ that will be displayed to the user as the name of this data source.
 Optional fields include:
 
  * no_label: flows with this label will be treated as unlabeled
- * ref: A url describing the data source (not a link to a pcap)
+ * ref: The url of a web page describing the data source (not a link
+   to a pcap)
+ * initial: one of: 'pp','ip','pi','ii' to indicate the default view
+   for this data set. Defaults to port x port view (pp).
 
 Each input file is read and processed at startup time. pcapviz can
 read gzipped input data and this is highly recommended.

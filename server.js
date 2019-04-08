@@ -49,11 +49,16 @@ function NotReadyException(thing) {
 
 let mwcache = new LRU(80);
 
+let legalViews=new Set(['pp','pi','ip','ii']);
+let defaultView = function(rname){
+  let inp = inputs.get(rname);
+  let view = (inp?inp.initial:null);
+  return legalViews.has(view)?view:'pp';
+}
+
 let phwalk = function(rname,pth){
   if(pth == null || pth.length <1){
-    let inp = inputs.get(rname);
-    let view = (inp?inp.initial:null) || 'pp';
-    pth = pu.pathParser('/'+view+'/');
+    pth = pu.pathParser('/'+defaultView(rname)+'/');
   }
   //Apply the service list only at top level and only if showing ports
   //on at least one axis:
@@ -206,16 +211,12 @@ function forceValidRedirect(pp,req,res){
 
 app.get(url_root+dyn_root+':input/',function(req,res){
   let rname = req.params['input'];
-  let inp = inputs.get(rname);
-  let view = (inp?inp.initial:null) || 'pp';
-  res.redirect(url_root+dyn_root+rname+'/'+view+'/index.html');
+  res.redirect(url_root+dyn_root+rname+'/'+defaultView(rname)+'/index.html');
 });
 
 app.get(url_root+dyn_root+':input/index.html',function(req,res){
   let rname = req.params['input'];
-  let inp = inputs.get(rname);
-  let view = (inp?inp.initial:null) || 'pp';
-  res.redirect(url_root+dyn_root+rname+'/'+view+'/index.html');
+  res.redirect(url_root+dyn_root+rname+'/'+defaultView(rname)+'/index.html');
 });
 
 app.get(url_root+dyn_root+':input/*/index.html',function(req,res){
