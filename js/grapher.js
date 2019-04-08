@@ -322,7 +322,8 @@
           .attr('x',scales.x(0))
           .attr('y',scales.y(0))
           .style("opacity",0.7)
-          .on("end",_=>{window.location=anchor.attr("href")});
+          .on("end",_=>{window.location=anchor.attr("href");
+                        crect.remove()});
       })
       .select("rect")
       .attr("width",UNIT_SIZE.x*(gapf))
