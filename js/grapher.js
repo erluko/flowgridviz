@@ -6,8 +6,8 @@
   let importData = inNode?n=>require('../out/'+n+'.js').IMPORT_DATA.get(n):n=>IMPORT_DATA.get(n);
 
 
-  pdata = importData('pmatrix');
-  if(pdata.error){
+  let ready = importData('ready');
+  if(!ready){
     window.onload=function(){
       let body = d3.select("body");
       body.selectAll('*').remove();
@@ -17,6 +17,7 @@
     }
     return;
   }
+  pdata = importData('pmatrix');
   let sources = new Set(pdata.sources);
   let dests = new Set(pdata.dests);
   let plotrix = pdata.matrix;

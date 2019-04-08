@@ -264,13 +264,15 @@ app.get(url_root+dyn_root+':input/*/pmatrix.js',function(req,res){
     res.send(jsonWrap('pmatrix',lmat));
   } catch(e) {
     if(e instanceof NotReadyException){
-      // this one returns 200 because grapher.js reads this error
-      res.status(200).type("text/javascript").send(jsonWrap("pmatrix",{error: "Resource not ready, try again later"}));
+      res.status(409).type("text/javascript").send(jsonWrap("pmatrix",{error: "Resource not ready, try again later"}));
     } else {
       throw e;
     }
   }
-
+});
+app.get(url_root+dyn_root+':input/ready.js',function(req,res){
+  let rname = req.params['input'];
+  res.type("text/javascript").send(jsonWrap('ready',records.has(rname)));
 });
 
 app.get(url_root+dyn_root+':input/*/filter.txt',function(req,res){
