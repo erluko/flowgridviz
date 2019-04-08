@@ -215,8 +215,7 @@
       .domain([1,maxCount])
       .range([0.15,1]);
 
-    let gapf = 1;//0.03;
-    let rf = 1;//0.08;
+    let gapf = 1;
 
     /* Subgraphs are described in lib/matrixexplorer.js
 
