@@ -5,7 +5,8 @@
   var root = inNode?module.exports:this;
   let importData = inNode?n=>require('../out/'+n+'.js').IMPORT_DATA.get(n):n=>IMPORT_DATA.get(n);
 
-  let useAnimatedTransitions = true;
+  let useAnimatedTransitions = OneCookie.get({anim:true}).anim;
+
   let ready = importData('ready');
   if(!ready){
     window.onload=function(){
