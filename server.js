@@ -19,6 +19,7 @@ let ph0_servs = new phr.nethasher(slist.servicemap);
 let pth0 = pu.pathParser("/pp/");
 let labels  = new Map();
 let records = new Map();
+let all_ready = false;
 
 let dyn_root = 'viz/';
 
@@ -148,9 +149,12 @@ app.get(url_root+'js-ext/:script.js',function (req,res){
 
 app.get(url_root+'inputs.html',function(req,res){
   res.render('inputs',{
-    key: 'inputs',
+    key: 'inputs'+all_ready,
     render: function(window,sdone) {
       let document = window.document;
+      if(all_ready){
+        document.getElementById("readyscript").remove()
+      }
       let holder = document.getElementById("sources");
       for(name of inputs.keys()){
         if(name.indexOf('/') == -1){
@@ -270,9 +274,15 @@ app.get(url_root+dyn_root+':input/*/pmatrix.js',function(req,res){
     }
   }
 });
+
 app.get(url_root+dyn_root+':input/ready.js',function(req,res){
   let rname = req.params['input'];
   res.type("text/javascript").send(jsonWrap('ready',records.has(rname)));
+});
+
+app.get(url_root+dyn_root+':input/ready.json',function(req,res){
+  let rname = req.params['input'];
+  res.json(records.has(rname));
 });
 
 app.get(url_root+dyn_root+':input/*/filter.txt',function(req,res){
@@ -356,6 +366,7 @@ for([key,input] of inputs){
 Promise.all(proms).then(function(){
   clearInterval(dots);
   console.log('All inputs loaded');
+  all_ready = true;
 });
 
 var server = http.createServer(app);
