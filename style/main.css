@@ -22,7 +22,7 @@ rect { stroke: none }
 
 rect.plot { clip-path: inset(0px 0px 0px 0px)}
 rect.labeled { stroke: purple;
-               stroke-opacity: 0.7;
+               stroke-opacity: 0.5;
                stroke-width: 5px;}
 
 h1 { text-align: center; font-size: 24px }
