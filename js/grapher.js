@@ -226,9 +226,6 @@
      */
     let subgraphURL = function(idx){
       let newpath='./'+idx+'/'+pdata.stype+pdata.dtype+'/index.html'
-      if(window.location.pathname.startsWith('/index.html')){
-        newpath = 'pp/'+newpath;
-      }
       return newpath;
     }
 
