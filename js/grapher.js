@@ -5,7 +5,7 @@
   var root = inNode?module.exports:this;
   let importData = inNode?n=>require('../out/'+n+'.js').IMPORT_DATA.get(n):n=>IMPORT_DATA.get(n);
 
-
+  let useAnimatedTransitions = true;
   let ready = importData('ready');
   if(!ready){
     window.onload=function(){
@@ -293,6 +293,11 @@
     }
     showTotals();
 
+    let showProgress = function(){
+      svg.style("opacity",0);
+      body.style("background-image",null);
+    }
+
     let as = svg.selectAll("a.plot")
         .data(plotrix);
 
@@ -309,28 +314,30 @@
     as.merge(newAs)
       .attr("xlink:href",([idx,v]) => subgraphURL(+idx))
       .on("click",function(){
-        let anchor = d3.select(this);
-        d3.event.preventDefault()
-        let crect = d3.select(svg.node()
-                              .appendChild(anchor.select("rect")
-                                           .node()
-                                           .cloneNode()));
-        let recs = d3.selectAll('rect.plot')
-          .transition()
-          .style("opacity",0);
+        if(useAnimatedTransitions){
+          let anchor = d3.select(this);
+          d3.event.preventDefault()
+          let crect = d3.select(svg.node()
+                                .appendChild(anchor.select("rect")
+                                             .node()
+                                             .cloneNode()));
+          let recs = d3.selectAll('rect.plot')
+              .transition()
+              .style("opacity",0);
 
-        crect.style('clip-path','none')
-          .style("opacity",0.1)
-          .transition()
-          .attr("width",WIDTH-PADDINGS.x)
-          .attr("height",HEIGHT-PADDINGS.y)
-          .attr('x',scales.x(0))
-          .attr('y',scales.y(0))
-          .style("opacity",1)
-          .on("end",_=>{window.location=anchor.attr("href");
-                        svg.style("opacity",0);
-                        body.style("background-image",null);
-                       });
+          crect.style('clip-path','none')
+            .style("opacity",0.1)
+            .transition()
+            .attr("width",WIDTH-PADDINGS.x)
+            .attr("height",HEIGHT-PADDINGS.y)
+            .attr('x',scales.x(0))
+            .attr('y',scales.y(0))
+            .style("opacity",1)
+            .on("end",_=>{window.location=anchor.attr("href");
+                          showProgress()});
+        } else {
+          showProgress();
+        }
       })
       .select("rect")
       .attr("width",UNIT_SIZE.x*(gapf))
