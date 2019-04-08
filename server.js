@@ -158,6 +158,9 @@ app.get(url_root+'inputs.html',function(req,res){
       let holder = document.getElementById("sources");
       for(name of inputs.keys()){
         if(name.indexOf('/') == -1){
+          let img = document.createElement("img");
+          img.setAttribute("src",records.has(name)?"images/checkbox.png":"images/loading-sm.gif");
+          holder.appendChild(img);
           let a = document.createElement("a");
           a.setAttribute("href",dyn_root + name+"/");
           a.appendChild(document.createTextNode(inputs.get(name).title));
