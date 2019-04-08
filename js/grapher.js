@@ -11,7 +11,9 @@
     window.onload=function(){
       let body = d3.select("body");
       body.selectAll('*').remove();
-      let h1=body.append("H1").text("Loading data. Please wait.");
+      let s="Loading data. Please wait.";
+      document.title=s;
+      let h1=body.append("H1").text(s);
       window.setTimeout(_=>window.location=window.location,1000);
       return;
     }
@@ -109,6 +111,7 @@
       let h1=body.select("h1").node();
       h1.appendChild(colon);
       h1.appendChild(titleDetail);
+      document.title=h1.innerText;
     }
 
     body.select("div.nav")
