@@ -104,6 +104,11 @@
       body.style("background-image",null);
     }
 
+    let hideLoading = function(){
+      svg.style("opacity",1);
+      body.style("background-image","none");
+    }
+
     if(input_rec.title){
       let titleDetail =document.createTextNode(input_rec.title);
       let colon = document.createTextNode(": ");
@@ -274,7 +279,8 @@
         .style("top",getSize(svgHolder,"top", 50)+"px")
         .style("left",getSize(svgHolder,"right", svgHolderWidth)+"px")
 
-    body.style("width", getSize(tipHolder,"right", svgHolderWidth)+"px");
+    body.style("width",getSize(tipHolder,"right", svgHolderWidth)+"px");
+    body.style("background-position", (svgHolderWidth/2)+"px center");
 
     let tip = {count: tipHolder.append("span"),
                label: labels.length>0?(tipHolder.append("br"),tipHolder.append("span")):{text:_=>null},
@@ -382,10 +388,8 @@
             _=>setbox.style("visibility",_=>
                             setbox.style("visibility") == "visible"?
                             "hidden": "visible"));
-    window.getSize=getSize;
-
 
     //remove loading graphic
-    body.style("background-image","none");
+    hideLoading();
   };
 })();
