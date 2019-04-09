@@ -399,11 +399,22 @@
 
     options.append(d=>document.createTextNode(d.name));
 
+    let win = d3.select(window);
+    let windowHideSettings = function(){
+      if(d3.event.target!=gear.node()){
+        gear.dispatch("click")
+      }
+    }
     gear.on("click",
-            _=>setbox.style("visibility",_=>
-                            setbox.style("visibility") == "visible"?
-                            "hidden": "visible"));
-
+            function(){
+              if(setbox.style("visibility") == "visible"){
+                win.on("click.settings",null);
+                setbox.style("visibility","hidden")
+              } else {
+                setbox.style("visibility","visible")
+                win.on("click.settings", windowHideSettings);
+              }
+            })
     //remove loading graphic
     hideLoading();
   };
