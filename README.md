@@ -201,7 +201,8 @@ Acknowledgments
 PCAP sample data is from
 https://iscxdownloads.cs.unb.ca/iscxdownloads/ISCX-Bot-2014/ISCX_Botnet-Training.pcap
 
-Loading graphic (images/loading.gif) was generated using
+Loading graphics (images/loading*.gif) are in the public domain and
+were generated using
 http://www.ajaxload.info/
 
 Public domain transparent favicon is from
@@ -218,6 +219,11 @@ was helpful. It took some tweaking to make it work on Amazon Linux 2.
 Pre-deployment testing was made possible by Amazon's guide to running
 an EC2-like Linux image in VirtualBox:
 https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/amazon-linux-2-virtual-machine.html
+
+Checkbox icon was created from scratch in GiMP.
+
+Gear icon is in the public domain:
+https://publicdomainvectors.org/en/free-clipart/Tool-options/67662.html
 
 See package.json for a list of server-side dependencies.
 

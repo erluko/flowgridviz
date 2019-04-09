@@ -13,6 +13,15 @@ text {
 
 svg { display: block; }
 
+div.settings { float:right; padding-right:5px; }
+
+#settings-panel {
+    visibility: hidden;
+    position: absolute;
+    background: lightgrey;
+    z-index: 1;
+}
+
 div.graph {
     display: inline-block;
     vertical-align: top;

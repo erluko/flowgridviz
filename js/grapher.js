@@ -5,7 +5,7 @@
   var root = inNode?module.exports:this;
   let importData = inNode?n=>require('../out/'+n+'.js').IMPORT_DATA.get(n):n=>IMPORT_DATA.get(n);
 
-  let useAnimatedTransitions = OneCookie.get({anim:true}).anim;
+  let settings = OneCookie.get({anim:true});
 
   let ready = importData('ready');
   if(!ready){
@@ -315,7 +315,7 @@
     as.merge(newAs)
       .attr("xlink:href",([idx,v]) => subgraphURL(+idx))
       .on("click",function(){
-        if(useAnimatedTransitions){
+        if(settings.anim){
           let anchor = d3.select(this);
           d3.event.preventDefault()
           let crect = d3.select(svg.node()
@@ -349,6 +349,39 @@
       .classed("labeled",([idx,[v,l]])=>l!=0)
       .on("mouseover",function(){handleHover.call(this,true,...arguments)})
       .on("mouseout",function(){handleHover.call(this,false,...arguments)})
+
+    let setbox = body.select('#settings-panel');
+    let gear = body.select('#gear');
+
+    setbox.style("right",(window.innerWidth - getSize(gear,"right") -
+                          getSize(gear,"width"))+"px")
+      .style("top",getSize(gear,"bottom")+"px");
+
+    let spans = setbox.append("form")
+        .selectAll("span.setting")
+        .data([{name:"Use Animations",cname:"anim"}])
+        .enter()
+        .append("span")
+        .classed("setting",true)
+
+    spans.append("input")
+      .attr("type","checkbox")
+      .attr("checked",d=>settings[d.cname]?"checked":null)
+      .on("change",function(){
+        let me = d3.select(this);
+        let d = me.datum();
+        settings[d.cname]=this.checked;
+        OneCookie.set(settings);
+      });
+    spans.append("label")
+      .text(d=>d.name)
+
+    gear.on("click",
+            _=>setbox.style("visibility",_=>
+                            setbox.style("visibility") == "visible"?
+                            "hidden": "visible"));
+    window.getSize=getSize;
+
 
     //remove loading graphic
     body.style("background-image","none");
