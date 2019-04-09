@@ -99,6 +99,11 @@
 
     let body = d3.select("body");
 
+    let showLoading = function(){
+      svg.style("opacity",0);
+      body.style("background-image",null);
+    }
+
     if(input_rec.title){
       let titleDetail =document.createTextNode(input_rec.title);
       let colon = document.createTextNode(": ");
@@ -133,6 +138,7 @@
         }
         return null;
       })
+      .on("click",showLoading)
       .text(v=>v instanceof Array?v.join(''):v)
 
     let sel = pdata.stype+pdata.dtype;
@@ -144,6 +150,7 @@
       .attr("href",d=>'../'+d+'/index.html')
       .attr("class",d=>d+"_link")
       .classed("types_selected",d=>d==sel)
+      .on("click",showLoading)
       .text(d=>d)
 
     let svgHolder = body.select("div.graph");
@@ -294,11 +301,6 @@
     }
     showTotals();
 
-    let showProgress = function(){
-      svg.style("opacity",0);
-      body.style("background-image",null);
-    }
-
     let as = svg.selectAll("a.plot")
         .data(plotrix);
 
@@ -335,9 +337,9 @@
             .attr('y',scales.y(0))
             .style("opacity",1)
             .on("end",_=>{window.location=anchor.attr("href");
-                          showProgress()});
+                          showLoading()});
         } else {
-          showProgress();
+          showLoading();
         }
       })
       .select("rect")
