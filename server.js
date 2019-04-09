@@ -228,6 +228,7 @@ app.get(url_root+dyn_root+':input/*/index.html',function(req,res){
     key: rname+'/index',
     render: function(window,sdone) {
       let document = window.document;
+      Array.from(document.getElementsByTagName("img")).forEach(reroot(rname,"src"));
       Array.from(document.getElementsByTagName("script")).forEach(reroot(rname,"src"));
       Array.from(document.getElementsByTagName("link")).forEach(reroot(rname,"href"));
     }});
