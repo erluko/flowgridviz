@@ -6,6 +6,7 @@
   let importData = inNode?n=>require('../out/'+n+'.js').IMPORT_DATA.get(n):n=>IMPORT_DATA.get(n);
 
   let settings = OneCookie.get({anim:true,shrt:false});
+  let settingsWatchers = Object.entries(settings).reduce((a,[k,v])=>(a[k]=[],a),{});
 
   let ready = importData('ready');
   if(!ready){
@@ -288,12 +289,24 @@
                dest: (tipHolder.append("br"),tipHolder.append("span")),
               }
 
+    function elideText(text,max){
+      return text.length > max?text.substr(0,max-1)+'\u2026':text;
+    }
+
     function showTotals(){
+      let shorten = settings.shrt;
       tip.count.text("Total Count: "+totalPackets)
-      tip.source.text("from: "+pdata.sources.map(type_display[pdata.stype]).join(' '));
-      tip.dest.text("to: "+pdata.dests.map(type_display[pdata.dtype]).join(' '));
+      let fromtext = pdata.sources.map(type_display[pdata.stype]).join(' ');
+      if(shorten) fromtext = elideText(fromtext,1000);
+      tip.source.text("from: "+ fromtext);
+      let totext = pdata.dests.map(type_display[pdata.dtype]).join(' ');
+      if(shorten) totext = elideText(totext,1000);
+      tip.dest.text("to: " + totext);
       tip.label.text("label(s): "+(usedL==0?'None':labels.filter((n,i)=>usedL & 1<<i)));
     }
+
+    settingsWatchers.shrt.push(showTotals);
+
     function handleHover(mode,[idx,[c,l]],index,nodes){
       if(mode){
         let [sps,dps] = valuesForIndex(+idx);
@@ -380,6 +393,7 @@
         let me = d3.select(this);
         let d = me.datum();
         settings[d.cname]=this.checked;
+        settingsWatchers[d.cname].forEach(x=>x(this.checked));
         OneCookie.set(settings);
       })
 
