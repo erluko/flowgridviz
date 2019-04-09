@@ -6,6 +6,7 @@ body {
     background-position: center;
 }
 
+label { display: block; padding-right: 8px;}
 text {
     fill:black;
     font-family: sans-serif

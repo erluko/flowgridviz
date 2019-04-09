@@ -5,7 +5,7 @@
   var root = inNode?module.exports:this;
   let importData = inNode?n=>require('../out/'+n+'.js').IMPORT_DATA.get(n):n=>IMPORT_DATA.get(n);
 
-  let settings = OneCookie.get({anim:true});
+  let settings = OneCookie.get({anim:true,shrt:false});
 
   let ready = importData('ready');
   if(!ready){
@@ -365,14 +365,15 @@
                           getSize(gear,"width"))+"px")
       .style("top",getSize(gear,"bottom")+"px");
 
-    let spans = setbox.append("form")
-        .selectAll("span.setting")
-        .data([{name:"Use Animations",cname:"anim"}])
+    let options = setbox.append("form")
+        .selectAll("label.setting")
+        .data([{name:"Use Animations",cname:"anim"},
+               {name:"Abbreviate Long Lists",cname:"shrt"},])
         .enter()
-        .append("span")
+        .append("label")
         .classed("setting",true)
 
-    spans.append("input")
+    options.append("input")
       .attr("type","checkbox")
       .attr("checked",d=>settings[d.cname]?"checked":null)
       .on("change",function(){
@@ -380,9 +381,9 @@
         let d = me.datum();
         settings[d.cname]=this.checked;
         OneCookie.set(settings);
-      });
-    spans.append("label")
-      .text(d=>d.name)
+      })
+
+    options.append(d=>document.createTextNode(d.name));
 
     gear.on("click",
             _=>setbox.style("visibility",_=>
