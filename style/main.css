@@ -20,6 +20,7 @@ div.settings { float:right; padding-right:5px; }
     position: absolute;
     background: lightgrey;
     z-index: 1;
+    padding: 10px;
 }
 
 div.graph {
