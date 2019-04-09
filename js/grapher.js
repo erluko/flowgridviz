@@ -144,7 +144,7 @@
         }
         return null;
       })
-      .on("click",showLoading)
+      .each(function(){if(this.href) d3.select(this).on("click",showLoading)})
       .text(v=>v instanceof Array?v.join(''):v)
 
     let sel = pdata.stype+pdata.dtype;
