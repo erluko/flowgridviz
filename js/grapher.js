@@ -382,10 +382,6 @@
     let setbox = body.select('#settings-panel');
     let gear = body.select('#gear');
 
-    setbox.style("right",(window.innerWidth - getSize(gear,"right") -
-                          getSize(gear,"width"))+"px")
-      .style("top",getSize(gear,"bottom")+"px");
-
     let options = setbox.append("form")
         .selectAll("label.setting")
         .data([{name:"Use Animations",cname:"anim"},
@@ -406,6 +402,9 @@
       })
 
     options.append(d=>document.createTextNode(d.name));
+
+    setbox.style("left",((getSize(gear,"right") - getSize(setbox,"width"))+"px"))
+      .style("top",getSize(gear,"bottom")+"px");
 
     let win = d3.select(window);
     let windowHideSettings = function(){
