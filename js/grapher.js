@@ -401,7 +401,8 @@
 
     let win = d3.select(window);
     let windowHideSettings = function(){
-      if(d3.event.target!=gear.node()){
+      if(d3.event.target!=gear.node() &&
+         !setbox.node().contains(d3.event.target)){
         gear.dispatch("click")
       }
     }
