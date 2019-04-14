@@ -174,6 +174,14 @@
 //todo: FIXME
     svg.node().setAttribute("xmlns:xlink","http://www.w3.org/1999/xlink");
 
+   svg.append("defs")
+      .append("clipPath")
+      .attr("clipPathUnits","objectBoundingBox")
+      .attr("id","cpth")
+      .append("rect")
+      .attr("width","1")
+      .attr("height","1")
+
     // distinct paddings -- to leave room for title, labels, and legend
     let PADDINGS = {left: 40,
                     right: 0,

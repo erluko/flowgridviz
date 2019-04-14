@@ -31,7 +31,8 @@ div.graph {
 
 rect { stroke: none }
 
-rect.plot { clip-path: inset(0px 0px 0px 0px)}
+rect.plot { clip-path: url(#cpth)}
+
 rect.labeled { stroke: purple;
                stroke-opacity: 0.5;
                stroke-width: 5px;}
