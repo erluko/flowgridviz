@@ -94,7 +94,7 @@
                                         .substring(0,window.location.pathname.length-"index.html".length));
     let top_level = pathutil.isTopLevel(pathParts);
 
-    let chunks = ["inputs",input_key,].concat(pathParts.flatMap(x=>x));
+    let chunks = ["inputs",input_key,].concat(pathParts.reduce((o,p)=>o.concat(p),[]))
     let numparts = chunks.length - (chunks[chunks.length-1]==null?2:1);
     let dots = Array.from({length:numparts},x=>'../');
 
