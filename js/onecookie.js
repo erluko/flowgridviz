@@ -11,7 +11,9 @@
     TooLarge:  function(){ // Exception constructor
       this.message = "Cookie value too large";
     },
-    clear: function() { // clear ALL cookies aggressively
+    clear: function() {
+      // clear ALL cookies aggressively
+      // handles cases with "=" in cookie names or values
       document.cookie.split('; ').map(function(s){let o=[];let c=-1;while((c=s.indexOf('=',c+1))!=-1) o.push(s.substr(0,c)); return o}).reduce((a,b)=>a.concat(b),[]).forEach(n=>document.cookie=n+'=;max-age=0');
     },
     set: function(v){ // set the value of the one single cookie

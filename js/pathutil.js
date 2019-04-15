@@ -18,25 +18,32 @@
 
   root.pathParser = function (s){
     let instr = s.split('/');
+    // ignore the any prefix before encoungering expected path structure
     while(instr.length>0 && !/^[pi]{2}$/.test(instr[0])) instr.shift();
+    //ignore "//" in paths, extract path info based on even/odd index value
     instr=instr.filter(g => g.length > 0)
         .map((p,i)=>i%2?
              (/^\d+$/.test(p)?+p:null):
              (/^[pi]{2}$/.test(p)?Array.from(p):null));
+    // return [] if any path elements failed parsing and were null
+    // otherwise return a structure of [ [[stype,dtype],idx], ...]
     return instr.includes(null)?[]:(instr.length%2?instr.concat(null):instr).reduce(
       (a,b,i)=>((i%2?a[0]=[a[0],b]:a.unshift(b)),a),[]).reverse();
   }
+  // return true if the path doesn't define a view type or index
   root.isTopLevel = function(pathParts){
     return pathParts == null ||
       pathParts.length == 0 ||
       pathParts[0].length<2 ||
       pathParts[0][1] == null;
   }
+  // return ture if the path ends in a view type
   root.isValidFinalPath = function(pathParts){
     return pathParts != null &&
       pathParts.length >=1 &&
       pathParts[pathParts.length-1][1] == null;
   }
+  // add a trailing view type based on the last view type
   root.makeValidFinalPath = function(pathParts){
     if(pathParts == null ||
        pathParts.length == 0 ||
@@ -52,6 +59,7 @@
       return pathParts.concat([[last[0],null]]);
     }
   }
+  // convert a path structure back into a string
   root.toPathStr = function(pathParts){
     if(pathParts == null ||
        pathParts.length == 0 ||
