@@ -231,9 +231,9 @@ app.get(url_root+'js-ext/:script.js',function (req,res){
   res.sendFile(req.params['script']+'.js',{root:'js-ext'});
 });
 
-
+let homeurl=url_root+'inputs.html';
 // route for actually generating responses to requests for inputs.html
-app.get(url_root+'inputs.html',function(req,res){
+app.get(homeurl,function(req,res){
   res.render('inputs',{
     // "inputs" above tells the viewer to fetch view/inputs.html
     // the value of key: below is used as the cache key in the view layer
@@ -343,7 +343,7 @@ app.get(url_root+dyn_root+':input/labels.js',function(req,res){
 app.get(url_root+dyn_root+':input/input.json',function(req,res){
   let rname = req.params['input'];
   let inp= inputs.get(rname);
-  res.json([rname,inp]);
+  res.json([rname,inp,homeurl]);
 });
 
 /* This route makes the input definition for the selected data set
@@ -352,7 +352,7 @@ app.get(url_root+dyn_root+':input/input.js',function(req,res){
   let rname = req.params['input'];
   let inp = inputs.get(rname);
   res.type("text/javascript");
-  res.send(jsonWrap("input",[rname,inp]));
+  res.send(jsonWrap("input",[rname,inp,homeurl]));
 });
 
 /* This route is unused by the application, but is available for debugging

@@ -1,3 +1,4 @@
+/* Uses D3 to render the pcapviz UI */
 (function(){
     var inNode = !(typeof Window === 'function' &&
                  Window.prototype.isPrototypeOf(this));
@@ -5,12 +6,23 @@
   var root = inNode?module.exports:this;
   let importData = inNode?n=>require('../out/'+n+'.js').IMPORT_DATA.get(n):n=>IMPORT_DATA.get(n);
 
+  // See js/onecookie.js for more info:
   let settings = OneCookie.get({anim:true,shrt:false});
+
+  // Build an empty watcher array for each setting
   let settingsWatchers = Object.entries(settings).reduce((a,[k,v])=>(a[k]=[],a),{});
 
-  let ready = importData('ready');
-  if(!ready){
+  // find out about the selected input
+  let inp = importData('input') || ['',{},'/'];
+  let input_key = inp[0];
+  let input_rec = inp[1];
+  let input_home = inp[2];
+
+  // check for data source readiness
+  let status = (importData('ready') || {status: 'failed'})['status'];
+  if(status == 'loading'){
     window.onload=function(){
+      // Show a loading screen if the data is not ready yet, poll every second
       let body = d3.select("body");
       body.selectAll('*').remove();
       let s="Loading data. Please wait.";
@@ -20,25 +32,42 @@
       return;
     }
     return;
+  } else if (status == 'failed') {
+    window.onload=function(){
+      // Show a failure screen if the data won't ever be ready
+      let body = d3.select("body");
+      body.style('background','white')
+      body.selectAll('*').remove();
+      let s="This input failed to load. Please return to the input list.";
+      document.title=s;
+      body.append("H1")
+        .append('a')
+        .attr('href',input_home)
+        .text(s);
+    }
+    return;
   }
+  /* pmatrix is a jsonWrapped structure representing the matrix.
+     See server.js for more details. */
   pdata = importData('pmatrix');
-  let sources = new Set(pdata.sources);
-  let dests = new Set(pdata.dests);
-  let plotrix = pdata.matrix;
-  let labels = importData('labels');
-  let inp = importData('input');
-  let input_key = inp[0];
-  let input_rec = inp[1];
-  let type_labels = {p: 'Port',i: "IP"};
-  let type_display = {p: x=>x,
+
+  let sources = new Set(pdata.sources); // list of source ports or IPs
+  let dests = new Set(pdata.dests);     // list of dest ports or IPs
+  let plotrix = pdata.matrix;           // heatmap sparse matrix
+  let labels = importData('labels');    // list of labels
+  let type_labels = {p: 'Port',i: "IP"};// for axis labels
+  let type_display = {p: x=>x, // display ports as-is
+                      // convert IPs to dotted notation
                       i: x=> ((x >>> 24 & 0x0FF)+'.'+
                               (x >>> 16 & 0x0FF)+'.'+
                               (x >>>  8 & 0x0FF)+'.'+
                               (x >>>  0 & 0x0FF))};
 
-
+  // get the nethasher code
   let phr = inNode?require('nethasher.js'):{nethasher: root.nethasher};
   let bcount = phr.nethasher.getBucketCount();
+
+  // construct a nethasher equivalent to the one used to generate this matrix
   let ph = new phr.nethasher(pdata.hashconfig);
 
   // first watch for any existing load events
@@ -47,7 +76,7 @@
     oldload=window.onload;
   }
 
-
+  // cross-browser helper for finding the size of things
   function getSize(sel,name,def){
     try{
       s = +sel.node().getBoundingClientRect()[name];
@@ -63,6 +92,8 @@
     }
     return s;
   }
+
+  // call a function once with "x" and a gain with "y", store results in a map
   function callxy(f){
     return {x:f("x"),y:f("y")}
   }
@@ -90,30 +121,36 @@
       oldload.apply(this,arguments);
     }
 
+    // parse the path in order to build the nav UI
     let pathParts = pathutil.pathParser(window.location.pathname
                                         .substring(0,window.location.pathname.length-"index.html".length));
     let top_level = pathutil.isTopLevel(pathParts);
 
+    // start by prepending the input key to make it possible to return to root
     let chunks = ["inputs",input_key,].concat(pathParts.reduce((o,p)=>o.concat(p),[]))
     let numparts = chunks.length - (chunks[chunks.length-1]==null?2:1);
-    let dots = Array.from({length:numparts},x=>'../');
+    let dots = Array.from({length:numparts},x=>'../'); // make a lot of dots
 
     let body = d3.select("body");
 
     let showLoading = function(){
+      // cause the backround image (see main.css) to appear
       svg.style("opacity",0);
       body.style("background-image",null);
     }
 
     let hideLoading = function(){
+      // hide the background image (see main.css)
       svg.style("opacity",1);
       body.style("background-image","none");
     }
 
+    // If the input has a name, use it in the title and heading
     if(input_rec.title){
       let titleDetail =document.createTextNode(input_rec.title);
       let colon = document.createTextNode(": ");
       if(input_rec.ref){
+        // if the input references another site, link to it
         let text = titleDetail;
         titleDetail = document.createElement("a");
         titleDetail.setAttribute("href",input_rec.ref);
@@ -126,6 +163,7 @@
       document.title=h1.innerText;
     }
 
+    // build the navigation interface
     body.select("div.nav")
       .selectAll("span.uplink")
       .data(chunks)
@@ -147,6 +185,7 @@
       .each(function(){if(this.href) d3.select(this).on("click",showLoading)})
       .text(v=>v instanceof Array?v.join(''):v)
 
+    // build the view interface (selecting source/dest view types)
     let sel = pdata.stype+pdata.dtype;
     body.select("div.types")
       .selectAll("a.type")
@@ -161,6 +200,7 @@
 
     let svgHolder = body.select("div.graph");
 
+    // ask the renderer for how big the SVG-holding div really is
     let svgHolderWidth = getSize(svgHolder,"width", 700)
 
     let WIDTH = svgHolderWidth - 8
@@ -174,7 +214,8 @@
 //todo: FIXME
     svg.node().setAttribute("xmlns:xlink","http://www.w3.org/1999/xlink");
 
-   svg.append("defs")
+    // Establish a clip-path to make the labeled rect strokes appear inset
+    svg.append("defs")
       .append("clipPath")
       .attr("clipPathUnits","objectBoundingBox")
       .attr("id","cpth")
@@ -182,7 +223,7 @@
       .attr("width","1")
       .attr("height","1")
 
-    // distinct paddings -- to leave room for title, labels, and legend
+    // distinct paddings -- to leave room for title, labels, etc.
     let PADDINGS = {left: 40,
                     right: 0,
                     top: 0,
@@ -195,12 +236,14 @@
     PADDINGS.b = {x: PADDINGS.right, y: PADDINGS.bottom};
 
 
+    // Make Y (source) axis
     svg.append("g")
       .classed("y-axis-label",true)
       .append("text")
       .call(makeVertical,PADDINGS.left-8,HEIGHT/2)
       .text("Source "+type_labels[pdata.stype])
 
+    // Make X (dest) axis
     svg.append("g")
       .classed("x-axis-label",true)
       .append("text")
@@ -208,11 +251,14 @@
       .attr("y",HEIGHT-PADDINGS.bottom+8)
       .text("Destination "+type_labels[pdata.dtype])
 
+    // Calculate maximum rect dimensions
     let squareSideMax = callxy(xy=>(SIZES[xy]-PADDINGS[xy])/
                                (bcount+1));
 
+    // Make a square using the smaller of the max dimensions
     let squareSide = Math.min(squareSideMax.x,squareSideMax.y);
 
+    // Positioning scale for rect placement
     let scales = callxy(xy => d3.scaleLinear()
                         .domain([0,bcount+1])
                         .range([PADDINGS.a[xy],
@@ -223,7 +269,7 @@
       y: scales.y(1)-scales.y(0)  //~=squareSide
     };
 
-
+    //FIXME: this still says packets, should say records
     let totalPackets = 0;
     let maxCount = 0;
     let usedL = 0;
@@ -233,6 +279,7 @@
       totalPackets += v;
     });
 
+    // make a color scale based on the number of records represented by the square
     scales.z = d3.scaleLog()
       .domain([1,maxCount])
       .range([0.15,1]);
@@ -251,6 +298,8 @@
       return newpath;
     }
 
+    /* Given an index, return the sources and dests that might have contributed
+       to it */
     let valuesForIndex = function(idx){
       let x = idx % bcount;
       let y = Math.floor(idx / bcount);
@@ -259,6 +308,7 @@
       return [sps,dps];
     }
 
+    // Build filter UI
     let tsharkfilter = body.select(".tsharkfilter");
     let tsa = tsharkfilter.append("a")
         .attr("href","#tfilter")
@@ -269,6 +319,7 @@
         .attr("id","tfilter")
         .classed("hidden", true);
 
+    // Show or hide the tshark filter text
     function toggleFilter(){
       let showNow = tfilter.classed("hidden");
       if(tfilter.text() == ''){
@@ -282,25 +333,30 @@
     }
     tsa.on("click",toggleFilter)
 
+    // The box on the right was once a tooltip, the word tip still appears here
     let tipHolder = body.select("div.port-tip")
         .style("height",scales.y(bcount)+"px")
         .style("position","absolute")
         .style("top",getSize(svgHolder,"top", 50)+"px")
         .style("left",getSize(svgHolder,"right", svgHolderWidth)+"px")
 
+    // Center the loading graphic and the page heading
     body.style("width",getSize(tipHolder,"right", svgHolderWidth)+"px");
     body.style("background-position", (svgHolderWidth/2)+"px center");
 
+    // Object for holding the "lines" of the tip text
     let tip = {count: tipHolder.append("span"),
                label: labels.length>0?(tipHolder.append("br"),tipHolder.append("span")):{text:_=>null},
                source: (tipHolder.append("br"),tipHolder.append("span")),
                dest: (tipHolder.append("br"),tipHolder.append("span")),
               }
 
+    // If abbreviation is enable, use elipses for too-long text
     function elideText(text,max){
       return text.length > max?text.substr(0,max-1)+'\u2026':text;
     }
 
+    // update tip fields with the totals
     function showTotals(){
       let shorten = settings.shrt;
       tip.count.text("Total Count: "+totalPackets)
@@ -313,37 +369,48 @@
       tip.label.text("label(s): "+(usedL==0?'None':labels.filter((n,i)=>usedL & 1<<i)));
     }
 
+    // If the abbreviation feature flag changes, call showTotals()
     settingsWatchers.shrt.push(showTotals);
 
     function handleHover(mode,[idx,[c,l]],index,nodes){
       if(mode){
+        // MouseOver: update tip fields based on hover
+
         let [sps,dps] = valuesForIndex(+idx);
         tip.count.text("count: "+c)
         tip.source.text("from: "+sps.map(type_display[pdata.stype]).join(' '));
         tip.dest.text("to: "+dps.map(type_display[pdata.dtype]).join(' '));
         tip.label.text("label(s): "+(l==0?'None':labels.filter((n,i)=>l & 1<<i)));
       } else {
+        // MouseOut: show the totals again
         showTotals()
       }
     }
+
+    // Start with totals rendered
     showTotals();
 
+    // Build the heatmap
     let as = svg.selectAll("a.plot")
         .data(plotrix);
 
     // next line not needed unless changing node counts
     as.exit().remove();
 
+    // Each node is an anchor tag
     let newAs=as.enter()
         .append("a")
         .classed("plot",true)
 
+    // Each anchor contains a rect
     newAs.append("rect")
         .classed("plot",true);
 
+    // Each anchor has an href linking to that point's subgraph
     as.merge(newAs)
       .attr("xlink:href",([idx,v]) => subgraphURL(+idx))
       .on("click",function(){
+        // animate "zooming in" to the point if animation is enabled
         if(settings.anim){
           let anchor = d3.select(this);
           d3.event.preventDefault()
@@ -366,6 +433,7 @@
             .on("end",_=>{window.location=anchor.attr("href");
                           showLoading()});
         } else {
+          // if not animating, at least provide the loading feedback
           showLoading();
         }
       })
@@ -375,10 +443,11 @@
       .attr("x",([idx,[v,l]])=>scales.x((+idx) % bcount)+UNIT_SIZE.x*(gapf/2))
       .attr("y",([idx,[v,l]])=>scales.y(Math.floor((+idx) / bcount))+UNIT_SIZE.y*(gapf/2))
       .attr("fill",([idx,[v,l]])=>v=0?'white':d3.interpolateYlOrBr(scales.z(v)))
-      .classed("labeled",([idx,[v,l]])=>l!=0)
+      .classed("labeled",([idx,[v,l]])=>l!=0) // highlight labeled points
       .on("mouseover",function(){handleHover.call(this,true,...arguments)})
       .on("mouseout",function(){handleHover.call(this,false,...arguments)})
 
+    // set up the settings panel/gear UI
     let setbox = body.select('#settings-panel');
     let gear = body.select('#gear');
 
@@ -390,6 +459,7 @@
         .append("label")
         .classed("setting",true)
 
+    // Put the checkboxes in place with "checked" based on cookie
     options.append("input")
       .attr("type","checkbox")
       .attr("checked",d=>settings[d.cname]?"checked":null)
@@ -401,11 +471,14 @@
         OneCookie.set(settings);
       })
 
+    // Set each option's label
     options.append(d=>document.createTextNode(d.name));
 
+    // Position the box
     setbox.style("left",((getSize(gear,"right") - getSize(setbox,"width"))+"px"))
       .style("top",getSize(gear,"bottom")+"px");
 
+    // MAke it so that any click outside of the visible settings box hides it
     let win = d3.select(window);
     let windowHideSettings = function(){
       if(d3.event.target!=gear.node() &&
@@ -413,6 +486,8 @@
         gear.dispatch("click")
       }
     }
+
+    // Clicking the gear toggles showing the settings box
     gear.on("click",
             function(){
               if(setbox.style("visibility") == "visible"){
