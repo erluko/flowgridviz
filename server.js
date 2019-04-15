@@ -1,3 +1,4 @@
+// npm modules
 const fs = require('fs');
 const http = require('http');
 const express = require('express');
@@ -6,23 +7,33 @@ const jsdom = require("jsdom");
 const { JSDOM } = jsdom;
 const LRU = require("lru-cache")
 
+// local modules
 const me = require('./lib/matrixexplorer');
 const pu = require('./js/pathutil');
 const tsf = require('./js/filtermaker');
 const slist = require('./lib/servicelist.js');
 const phr = require('./js/nethasher.js');
 
+// load list of input datasources
 let inputs = new Map(JSON.parse(fs.readFileSync("./data/inputs.json")));
 
+/* ph0 is the default un-configured hasher to use for the initial top-level
+   views where no axis shows ports */
 let ph0 = new phr.nethasher();
-let ph0_servs = new phr.nethasher(slist.servicemap);
-let labels  = new Map();
-let records = new Map();
-let statuses = new Map();
-let all_ready = false;
 
+/* ph0_servs is a hasher configured to know about common service
+   ports. It is used for top-level views where at least one axis shows ports. */
+let ph0_servs = new phr.nethasher(slist.servicemap);
+
+let labels  = new Map(); // per-dataset list of labels
+let records = new Map(); // per-dataset list of flows or packets
+let statuses = new Map();// per-dataset object showing loading status
+let all_ready = false;   // true once all data sources are loaded
+
+// dynamic urls all start with this prefix:
 let dyn_root = 'viz/';
 
+// every LRU should have a get-or-set method
 LRU.prototype.getOrSet = function(k,f){
   let v = this.get(k);
   if(typeof v === 'undefined'){
@@ -32,32 +43,56 @@ LRU.prototype.getOrSet = function(k,f){
   return v;
 }
 
-
+/* load the Javascript DOM Template library I created for this project,
+   give it a 30-element LRU cache,
+   and set it as the template engine to use for html.*/
+// TODO: make the LRU size configurable
 app.engine('html',require('./lib/jsdt')({cache: new LRU(30)}));
 app.set('view engine', 'html');
 
-
+// configured port should the server listen on?
 const port = process.env.npm_package_config_port;
+
+// configured IP address to listen on
 const ip = process.env.npm_package_config_listen_ip;
+
+// configured *per-dataset* upper limit on records to load
 const max_records = (s=>s?(s.toLowerCase()=='all'?0:+s||0):0)(process.env.npm_package_config_max_records);
+
+// base for all urls, usually "pcv" in production
 let url_root = process.env.npm_package_config_url_root || '/';
 if(!url_root.endsWith("/")) url_root=url_root+'/';
 if(!url_root.startsWith("/")) url_root='/'+url_root;
 
+// a simple exception type to use
 function NotReadyException(thing) {
   this.thing = thing;
 }
 
+// cache to hold 80 different matrix walks
+// TODO: make the size configurable
 let mwcache = new LRU(80);
 
+// Port x Port, Port x IP, IP x Port, IP x IP
 let legalViews=new Set(['pp','pi','ip','ii']);
+
+/* Each dataset can set a default view.
+   If none is specified, start with Port x Port */
 let defaultView = function(rname){
   let inp = inputs.get(rname);
   let view = (inp?inp.initial:null);
   return legalViews.has(view)?view:'pp';
 }
 
+/* Originally "porthasher walker", now the "ph" is just an artifact of
+   the days before pcapviz supported flows and IPs.
+
+   TODO: rename phwalk
+
+   Given a dataset name and a path string to walk, performs the walk.
+   See MatrixExplorer for more details */
 let phwalk = function(rname,pth){
+  // Use selected path or the default if none is specified
   if(pth == null || pth.length <1){
     pth = pu.pathParser('/'+defaultView(rname)+'/');
   }
@@ -65,22 +100,38 @@ let phwalk = function(rname,pth){
   //on at least one axis:
   let lph = (pth[0][0][0]=='p' ||
              pth[0][0][1]=='p')?ph0_servs:ph0;
+
+  // pkts is the list of records to consider in this walk
   let pkts = records.get(rname);
   if(!pkts){
+    /* this only happens if someone requests a url that depends
+       on the records for a nonexistent or not-yet-loaded dataset.
+       One common cause would be a server restart. */
     throw new NotReadyException(rname);
   }
   let bcount = phr.nethasher.getBucketCount();
+
+  // mwk ("matrix walk" is used as the cache key, it starts with the dataset name)
   let mwk = [rname];
 
   let matrix;
   for(let [[stype,dtype],idx] of pth) {
     //stype and dtype are either 'p' meaning port of 'i' meaning ip
+    //idx is the coordinate of the cell to enter (y*bcount+x)
     matrix = me.getMatrix(lph,stype,dtype,pkts)
     let sources = new Set(matrix.sources);
     let dests = new Set(matrix.dests);
+    /* idxs is the list of indices into the columns of each record
+       that represent the requested data.
+       The native storage is src-ip, dest-ip, src-port, dst-port, ...
+       So for view 'pp' idxs = [2,3]
+       and for view 'ip' idxs = [0,3]
+    */
     let idxs = me.idxsForTypes(stype,dtype);
     if(idx != null){
+      // extend the cache key
       mwk.push(''+stype+dtype+idx);
+      // either read from cache or caclulate the next answer
       [sources,dests,lph] = mwcache
         .getOrSet(JSON.stringify(mwk), function(){
           let x = idx % bcount;
@@ -91,22 +142,31 @@ let phwalk = function(rname,pth){
                   new Set(dps),
                   new phr.nethasher(sps.concat(dps).map((v,i)=>[v,i]))];
         });
+      // keep on the records left after walking into the matrix
       pkts = pkts.filter(r=>sources.has(r[idxs[0]]) &&
                          dests.has(r[idxs[1]]));
 
     }
   }
+  /* return the newly calculated (or fetched from cache) matrix,
+     and the list of packets or flows it represents */
   return [matrix,pkts];
 };
 
+
+// Matrix Walk, it's just a helper around a common use of phwalk
 let mwalk = function(rname,pth){
   let [matrix,pkts] = phwalk(rname,pth);
   return matrix;
 }
 
 
-/* sed mimicry */
-
+/* This function is essentially sed mimicry.
+   Early versions of the code used 'sed' at install-time to convert
+   json files into javascript files loadable via a script tag, essentially
+   a safer form of jsonp. For the few bits of code that depended on this,
+   we have jsonWrap() which duplicates the old sed script behavior.
+ */
 function jsonWrap(n,d){
   let j = JSON.stringify(d);
   return `(function(){
@@ -129,6 +189,8 @@ function jsonWrap(n,d){
 `;
 }
 
+
+// reroot() Prepends the base address to absolute paths in the DOM
 function reroot(rname,attr){
    return function(n){
      let s=n.getAttribute(attr);
@@ -142,6 +204,7 @@ function reroot(rname,attr){
    }
 }
 
+// Define some basic routes to redirect to the "starting" page.
 app.get(url_root+dyn_root,(req,res) => res.redirect(url_root+'inputs.html'));
 app.get(url_root,(req,res) => res.redirect(url_root+'inputs.html'));
 app.get(url_root+'index.html',(req,res) => res.redirect(url_root+'inputs.html'));
@@ -152,6 +215,7 @@ app.get('/favicon.ico',function (req,res){
   res.sendFile('favicon.ico',{root:'images'});
 });
 
+// Handle all static file paths. Express handles rejecting path traversal attacks.
 app.get(url_root+'images/:imagefile',function (req,res){
   //thanks to http://www.ajaxload.info/
   res.sendFile(req.params['imagefile'],{root:'images'});
@@ -167,16 +231,26 @@ app.get(url_root+'js-ext/:script.js',function (req,res){
 });
 
 
+// route for actually generating responses to requests for inputs.html
 app.get(url_root+'inputs.html',function(req,res){
   res.render('inputs',{
+    // "inputs" above tells the viewer to fetch view/inputs.html
+    // the value of key: below is used as the cache key in the view layer
     key: 'inputs'+all_ready,
     render: function(window,sdone) {
+      /* given a DOM-like structure, modify it to represent the intended
+         output DOM. Why not use the built-in express templates? They are
+         vulnerable to XSS. This is not. */
       let document = window.document;
       if(all_ready){
+        /* when all sources have been processed, we can ditch the script
+           tag that polls for loading state */
         document.getElementById("readyscript").remove()
       }
+      // Generate <img> and <a> tags for each data source
       let holder = document.getElementById("sources");
       for(name of inputs.keys()){
+        /* prevent path weirdness in data source names. */
         if(name.indexOf('/') == -1){
           let img = document.createElement("img");
           let status = (statuses.get(name) || {status: 'failed'})['status'];
@@ -186,6 +260,8 @@ app.get(url_root+'inputs.html',function(req,res){
           holder.appendChild(img);
           let a = document.createElement("a");
           if (status != 'failed'){
+            /* the "readyscript" polls for readiness of all href-having
+               anchor tags, don't provide an href for known-bad sources */
             a.setAttribute("href",dyn_root + name+"/");
           }
           a.appendChild(document.createTextNode(inputs.get(name).title));
@@ -195,6 +271,7 @@ app.get(url_root+'inputs.html',function(req,res){
           console.log("Bad data source name");
         }
       }
+      // fix absolute urls be re-rooting them:
       Array.from(document.getElementsByTagName("script")).forEach(reroot('',"src"));
       Array.from(document.getElementsByTagName("link")).forEach(reroot('',"href"));
     }});
@@ -214,53 +291,71 @@ function forceValidRedirect(pp,req,res){
 }
 
 
-
+/* When visiting a data-source with no 'pp', 'ip', etc., go to the default view
+   for that data source. */
 app.get(url_root+dyn_root+':input/',function(req,res){
   let rname = req.params['input'];
   res.redirect(url_root+dyn_root+rname+'/'+defaultView(rname)+'/index.html');
 });
-
 app.get(url_root+dyn_root+':input/index.html',function(req,res){
   let rname = req.params['input'];
   res.redirect(url_root+dyn_root+rname+'/'+defaultView(rname)+'/index.html');
 });
 
+// Render the matrix view for the selected input and path
 app.get(url_root+dyn_root+':input/*/index.html',function(req,res){
-  let rname = req.params['input'];
-  let ps = req.params['0'];
-  let pp = pu.pathParser(ps);
-  if(forceValidRedirect(pp,req,res)) return;
+  let rname = req.params['input']; // the data source name
+  let ps = req.params['0']; // the matrix path
+  let pp = pu.pathParser(ps); // the parsed matrix path
+  if(forceValidRedirect(pp,req,res)) return; // fix bad urls (hack)
   res.render('index',{
+    // 'index' above tells the viewer to fetch view/index.html
+    // the value of key: below is used as the cache key in the view layer
     key: rname+'/index',
     render: function(window,sdone) {
       let document = window.document;
+      // fix all absolure urls in the document:
       Array.from(document.getElementsByTagName("img")).forEach(reroot(rname,"src"));
       Array.from(document.getElementsByTagName("script")).forEach(reroot(rname,"src"));
       Array.from(document.getElementsByTagName("link")).forEach(reroot(rname,"href"));
     }});
 });
+
+/* This route is unused by the application, but is available for debugging
+   and for future work */
 app.get(url_root+dyn_root+':input/labels.json',function(req,res){
   let rname = req.params['input'];
   let ls = labels.get(rname);
   res.json(ls);
 });
+
+// This route makes the labels for the selected data set available in-browser
 app.get(url_root+dyn_root+':input/labels.js',function(req,res){
   let rname = req.params['input'];
   let ls = labels.get(rname);
   res.type("text/javascript");
   res.send(jsonWrap("labels",ls));
 });
+
+/* This route is unused by the application, but is available for debugging
+   and for future work */
 app.get(url_root+dyn_root+':input/input.json',function(req,res){
   let rname = req.params['input'];
   let inp= inputs.get(rname);
   res.json([rname,inp]);
 });
+
+/* This route makes the input definition for the selected data set
+   available in-browser */
 app.get(url_root+dyn_root+':input/input.js',function(req,res){
   let rname = req.params['input'];
   let inp = inputs.get(rname);
   res.type("text/javascript");
   res.send(jsonWrap("input",[rname,inp]));
 });
+
+/* This route is unused by the application, but is available for debugging
+   and for future work */
 app.get(url_root+dyn_root+':input/*/matrix.json',function(req,res){
   let rname = req.params['input'];
   let ps = req.params['0'];
@@ -277,6 +372,9 @@ app.get(url_root+dyn_root+':input/*/matrix.json',function(req,res){
     }
   }
 });
+
+/* This route is makes the matrix for the seleted data set and matrix path
+   available in-browser. */
 app.get(url_root+dyn_root+':input/*/pmatrix.js',function(req,res){
   let rname = req.params['input'];
   let ps = req.params['0'];
@@ -295,16 +393,20 @@ app.get(url_root+dyn_root+':input/*/pmatrix.js',function(req,res){
   }
 });
 
+// Used for polling ready state (used in-browser)
 app.get(url_root+dyn_root+':input/ready.js',function(req,res){
   let rname = req.params['input'];
   res.type("text/javascript").send(jsonWrap('ready',statuses.get(rname)));
 });
 
+// Used for examining ready state via curl, etc
 app.get(url_root+dyn_root+':input/ready.json',function(req,res){
   let rname = req.params['input'];
   res.json(statuses.get(rname));
 });
 
+/* Potentially useful for building applications that fetch filter rules
+   for particular matrix paths, but not used by this application at the moment */
 app.get(url_root+dyn_root+':input/*/filter.txt',function(req,res){
   let rname = req.params['input'];
   let ps = req.params['0'];
@@ -325,11 +427,13 @@ app.get(url_root+dyn_root+':input/*/filter.txt',function(req,res){
     }
   }
 });
+// As above, but for the default (no-path) rule
 app.get(url_root+dyn_root+':input/filter.txt',function(req,res){
   res.type("text/plain")
   res.send("tcp or udp\n");
 });
 
+// Unused route for getting a view into the selected data set's records
 app.get(url_root+dyn_root+':input/pcap.json',function(req,res){
   let rname = req.params['input'];
   let recs = records.get(rname);
@@ -340,6 +444,8 @@ app.get(url_root+dyn_root+':input/pcap.json',function(req,res){
   }
 });
 
+/* Unused route for getting a view into the selected data set's records
+   for the given matrix path */
 app.get(url_root+dyn_root+':input/*/pcap.json',function(req,res){
   let rname = req.params['input'];
   let ps = req.params['0'];
@@ -357,22 +463,27 @@ app.get(url_root+dyn_root+':input/*/pcap.json',function(req,res){
   }
 });
 
+// "main" code that executes when 'npm start' is run begins here.
+
 console.log("Reading records");
 let startTime=new Date().getTime();
 let dots = setInterval(()=>console.log("."), 5000);
 
-
+// TODO: move require() calls to the top
 const FlowParser = require('./lib/flowparser');
 
+// List of promises to track:
 let proms = [];
 for([key,input] of inputs){
   statuses.set(key,{status:"loading"});
   let f = input.file;
   if(f.indexOf("/") >=0 ){
+    // reject files that have path traversal characters
     console.log(input)
     statuses.set(key,{status:"failed"});
     console.log(`ILLEGAL INPUT FILE: ${f}`);
   } else {
+    // get a promise for the parsed data
     let prom = FlowParser.flowsFromFile('data/'+f,{max: max_records,
                                                    no_label: input.no_label});
     proms.push(prom);
@@ -392,11 +503,13 @@ for([key,input] of inputs){
 }
 
 Promise.all(proms).then(function(){
+  // when all promises are done, the "inputs" page is simplified.
   clearInterval(dots);
   console.log('All inputs loaded');
   all_ready = true;
 });
 
+//Start the server at the selected IP and port
 var server = http.createServer(app);
 server.on("error", e =>console.log(`Unable to start server: ${e}`));
 server.listen(port, ip, () => console.log(`pcapviz listening on http://${ip}:${port}${url_root}!`));
