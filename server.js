@@ -362,7 +362,7 @@ let startTime=new Date().getTime();
 let dots = setInterval(()=>console.log("."), 5000);
 
 
-const FlowParser = require('./lib/pcsd');
+const FlowParser = require('./lib/flowparser');
 
 let proms = [];
 for([key,input] of inputs){
