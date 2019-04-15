@@ -126,6 +126,7 @@ let phwalk = function(rname,pth){
        The native storage is src-ip, dest-ip, src-port, dst-port, ...
        So for view 'pp' idxs = [2,3]
        and for view 'ip' idxs = [0,3]
+       See matrixexplorer.js
     */
     let idxs = me.idxsForTypes(stype,dtype);
     if(idx != null){
