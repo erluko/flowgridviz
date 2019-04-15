@@ -18,6 +18,7 @@ let ph0 = new phr.nethasher();
 let ph0_servs = new phr.nethasher(slist.servicemap);
 let labels  = new Map();
 let records = new Map();
+let statuses = new Map();
 let all_ready = false;
 
 let dyn_root = 'viz/';
@@ -178,10 +179,15 @@ app.get(url_root+'inputs.html',function(req,res){
       for(name of inputs.keys()){
         if(name.indexOf('/') == -1){
           let img = document.createElement("img");
-          img.setAttribute("src",records.has(name)?"images/checkbox.png":"images/loading-sm.gif");
+          let status = (statuses.get(name) || {status: 'failed'})['status'];
+          img.setAttribute("src", status=='ready'?"images/checkbox.png":
+                           status=='failed'?"images/redx.png":
+                           "images/loading-sm.gif");
           holder.appendChild(img);
           let a = document.createElement("a");
-          a.setAttribute("href",dyn_root + name+"/");
+          if (status != 'failed'){
+            a.setAttribute("href",dyn_root + name+"/");
+          }
           a.appendChild(document.createTextNode(inputs.get(name).title));
           holder.appendChild(a);
           holder.appendChild(document.createElement("br"));
@@ -291,12 +297,12 @@ app.get(url_root+dyn_root+':input/*/pmatrix.js',function(req,res){
 
 app.get(url_root+dyn_root+':input/ready.js',function(req,res){
   let rname = req.params['input'];
-  res.type("text/javascript").send(jsonWrap('ready',records.has(rname)));
+  res.type("text/javascript").send(jsonWrap('ready',statuses.get(rname)));
 });
 
 app.get(url_root+dyn_root+':input/ready.json',function(req,res){
   let rname = req.params['input'];
-  res.json(records.has(rname));
+  res.json(statuses.get(rname));
 });
 
 app.get(url_root+dyn_root+':input/*/filter.txt',function(req,res){
@@ -360,19 +366,27 @@ const FlowParser = require('./lib/pcsd');
 
 let proms = [];
 for([key,input] of inputs){
+  statuses.set(key,{status:"loading"});
   let f = input.file;
-  let prom = FlowParser.flowsFromFile('data/'+f,{max: max_records,
-                                             no_label: input.no_label});
-  proms.push(prom);
-  prom.then((function(key,input,[p,l]){
+  if(f.indexOf("/") >=0 ){
     console.log(input)
+    statuses.set(key,{status:"failed"});
+    console.log(`ILLEGAL INPUT FILE: ${f}`);
+  } else {
+    let prom = FlowParser.flowsFromFile('data/'+f,{max: max_records,
+                                                   no_label: input.no_label});
+    proms.push(prom);
+    prom.then((function(key,input,[p,l]){
+      console.log(input)
       let readyTime = new Date().getTime();
       let elapsedSecs = ((readyTime - startTime)/1000).toFixed(3);
       console.log(`Loaded ${p.length} records in ${elapsedSecs} seconds from ${input.file}`);
       labels.set(key,l);
       records.set(key,p);
+      statuses.set(key,{status:"ready"});
       phwalk(key, null); //initialize matrix cache
-  }).bind(null,key,input));
+    }).bind(null,key,input));
+  }
   //above use of bind inspired by:
   // https://stackoverflow.com/questions/32912459/promises-pass-additional-parameters-to-then-chain
 }

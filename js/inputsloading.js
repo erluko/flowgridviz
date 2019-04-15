@@ -8,29 +8,36 @@
     if(typeof(oldload) == 'function'){
       oldload.apply(this,arguments);
     }
-    let links = document.getElementsByTagName("a");
+    let links = Array.from(document.getElementsByTagName("a"))
+        .filter(x=>x.hasAttribute("href"));
     for(link of links){
       link.realhref=link.href;
       link.removeAttribute("href");
-      link.ready=false;
+      link.ready='loading';
     }
 
     for(link of links) {
       let checkReady = (function(link){
-        if(!link.ready){
+        if(link.ready == 'loading'){
           let aj = new XMLHttpRequest();
           aj.addEventListener("load", function(){
             try{
-              let ready = JSON.parse(this.responseText);
+              let status = JSON.parse(this.responseText);
+              let ready = status['status'] || 'failed'
               link.ready = ready;
-              if(ready){
-                link.setAttribute("href",link.realhref);
-                let prev = link.previousElementSibling;
-                if(prev.tagName == 'IMG'){
-                  prev.setAttribute("src","images/checkbox.png");
-
-                }
+              if(ready != 'loading'){
                 window.clearInterval(link.interval);
+                let prev = link.previousElementSibling;
+                if(ready == 'ready'){
+                  link.setAttribute("href",link.realhref);
+                  if(prev.tagName == 'IMG'){
+                    prev.setAttribute("src","images/checkbox.png");
+                  }
+                } else {
+                  if(prev.tagName == 'IMG'){
+                    prev.setAttribute("src","images/redx.png");
+                  }
+                }
               }
             } catch (e){
               console.log(e);
