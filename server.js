@@ -394,6 +394,7 @@ app.get(url_root+dyn_root+':input/*/pmatrix.js',function(req,res){
   }
 });
 
+//FIXME: this is an unauthenticated DoS vector. Add authentication, and a rate limit.
 // Used for forcing the reload of a named data source
 app.get(url_root+dyn_root+':input/reload/',function(req,res){
   let rname = req.params['input'];
