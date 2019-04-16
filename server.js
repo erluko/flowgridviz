@@ -495,18 +495,13 @@ function updateStatus(key,attr,val){
   status[attr]=val;
 }
 function  clearLoadedInput(key){
-  console.log("CLI: "+key);
   labels.delete(key);
   records.delete(key);
   initStatus(key);
-  console.log(mwcache.length);
   mwcache.forEach(function(_,ckey,c){
     let ck=JSON.parse(ckey);
     if(ck.length && ck[0]==key) {
-      console.log(`deleting ${ckey} from cache`)
       c.del(ckey);
-    } else {
-      console.log(`keeping ${ckey} in cache`)
     }
   })
 }
