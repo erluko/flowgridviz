@@ -28,7 +28,6 @@ let ph0_servs = new phr.nethasher(slist.servicemap);
 let labels  = new Map(); // per-dataset list of labels
 let records = new Map(); // per-dataset list of flows or packets
 let statuses = new Map();// per-dataset object showing loading status
-let all_ready = false;   // true once all data sources are loaded
 
 // dynamic urls all start with this prefix:
 let dyn_root = 'viz/';
@@ -234,6 +233,7 @@ app.get(url_root+'js-ext/:script.js',function (req,res){
 let homeurl=url_root+'inputs.html';
 // route for actually generating responses to requests for inputs.html
 app.get(homeurl,function(req,res){
+  let all_ready = Array.from(statuses.values()).every(v=>v.status!="loading");
   res.render('inputs',{
     // "inputs" above tells the viewer to fetch view/inputs.html
     // the value of key: below is used as the cache key in the view layer
@@ -394,6 +394,22 @@ app.get(url_root+dyn_root+':input/*/pmatrix.js',function(req,res){
   }
 });
 
+// Used for forcing the reload of a named data source
+app.get(url_root+dyn_root+':input/reload/',function(req,res){
+  let rname = req.params['input'];
+  input = inputs.get(rname);
+  clearLoadedInput(rname);
+  prom = FlowParser.flowsFromURL(input.url,{max: max_records,
+                                            no_label: input.no_label});
+  prom.then(function(d){
+    acceptLoadedInput(rname,input,d);
+  }).catch(function(e){
+    statuses.set(rname,{status:"failed"});
+  });
+  res.redirect(homeurl)
+});
+
+
 // Used for polling ready state (used in-browser)
 app.get(url_root+dyn_root+':input/ready.js',function(req,res){
   let rname = req.params['input'];
@@ -473,6 +489,30 @@ let dots = setInterval(()=>console.log("."), 5000);
 // TODO: move require() calls to the top
 const FlowParser = require('./lib/flowparser');
 
+function  clearLoadedInput(key){
+  labels.delete(key);
+  records.delete(key);
+  statuses.set(key,{status:"loading"});
+  mwcache.forEach(function(_,ckey,c){
+    if(key.startsWith('["'+key+'",')){
+      console.log(`deleting ${ckey} from cache`)
+      c.del(ckey);
+    }
+  })
+}
+
+function  acceptLoadedInput(key,input,[p,l]){
+  console.log(input)
+  let readyTime = new Date().getTime();
+  let elapsedSecs = ((readyTime - startTime)/1000).toFixed(3);
+  console.log(`Loaded ${p.length} records at ${elapsedSecs} seconds`);
+  labels.set(key,l);
+  records.set(key,p);
+  statuses.set(key,{status:"ready"});
+  phwalk(key, null); //initialize matrix cache
+}
+
+
 // List of promises to track:
 let proms = [];
 for([key,input] of inputs){
@@ -502,15 +542,8 @@ for([key,input] of inputs){
        When Promise.protoype.finally() is added to the standard, this won't be
        necessary. */
     proms.push(prom.catch(_=>{}));
-    let success = (function(key,input,[p,l]) {
-      console.log(input)
-      let readyTime = new Date().getTime();
-      let elapsedSecs = ((readyTime - startTime)/1000).toFixed(3);
-      console.log(`Loaded ${p.length} records in ${elapsedSecs} seconds from ${source}`);
-      labels.set(key,l);
-      records.set(key,p);
-      statuses.set(key,{status:"ready"});
-      phwalk(key, null); //initialize matrix cache
+    let success = (function(key,input,data) {
+      acceptLoadedInput(key,input,data);
     }).bind(null,key,input);
     let failure = (function(key,input,err){
       console.log(input);
@@ -527,7 +560,6 @@ Promise.all(proms).then(function(){
   // when all promises are done, the "inputs" page is simplified.
   clearInterval(dots);
   console.log('All inputs loaded');
-  all_ready = true;
 })
 
 //Start the server at the selected IP and port
