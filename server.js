@@ -397,15 +397,13 @@ app.get(url_root+dyn_root+':input/*/pmatrix.js',function(req,res){
 // Used for forcing the reload of a named data source
 app.get(url_root+dyn_root+':input/reload/',function(req,res){
   let rname = req.params['input'];
-  input = inputs.get(rname);
+  let input = inputs.get(rname);
   clearLoadedInput(rname);
-  prom = FlowParser.flowsFromURL(input.url,{max: max_records,
+  let prom = FlowParser.flowsFromURL(input.url,{max: max_records,
                                             no_label: input.no_label});
-  prom.then(function(d){
-    acceptLoadedInput(rname,d);
-  }).catch(function(e){
-    recordLoadFailure(rname,e);
-  });
+
+  prom.then(acceptLoadedInput.bind(null,rname),
+            recordLoadFailure.bind(null,rname));
   res.redirect(homeurl)
 });
 
@@ -497,13 +495,18 @@ function updateStatus(key,attr,val){
   status[attr]=val;
 }
 function  clearLoadedInput(key){
+  console.log("CLI: "+key);
   labels.delete(key);
   records.delete(key);
   initStatus(key);
+  console.log(mwcache.length);
   mwcache.forEach(function(_,ckey,c){
-    if(ckey.startsWith('["'+key+'",')){
+    let ck=JSON.parse(ckey);
+    if(ck.length && ck[0]==key) {
       console.log(`deleting ${ckey} from cache`)
       c.del(ckey);
+    } else {
+      console.log(`keeping ${ckey} in cache`)
     }
   })
 }
@@ -525,7 +528,6 @@ function  acceptLoadedInput(key,[p,l]){
   labels.set(key,l);
   records.set(key,p);
   updateStatus(key,'status',"ready");
-  phwalk(key, null); //initialize matrix cache
   let status = statuses.get(key);
   let elapsedSecs = ((status.done - status.start)/1000).toFixed(3);
   console.log(`Loaded ${status.record_count} records in ${elapsedSecs} seconds for "${key}"`);
@@ -537,9 +539,7 @@ let proms = [];
 for([key,input] of inputs){
   initStatus(key);
   let prom = null;
-  let source = '';
   if(input.file){
-    source = input.file;
     if(input.file.indexOf("/") >=0 ){
       // reject files that have path traversal characters
       recordLoadFailure(key,"Illegal input file name")
@@ -549,7 +549,6 @@ for([key,input] of inputs){
                                                           no_label: input.no_label});
     }
   } else if(input.url) {
-    source = input.url;
     prom = FlowParser.flowsFromURL(input.url,{max: max_records,
                                               no_label: input.no_label});
   }
@@ -559,13 +558,8 @@ for([key,input] of inputs){
        When Promise.protoype.finally() is added to the standard, this won't be
        necessary. */
     proms.push(prom.catch(_=>{}));
-    let success = (function(key,data) {
-      acceptLoadedInput(key,data);
-    }).bind(null,key);
-    let failure = (function(key,err){
-      recordLoadFailure(key,err);
-    }).bind(null,key);
-    prom.then(success,failure);
+    prom.then(acceptLoadedInput.bind(null,key),
+              recordLoadFailure.bind(null,key));
   }
   //above use of bind inspired by:
   // https://stackoverflow.com/questions/32912459/promises-pass-additional-parameters-to-then-chain
