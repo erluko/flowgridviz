@@ -402,9 +402,9 @@ app.get(url_root+dyn_root+':input/reload/',function(req,res){
   prom = FlowParser.flowsFromURL(input.url,{max: max_records,
                                             no_label: input.no_label});
   prom.then(function(d){
-    acceptLoadedInput(rname,input,d);
+    acceptLoadedInput(rname,d);
   }).catch(function(e){
-    statuses.set(rname,{status:"failed"});
+    recordLoadFailure(rname,e);
   });
   res.redirect(homeurl)
 });
@@ -489,43 +489,60 @@ let dots = setInterval(()=>console.log("."), 5000);
 // TODO: move require() calls to the top
 const FlowParser = require('./lib/flowparser');
 
+function initStatus(key){
+  statuses.set(key,{status:"loading",start:new Date().getTime()});
+}
+function updateStatus(key,attr,val){
+  let status = statuses.get(key);
+  status[attr]=val;
+}
 function  clearLoadedInput(key){
   labels.delete(key);
   records.delete(key);
-  statuses.set(key,{status:"loading"});
+  initStatus(key);
   mwcache.forEach(function(_,ckey,c){
-    if(key.startsWith('["'+key+'",')){
+    if(ckey.startsWith('["'+key+'",')){
       console.log(`deleting ${ckey} from cache`)
       c.del(ckey);
     }
   })
 }
 
-function  acceptLoadedInput(key,input,[p,l]){
+function  recordLoadFailure(key,why){
+  console.log(inputs.get(key));
+  let status = statuses.get(key);
+  updateStatus(key,'status',"failed");
+  updateStatus(key,'error',why);
+  updateStatus(key,'done',new Date().getTime());
+  console.log(`Failed to load "${key}": ${why}`);
+}
+
+function  acceptLoadedInput(key,[p,l]){
+  let input = inputs.get(key)
   console.log(input)
-  let readyTime = new Date().getTime();
-  let elapsedSecs = ((readyTime - startTime)/1000).toFixed(3);
-  console.log(`Loaded ${p.length} records at ${elapsedSecs} seconds`);
+  updateStatus(key,'done',new Date().getTime());
+  updateStatus(key,'record_count',p.length)
   labels.set(key,l);
   records.set(key,p);
-  statuses.set(key,{status:"ready"});
+  updateStatus(key,'status',"ready");
   phwalk(key, null); //initialize matrix cache
+  let status = statuses.get(key);
+  let elapsedSecs = ((status.done - status.start)/1000).toFixed(3);
+  console.log(`Loaded ${status.record_count} records in ${elapsedSecs} seconds for "${key}"`);
 }
 
 
 // List of promises to track:
 let proms = [];
 for([key,input] of inputs){
-  statuses.set(key,{status:"loading"});
+  initStatus(key);
   let prom = null;
   let source = '';
   if(input.file){
     source = input.file;
     if(input.file.indexOf("/") >=0 ){
       // reject files that have path traversal characters
-      console.log(input)
-      statuses.set(key,{status:"failed"});
-      console.log(`ILLEGAL INPUT FILE: ${input.file}`);
+      recordLoadFailure(key,"Illegal input file name")
     } else {
       // get a promise for the parsed data
       prom = FlowParser.flowsFromFile('data/'+input.file,{max: max_records,
@@ -542,14 +559,12 @@ for([key,input] of inputs){
        When Promise.protoype.finally() is added to the standard, this won't be
        necessary. */
     proms.push(prom.catch(_=>{}));
-    let success = (function(key,input,data) {
-      acceptLoadedInput(key,input,data);
-    }).bind(null,key,input);
-    let failure = (function(key,input,err){
-      console.log(input);
-      statuses.set(key,{status:"failed"});
-      console.log(`Failed to load: ${source}`);
-    }).bind(null,key,input);
+    let success = (function(key,data) {
+      acceptLoadedInput(key,data);
+    }).bind(null,key);
+    let failure = (function(key,err){
+      recordLoadFailure(key,err);
+    }).bind(null,key);
     prom.then(success,failure);
   }
   //above use of bind inspired by:
