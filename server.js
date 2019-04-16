@@ -477,27 +477,47 @@ const FlowParser = require('./lib/flowparser');
 let proms = [];
 for([key,input] of inputs){
   statuses.set(key,{status:"loading"});
-  let f = input.file;
-  if(f.indexOf("/") >=0 ){
-    // reject files that have path traversal characters
-    console.log(input)
-    statuses.set(key,{status:"failed"});
-    console.log(`ILLEGAL INPUT FILE: ${f}`);
-  } else {
-    // get a promise for the parsed data
-    let prom = FlowParser.flowsFromFile('data/'+f,{max: max_records,
-                                                   no_label: input.no_label});
-    proms.push(prom);
-    prom.then((function(key,input,[p,l]){
+  let prom = null;
+  let source = '';
+  if(input.file){
+    source = input.file;
+    if(input.file.indexOf("/") >=0 ){
+      // reject files that have path traversal characters
+      console.log(input)
+      statuses.set(key,{status:"failed"});
+      console.log(`ILLEGAL INPUT FILE: ${input.file}`);
+    } else {
+      // get a promise for the parsed data
+      prom = FlowParser.flowsFromFile('data/'+input.file,{max: max_records,
+                                                          no_label: input.no_label});
+    }
+  } else if(input.url) {
+    source = input.url;
+    prom = FlowParser.flowsFromURL(input.url,{max: max_records,
+                                              no_label: input.no_label});
+  }
+  if(prom != null) {
+    /* Without this rather annoying catch(_=>{}), the error which is handled
+       just fine in the 'failure' function bubbles up again in Promise.all(...).
+       When Promise.protoype.finally() is added to the standard, this won't be
+       necessary. */
+    proms.push(prom.catch(_=>{}));
+    let success = (function(key,input,[p,l]) {
       console.log(input)
       let readyTime = new Date().getTime();
       let elapsedSecs = ((readyTime - startTime)/1000).toFixed(3);
-      console.log(`Loaded ${p.length} records in ${elapsedSecs} seconds from ${input.file}`);
+      console.log(`Loaded ${p.length} records in ${elapsedSecs} seconds from ${source}`);
       labels.set(key,l);
       records.set(key,p);
       statuses.set(key,{status:"ready"});
       phwalk(key, null); //initialize matrix cache
-    }).bind(null,key,input));
+    }).bind(null,key,input);
+    let failure = (function(key,input,err){
+      console.log(input);
+      statuses.set(key,{status:"failed"});
+      console.log(`Failed to load: ${source}`);
+    }).bind(null,key,input);
+    prom.then(success,failure);
   }
   //above use of bind inspired by:
   // https://stackoverflow.com/questions/32912459/promises-pass-additional-parameters-to-then-chain
@@ -508,7 +528,7 @@ Promise.all(proms).then(function(){
   clearInterval(dots);
   console.log('All inputs loaded');
   all_ready = true;
-});
+})
 
 //Start the server at the selected IP and port
 var server = http.createServer(app);
