@@ -263,9 +263,6 @@ let homeurl=url_root+'inputs.html';
 app.get(homeurl,function(req,res){
   let all_ready = Array.from(statuses.values()).every(v=>v.status!="loading");
   res.render('inputs',{
-    // "inputs" above tells the viewer to fetch view/inputs.html
-    // the value of key: below is used as the cache key in the view layer
-    key: 'inputs'+all_ready,
     render: function(window,sdone) {
       /* given a DOM-like structure, modify it to represent the intended
          output DOM. Why not use the built-in express templates? They are
@@ -473,7 +470,22 @@ function loadInput(key,input,proms) {
   // https://stackoverflow.com/questions/32912459/promises-pass-additional-parameters-to-then-chain
 }
 
-app.put(url_root+dyn_root+':input/configure',jsonParser,function(req,res){
+
+app.delete(url_root+dyn_root+':input',function(req,res){
+  let rname = req.params['input'];
+  let verif = verifyRequestAuthorization(req)
+  if(!(verif.passed && verif.headers.includes('date'))){
+    res.status(401).type("text/plain").send("Signature authorization with a known public key is required over at least the date header. See: https://tools.ietf.org/html/draft-cavage-http-signatures-10");
+  } else {
+    let oldInput = inputs.get(rname);
+    clearLoadedInput(rname);
+    statuses.delete(rname);
+    inputs.delete(rname);
+    res.json(oldInput);
+  }
+});
+
+app.put(url_root+dyn_root+':input',jsonParser,function(req,res){
   let rname = req.params['input'];
   let verif = verifyRequestAuthorization(req)
   if(!(verif.passed && verif.headers.includes('date') && verif.headers.includes('digest'))){
