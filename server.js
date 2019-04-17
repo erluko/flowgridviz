@@ -27,7 +27,7 @@ function verifyInputFormat(input){
   return (input != null &&
           typeof(input) == 'object' &&
           Object.keys(input).every(k=>allowedInputKeys.has(k)) &&
-          (input.file ==null || input.url == null));
+          ((input.file ==null) ^ (input.url == null)));
   // Only one of "file" or "url" can be specified
 }
 
@@ -503,7 +503,7 @@ app.put(url_root+dyn_root+':input',jsonParser,function(req,res){
   }
 });
 
-app.put(url_root+'/auth_check',function(req,res){
+app.post(url_root+'auth_check',function(req,res){
   let verif = verifyRequestAuthorization(req)
   res.json(verif)
 });
