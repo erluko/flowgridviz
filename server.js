@@ -6,6 +6,12 @@ const app = express();
 const jsdom = require("jsdom");
 const { JSDOM } = jsdom;
 const LRU = require("lru-cache")
+const httpSignature = require('http-signature');
+const bodyParser = require('body-parser');
+
+// allow jsonParser to ignore content-type header
+var jsonParser = bodyParser.json({type: _=>true})
+
 
 // local modules
 const me = require('./lib/matrixexplorer');
@@ -14,8 +20,27 @@ const tsf = require('./js/filtermaker');
 const slist = require('./lib/servicelist.js');
 const phr = require('./js/nethasher.js');
 
+
+
+let allowedInputKeys = new Set(['file','url','initial','title','no_label','ref']);
+function verifyInputFormat(input){
+  return (input != null &&
+          typeof(input) == 'object' &&
+          Object.keys(input).every(k=>allowedInputKeys.has(k)) &&
+          (input.file ==null || input.url == null));
+  // Only one of "file" or "url" can be specified
+}
+
 // load list of input datasources
-let inputs = new Map(JSON.parse(fs.readFileSync("./data/inputs.json")));
+let inputs_r = new Map(JSON.parse(fs.readFileSync("./data/inputs.json")));
+let inputs = new Map();
+for([key,input] of inputs_r){
+  if(verifyInputFormat(input)){
+    inputs.set(key,input)
+  } else {
+    console.log(`Rejecting malformed input "${key}"`)
+  }
+}
 
 /* ph0 is the default un-configured hasher to use for the initial top-level
    views where no axis shows ports */
@@ -54,6 +79,9 @@ const port = process.env.npm_package_config_port;
 
 // configured IP address to listen on
 const ip = process.env.npm_package_config_listen_ip;
+
+// configured directory storing authorized key files for API caller authentication
+const key_dir = process.env.npm_package_config_key_dir;
 
 // configured *per-dataset* upper limit on records to load
 const max_records = (s=>s?(s.toLowerCase()=='all'?0:+s||0):0)(process.env.npm_package_config_max_records);
@@ -394,18 +422,96 @@ app.get(url_root+dyn_root+':input/*/pmatrix.js',function(req,res){
   }
 });
 
-//FIXME: this is an unauthenticated DoS vector. Add authentication, and a rate limit.
-// Used for forcing the reload of a named data source
-app.get(url_root+dyn_root+':input/reload/',function(req,res){
-  let rname = req.params['input'];
-  let input = inputs.get(rname);
-  clearLoadedInput(rname);
-  let prom = FlowParser.flowsFromURL(input.url,{max: max_records,
-                                            no_label: input.no_label});
+function verifyRequestAuthorization(req){
+  let parsed = httpSignature.parseRequest(req);
+  let key_file = parsed.keyId.replace("/","_");
+  let pubkeydata = (function(){
+    try{
+      return fs.readFileSync(key_dir+'/'+key_file+'.pem', 'ascii');
+    } catch (e) {
+      return null;
+    }
+  })();
 
-  prom.then(acceptLoadedInput.bind(null,rname),
-            recordLoadFailure.bind(null,rname));
-  res.redirect(homeurl)
+  let info = { passed: false,
+               key_id: parsed.keyId,
+               headers: parsed.params.headers};
+  if(pubkeydata != null){
+    info.passed = httpSignature.verifySignature(parsed, pubkeydata);
+  }
+  return info;
+}
+
+function loadInput(key,input,proms) {
+  initStatus(key);
+  let prom = null;
+  if(input.file){
+    if(input.file.indexOf("/") >=0 ){
+      // reject files that have path traversal characters
+      recordLoadFailure(key,"Illegal input file name")
+    } else {
+      // get a promise for the parsed data
+      prom = FlowParser.flowsFromFile('data/'+input.file,{max: max_records,
+                                                          no_label: input.no_label});
+    }
+  } else if(input.url) {
+    prom = FlowParser.flowsFromURL(input.url,{max: max_records,
+                                              no_label: input.no_label});
+  }
+  if(prom != null) {
+    /* Without this rather annoying catch(_=>{}), the error which is handled
+       just fine in the 'failure' function bubbles up again in Promise.all(...).
+       When Promise.protoype.finally() is added to the standard, this won't be
+       necessary. */
+    if(proms) {
+      proms.push(prom.catch(_=>{}));
+    }
+    prom.then(acceptLoadedInput.bind(null,key),
+              recordLoadFailure.bind(null,key));
+  }
+  //above use of bind inspired by:
+  // https://stackoverflow.com/questions/32912459/promises-pass-additional-parameters-to-then-chain
+}
+
+app.put(url_root+dyn_root+':input/configure',jsonParser,function(req,res){
+  let rname = req.params['input'];
+  let verif = verifyRequestAuthorization(req)
+  if(!(verif.passed && verif.headers.includes('date') && verif.headers.includes('digest'))){
+    res.status(401).type("text/plain").send("Signature authorization with a known public key is required over at least the date and digest headers. See: https://tools.ietf.org/html/draft-cavage-http-signatures-10");
+  } else {
+    let update = req.body;
+    if(verifyInputFormat(update)){
+      clearLoadedInput(rname);
+      inputs.set(rname,update);
+      loadInput(rname,update);
+      res.json(update);
+    } else {
+      res.status(400).type("text/plain").send("Invalid input specification")
+    }
+  }
+});
+
+app.put(url_root+'/auth_check',function(req,res){
+  let verif = verifyRequestAuthorization(req)
+  res.json(verif)
+});
+
+// Used for forcing the reload of a named data source
+app.post(url_root+dyn_root+':input/reload/',function(req,res){
+  let verif = verifyRequestAuthorization(req)
+  if(!(verif.passed && verif.headers.includes('date') && verif.headers.includes('digest'))){
+    res.status(401).type("text/plain").send("Signature authorization with a known public key is required over at least the date and digest headers. See: https://tools.ietf.org/html/draft-cavage-http-signatures-10");
+  }  else {
+    let rname = req.params['input'];
+    let input = inputs.get(rname);
+    clearLoadedInput(rname);
+    let prom = FlowParser.flowsFromURL(input.url,{max: max_records,
+                                                  no_label: input.no_label});
+
+    prom.then(acceptLoadedInput.bind(null,rname),
+              recordLoadFailure.bind(null,rname));
+    res.redirect(homeurl)
+  }
 });
 
 
@@ -533,32 +639,7 @@ function  acceptLoadedInput(key,[p,l]){
 // List of promises to track:
 let proms = [];
 for([key,input] of inputs){
-  initStatus(key);
-  let prom = null;
-  if(input.file){
-    if(input.file.indexOf("/") >=0 ){
-      // reject files that have path traversal characters
-      recordLoadFailure(key,"Illegal input file name")
-    } else {
-      // get a promise for the parsed data
-      prom = FlowParser.flowsFromFile('data/'+input.file,{max: max_records,
-                                                          no_label: input.no_label});
-    }
-  } else if(input.url) {
-    prom = FlowParser.flowsFromURL(input.url,{max: max_records,
-                                              no_label: input.no_label});
-  }
-  if(prom != null) {
-    /* Without this rather annoying catch(_=>{}), the error which is handled
-       just fine in the 'failure' function bubbles up again in Promise.all(...).
-       When Promise.protoype.finally() is added to the standard, this won't be
-       necessary. */
-    proms.push(prom.catch(_=>{}));
-    prom.then(acceptLoadedInput.bind(null,key),
-              recordLoadFailure.bind(null,key));
-  }
-  //above use of bind inspired by:
-  // https://stackoverflow.com/questions/32912459/promises-pass-additional-parameters-to-then-chain
+  loadInput(key, input, proms)
 }
 
 Promise.all(proms).then(function(){
