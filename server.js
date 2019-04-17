@@ -511,8 +511,8 @@ app.post(url_root+'auth_check',function(req,res){
 // Used for forcing the reload of a named data source
 app.post(url_root+dyn_root+':input/reload/',function(req,res){
   let verif = verifyRequestAuthorization(req)
-  if(!(verif.passed && verif.headers.includes('date') && verif.headers.includes('digest'))){
-    res.status(401).type("text/plain").send("Signature authorization with a known public key is required over at least the date and digest headers. See: https://tools.ietf.org/html/draft-cavage-http-signatures-10");
+  if(!(verif.passed && verif.headers.includes('date'))){
+    res.status(401).type("text/plain").send("Signature authorization with a known public key is required over at least the date header. See: https://tools.ietf.org/html/draft-cavage-http-signatures-10");
   }  else {
     let rname = req.params['input'];
     let input = inputs.get(rname);
