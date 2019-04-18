@@ -29,25 +29,34 @@ if(action == 'update' && process.argv.length<6){
 }
 
 let url = process.argv[4]
+if(url.endsWith("/")) url = url.substr(0,url.length-1)
 
 var key = fs.readFileSync(keyfilepath, 'ascii');
 
+const urlsig = {
+  key: key,
+  keyId: keyid,
+  headers: ['date','(request-target)']
+}
+
+const bodysig = {
+  key: key,
+  keyId: keyid,
+  headers: ['date','digest','(request-target)']
+}
 
 const request = require('request').defaults({
-  httpSignature: {
-    key: key,
-    keyId: keyid,
-    headers: ['date','digest']
-  }
 });
 
 let acts={
-  check:  (x)=> request.post(url+'/auth_check',x),
-  reload: (x)=> request.post(url+'/reload',x),
-  delete: (x)=> request.delete(url,x),
+  check:  (x)=> request.post(url+'/auth_check',{httpSignature: urlsig},x),
+  reload: (x)=> request.post(url+'/reload',{httpSignature: urlsig},x),
+  delete: (x)=> request.delete(url,{httpSignature: urlsig},x),
   update: (x)=> {
     let d=process.argv[5];
-    return request.put(url,{body:d,headers:{digest:"SHA-256="+crypto.createHash('sha256').update(d).digest('base64')}},x)}
+    return request.put(url,{body:d,
+                            httpSignature: bodysig,
+                            headers:{digest:"SHA-256="+crypto.createHash('sha256').update(d).digest('base64')}},x)}
 };
 
 let act = acts[action];
