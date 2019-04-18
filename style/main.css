@@ -14,9 +14,12 @@ text {
 
 svg { display: block; }
 
-div.settings { float:right; padding-right:5px; }
 
-#settings-panel {
+img.icon { padding-left: 5px }
+
+div.icons { float:right; padding-right:5px; }
+
+#settings-panel, #labeler-panel {
     visibility: hidden;
     position: absolute;
     background: lightgrey;

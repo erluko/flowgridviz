@@ -447,6 +447,23 @@
       .on("mouseover",function(){handleHover.call(this,true,...arguments)})
       .on("mouseout",function(){handleHover.call(this,false,...arguments)})
 
+    // set up the label appearance UI
+    let labeler = body.select('#labeler');
+    let labelerbox = body.select('#labeler-panel');
+    if(labels.length > 0){
+      labelerbox.text("placeholder");
+      labeler.classed("hidden",false);
+      labeler.on("click", function(){
+        if(labelerbox.style("visibility") == "visible"){
+          win.on("click.labeler",null);
+          labelerbox.style("visibility","hidden")
+        } else {
+          labelerbox.style("visibility","visible")
+          win.on("click.labeler", windowHideLabeler);
+        }
+      })
+    }
+
     // set up the settings panel/gear UI
     let setbox = body.select('#settings-panel');
     let gear = body.select('#gear');
@@ -478,12 +495,22 @@
     setbox.style("left",((getSize(gear,"right") - getSize(setbox,"width"))+"px"))
       .style("top",getSize(gear,"bottom")+"px");
 
-    // MAke it so that any click outside of the visible settings box hides it
+    labelerbox.style("left",((getSize(labeler,"right") -
+                           getSize(labelerbox,"width"))+"px"))
+      .style("top",getSize(labeler,"bottom")+"px");
+
+    // Make it so that any click outside of the visible settings box hides it
     let win = d3.select(window);
     let windowHideSettings = function(){
       if(d3.event.target!=gear.node() &&
          !setbox.node().contains(d3.event.target)){
         gear.dispatch("click")
+      }
+    }
+    let windowHideLabeler = function(){
+      if(d3.event.target!=labeler.node() &&
+         !labelerbox.node().contains(d3.event.target)){
+        labeler.dispatch("click")
       }
     }
 
