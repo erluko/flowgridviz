@@ -261,14 +261,13 @@ app.get(url_root+'js-ext/:script.js',function (req,res){
 let homeurl=url_root+'inputs.html';
 // route for actually generating responses to requests for inputs.html
 app.get(homeurl,function(req,res){
-  let all_ready = Array.from(statuses.values()).every(v=>v.status!="loading");
   res.render('inputs',{
     render: function(window,sdone) {
       /* given a DOM-like structure, modify it to represent the intended
          output DOM. Why not use the built-in express templates? They are
          vulnerable to XSS. This is not. */
       let document = window.document;
-      if(all_ready){
+      if(!anyInputLoading()){
         /* when all sources have been processed, we can ditch the script
            tag that polls for loading state */
         document.getElementById("readyscript").remove()
@@ -451,7 +450,10 @@ function failedAuthMessage(info){
 }
 
 function loadInput(key,input,proms) {
-  initStatus(key);
+  statuses.set(key,{status:"loading",start:new Date().getTime()});
+  console.log(`Started loading input "${key}"`);
+  console.log(input);
+
   let prom = null;
   if(input.file){
     if(input.file.indexOf("/") >=0 ){
@@ -495,6 +497,11 @@ app.delete(url_root+dyn_root+':input',function(req,res){
   }
 });
 
+/* FIXME: all state-mutating API calls have a race condition if called
+          repeatedly on the same dataset. Each will create a promise
+          and the final result is based on the promise retirement
+          order. This could lead to interleaved writes to data structures
+          and an undefined state for the resource. */
 app.put(url_root+dyn_root+':input',jsonParser,function(req,res){
   let rname = req.params['input'];
   let verif = verifyRequestAuthorization(req, ['date','digest','(request-target)'])
@@ -605,16 +612,22 @@ app.get(url_root+dyn_root+':input/*/pcap.json',function(req,res){
 
 // "main" code that executes when 'npm start' is run begins here.
 
+function anyInputLoading(){
+  return Array.from(statuses.values()).some(v=>v.status=="loading");
+}
+
 console.log("Reading records");
-let startTime=new Date().getTime();
-let dots = setInterval(()=>console.log("."), 5000);
+let dots = setInterval(function(){
+  /* TODO: consider managing this timer so that it is disabled after initial
+     loading and re-enabled by API interaction */
+  if(anyInputLoading()){
+    console.log(".");
+  }
+}, 5000);
 
 // TODO: move require() calls to the top
 const FlowParser = require('./lib/flowparser');
 
-function initStatus(key){
-  statuses.set(key,{status:"loading",start:new Date().getTime()});
-}
 function updateStatus(key,attr,val){
   let status = statuses.get(key);
   status[attr]=val;
@@ -661,9 +674,7 @@ for([key,input] of inputs){
 }
 
 Promise.all(proms).then(function(){
-  // when all promises are done, the "inputs" page is simplified.
-  clearInterval(dots);
-  console.log('All inputs loaded');
+  console.log('All startup inputs loaded');
 })
 
 //Start the server at the selected IP and port
