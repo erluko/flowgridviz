@@ -31,10 +31,14 @@ url = sys.argv[3]
 if url.endswith("/"):
   url = url[:-1]
 
+date_digest_target= ['date','digest','(request-target)']
+date_target= ['date','(request-target)']
+
 with open(keyfilepath, 'rb') as fh:
   auth=HTTPSignatureAuth(algorithm="rsa-sha256",
                          key=fh.read(),
-                         key_id=keyid)
+                         key_id=keyid,
+                         headers=date_target if action != 'update' else date_digest_target)
   res = {'content': "No request sent"}
   if action == 'reload':
     res = requests.post(url+'/reload', auth=auth)
