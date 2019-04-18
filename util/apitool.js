@@ -4,6 +4,11 @@ const fs = require('fs');
 const crypto = require('crypto');
 const request = require('request');
 
+/* TODO: don't require users to know the URL endpoints:
+         instead, take the base_url as a param and the data set name as
+         a separate parameter */
+/* TODO: Consider adding an option to fetch an input definition or check its
+         status using the existing unauthenticated APIs */
 function usage(){
   console.log(`
 USAGE:
@@ -15,6 +20,7 @@ apitool.js keyid:path/to/key delete URL
   process.exit(1);
 }
 
+// TODO: use a parameter parsing library, this is awful
 if(process.argv.length<5 ||
    process.argv[2] == '-h' ||
    process.argv[2] == '--help' ){
@@ -33,6 +39,8 @@ if(url.endsWith("/")) url = url.substr(0,url.length-1)
 
 var key = fs.readFileSync(keyfilepath, 'ascii');
 
+
+// some APIs check the body digest, others (bodyless) don't
 const urlsig = {
   key: key,
   keyId: keyid,
@@ -45,6 +53,7 @@ const bodysig = {
   headers: ['date','digest','(request-target)']
 }
 
+// Object with functions for each action.
 let acts={
   check:  (x)=> request.post(url+'/auth_check',{httpSignature: urlsig},x),
   reload: (x)=> request.post(url+'/reload',{httpSignature: urlsig},x),
