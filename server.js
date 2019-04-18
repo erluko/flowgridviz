@@ -419,7 +419,7 @@ app.get(url_root+dyn_root+':input/*/pmatrix.js',function(req,res){
   }
 });
 
-function verifyRequestAuthorization(req){
+function verifyRequestAuthorization(req,required_headers = []){
   let parsed = httpSignature.parseRequest(req);
   let key_file = parsed.keyId.replace("/","_");
   let pubkeydata = (function(){
@@ -430,13 +430,24 @@ function verifyRequestAuthorization(req){
     }
   })();
 
-  let info = { passed: false,
+  let info = { passed_signature: false,
+               passed: false,
                key_id: parsed.keyId,
-               headers: parsed.params.headers};
+               request_headers: parsed.params.headers,
+               required_headers: required_headers
+             };
   if(pubkeydata != null){
-    info.passed = httpSignature.verifySignature(parsed, pubkeydata);
+    info.passed_signature = httpSignature.verifySignature(parsed, pubkeydata);
+    info.passed = info.passed_signature &&
+      required_headers.every(h=>info.request_headers.includes(h))
   }
   return info;
+}
+
+function failedAuthMessage(info){
+  return "Signature authorization with a known public key is required over "+
+    "at least (" + JSON.stringify(info.required_headers) + ").\n" +
+    "See: https://tools.ietf.org/html/draft-cavage-http-signatures-10"
 }
 
 function loadInput(key,input,proms) {
@@ -473,9 +484,9 @@ function loadInput(key,input,proms) {
 
 app.delete(url_root+dyn_root+':input',function(req,res){
   let rname = req.params['input'];
-  let verif = verifyRequestAuthorization(req)
-  if(!(verif.passed && verif.headers.includes('date'))){
-    res.status(401).type("text/plain").send("Signature authorization with a known public key is required over at least the date header. See: https://tools.ietf.org/html/draft-cavage-http-signatures-10");
+  let verif = verifyRequestAuthorization(req, ['date','(request-target)'])
+  if(!verif.passed){
+    res.status(401).type("text/plain").send(failedAuthMessage(verif));
   } else {
     let oldInput = inputs.get(rname);
     clearLoadedInput(rname);
@@ -486,9 +497,9 @@ app.delete(url_root+dyn_root+':input',function(req,res){
 
 app.put(url_root+dyn_root+':input',jsonParser,function(req,res){
   let rname = req.params['input'];
-  let verif = verifyRequestAuthorization(req)
-  if(!(verif.passed && verif.headers.includes('date') && verif.headers.includes('digest'))){
-    res.status(401).type("text/plain").send("Signature authorization with a known public key is required over at least the date and digest headers. See: https://tools.ietf.org/html/draft-cavage-http-signatures-10");
+  let verif = verifyRequestAuthorization(req, ['date','digest','(request-target)'])
+  if(!verif.passed) {
+    res.status(401).type("text/plain").send(failedAuthMessage(verif));
   } else {
     let update = req.body;
     if(verifyInputFormat(update)){
@@ -509,9 +520,9 @@ app.post(url_root+'auth_check',function(req,res){
 
 // Used for forcing the reload of a named data source
 app.post(url_root+dyn_root+':input/reload/',function(req,res){
-  let verif = verifyRequestAuthorization(req)
-  if(!(verif.passed && verif.headers.includes('date'))){
-    res.status(401).type("text/plain").send("Signature authorization with a known public key is required over at least the date header. See: https://tools.ietf.org/html/draft-cavage-http-signatures-10");
+  let verif = verifyRequestAuthorization(req, ['date','(request-target)'])
+  if(!verif.passed) {
+    res.status(401).type("text/plain").send(failedAuthMessage(verif));
   }  else {
     let rname = req.params['input'];
     let input = inputs.get(rname);
