@@ -1,9 +1,8 @@
 #!/usr/bin/env node
+//> crypto.createHash('sha256').update('{"url": "http://ec2-54-224-49-247.compute-1.amazonaws.com:5000/v1/csv/classified/rfc/testDset-with-iscx_1.pcap_Flow_labeled.csv?columns=Src%20IP,Dst%20IP,Src%20Port,Dst%20Port,Tot%20Fwd%20Pkts,Label,Flow%20ID", "title": "Labeled Project Flow", "no_label": "No Label"}').digest('base64');
 
-console.log("Signatures over digest auth aren't working in the requests library")
-process.exit(1)
-
-var fs = require('fs');
+const fs = require('fs');
+const crypto = require('crypto');
 
 function usage(){
   console.log(`
@@ -46,7 +45,9 @@ let acts={
   check:  (x)=> request.post(url+'/auth_check',x),
   reload: (x)=> request.post(url+'/reload',x),
   delete: (x)=> request.delete(url,x),
-  update: (x)=> request.put(url,x)
+  update: (x)=> {
+    let d=process.argv[5];
+    return request.put(url,{body:d,headers:{digest:"SHA-256="+crypto.createHash('sha256').update(d).digest('base64')}},x)}
 };
 
 let act = acts[action];
