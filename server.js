@@ -479,7 +479,6 @@ app.delete(url_root+dyn_root+':input',function(req,res){
   } else {
     let oldInput = inputs.get(rname);
     clearLoadedInput(rname);
-    statuses.delete(rname);
     inputs.delete(rname);
     res.json(oldInput);
   }
@@ -517,11 +516,7 @@ app.post(url_root+dyn_root+':input/reload/',function(req,res){
     let rname = req.params['input'];
     let input = inputs.get(rname);
     clearLoadedInput(rname);
-    let prom = FlowParser.flowsFromURL(input.url,{max: max_records,
-                                                  no_label: input.no_label});
-
-    prom.then(acceptLoadedInput.bind(null,rname),
-              recordLoadFailure.bind(null,rname));
+    loadInput(rname, input)
     res.redirect(homeurl)
   }
 });
@@ -616,7 +611,7 @@ function updateStatus(key,attr,val){
 function  clearLoadedInput(key){
   labels.delete(key);
   records.delete(key);
-  initStatus(key);
+  statuses.delete(key);
   mwcache.forEach(function(_,ckey,c){
     let ck=JSON.parse(ckey);
     if(ck.length && ck[0]==key) {
