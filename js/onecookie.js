@@ -5,7 +5,7 @@
 
   // Secure defaults:
   let COOKIE_TRAILER=(window.location.protocol=='https:'?';Secure':'')+
-      ';SameSite=Strict';
+      ';SameSite=Strict;Path=/';
 
   let oc = {
     TooLarge:  function(){ // Exception constructor
@@ -21,13 +21,14 @@
       // make base64 cookie-safe:
       let dc = COOKIE_NAME+"="+(btoa(JSON.stringify(v)).replace(/=/g,"_"));
       if(dc.length < MAX_COOKIE_LEN){
+        //todo: implement per-cookie paths by embeding path in the json
         return document.cookie = dc+COOKIE_TRAILER;
       } else {
         throw new oc.TooLarge();
       }
     },
     // get the cookie value as an object, return "def" if not found
-    get: function(def){
+    get: function(def,subdefs){
       if(typeof def === 'undefined') def = null;
       let v = document.cookie;
       /* The next four lines are for browser weirdness compatibility
@@ -41,7 +42,7 @@
       /* only attempt decoding if the cookie length is short enough
          and not obviously a mess. This prevents an algorithmic-complexity
          DOS on the JSON parser and avoids some multi-cookie weirdness */
-      if(v.length<MAX_COOKIE_LEN && v.indexOf(';') == -1){
+      if(v.length>0 && v.length<MAX_COOKIE_LEN && v.indexOf(';') == -1){
         let parts = v.split('=');
         if(parts.length == 2 && parts[0]==COOKIE_NAME){
           try{
