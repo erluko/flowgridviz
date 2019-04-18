@@ -1,8 +1,8 @@
 #!/usr/bin/env node
-//> crypto.createHash('sha256').update('{"url": "http://ec2-54-224-49-247.compute-1.amazonaws.com:5000/v1/csv/classified/rfc/testDset-with-iscx_1.pcap_Flow_labeled.csv?columns=Src%20IP,Dst%20IP,Src%20Port,Dst%20Port,Tot%20Fwd%20Pkts,Label,Flow%20ID", "title": "Labeled Project Flow", "no_label": "No Label"}').digest('base64');
 
 const fs = require('fs');
 const crypto = require('crypto');
+const request = require('request');
 
 function usage(){
   console.log(`
@@ -44,9 +44,6 @@ const bodysig = {
   keyId: keyid,
   headers: ['date','digest','(request-target)']
 }
-
-const request = require('request').defaults({
-});
 
 let acts={
   check:  (x)=> request.post(url+'/auth_check',{httpSignature: urlsig},x),
