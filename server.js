@@ -21,7 +21,7 @@ const slist = require('./lib/servicelist.js');
 const phr = require('./js/nethasher.js');
 
 
-
+// Routine to verify that an input record (via API or inputs.json) is well-formed
 let allowedInputKeys = new Set(['file','url','initial','title','no_label','ref']);
 function verifyInputFormat(input){
   return (input != null &&
@@ -418,17 +418,36 @@ app.get(url_root+dyn_root+':input/*/pmatrix.js',function(req,res){
   }
 });
 
+
+/* API Authentication function
+
+   req: the request
+   required_headers: an array of strings containing the header names that were
+     expected to have been signed.
+
+   Returns an object that contains details of the verification process.
+   the .verified element of that object should be checked: it's set to true IFF
+   the signature was valid and covered all the required headers.
+*/
 function verifyRequestAuthorization(req,required_headers = []){
+  // Extract the signature data
   let parsed = httpSignature.parseRequest(req);
+  /* TODO: check that parsed throws no errors rather than letting the
+     default error handler show the user a stack trace */
+
+  // Get the key ID and convert it into a slash-free filename
   let key_file = parsed.keyId.replace("/","_");
   let pubkeydata = (function(){
     try{
+      // attempt to read the public key
       return fs.readFileSync(key_dir+'/'+key_file+'.pem', 'ascii');
     } catch (e) {
       return null;
     }
   })();
 
+  /* Populate "info" with a failed state so if we fall through to the return,
+     the system fails closed */
   let info = { passed_signature: false,
                passed: false,
                key_id: parsed.keyId,
@@ -436,19 +455,24 @@ function verifyRequestAuthorization(req,required_headers = []){
                required_headers: required_headers
              };
   if(pubkeydata != null){
+    // If the public key was loaded, check the signature against it
     info.passed_signature = httpSignature.verifySignature(parsed, pubkeydata);
+
+    // Check that the signature coveres the required parts of the request
     info.passed = info.passed_signature &&
       required_headers.every(h=>info.request_headers.includes(h))
   }
   return info;
 }
 
+// Generate a message explaining why authentication failed
 function failedAuthMessage(info){
   return "Signature authorization with a known public key is required over "+
     "at least (" + JSON.stringify(info.required_headers) + ").\n" +
     "See: https://tools.ietf.org/html/draft-cavage-http-signatures-10"
 }
 
+// Start loading an input definition, including storing it in the input map
 function loadInput(key,input,proms) {
   statuses.set(key,{status:"loading",start:new Date().getTime()});
   console.log(`Started loading input "${key}"`);
@@ -467,7 +491,7 @@ function loadInput(key,input,proms) {
   } else if(input.url) {
     prom = FlowParser.flowsFromURL(input.url,{max: max_records,
                                               no_label: input.no_label});
-  }
+  } // there's no "else" here because the following null check handles that case
   if(prom != null) {
     /* Without this rather annoying catch(_=>{}), the error which is handled
        just fine in the 'failure' function bubbles up again in Promise.all(...).
@@ -476,6 +500,7 @@ function loadInput(key,input,proms) {
     if(proms) {
       proms.push(prom.catch(_=>{}));
     }
+    // Either store the sucessfully loaded data or record that the load failed
     prom.then(acceptLoadedInput.bind(null,key),
               recordLoadFailure.bind(null,key));
   }
@@ -483,16 +508,22 @@ function loadInput(key,input,proms) {
   // https://stackoverflow.com/questions/32912459/promises-pass-additional-parameters-to-then-chain
 }
 
-
+// Authenticate API to remove a data set
 app.delete(url_root+dyn_root+':input',function(req,res){
   let rname = req.params['input'];
+  // Ensure the API request is authorized:
   let verif = verifyRequestAuthorization(req, ['date','(request-target)'])
   if(!verif.passed){
     res.status(401).type("text/plain").send(failedAuthMessage(verif));
   } else {
     let oldInput = inputs.get(rname);
+    // get rid of the old data, cache, etc.
     clearLoadedInput(rname);
+
+    // remove the input from the input map
     inputs.delete(rname);
+
+    // Send back whatever the old definition was
     res.json(oldInput);
   }
 });
@@ -502,17 +533,29 @@ app.delete(url_root+dyn_root+':input',function(req,res){
           and the final result is based on the promise retirement
           order. This could lead to interleaved writes to data structures
           and an undefined state for the resource. */
+
+// Authenticated API to add, replace, or reload a data set
 app.put(url_root+dyn_root+':input',jsonParser,function(req,res){
   let rname = req.params['input'];
+  // Ensure the API request is authorized (including the body digest):
   let verif = verifyRequestAuthorization(req, ['date','digest','(request-target)'])
   if(!verif.passed) {
     res.status(401).type("text/plain").send(failedAuthMessage(verif));
   } else {
     let update = req.body;
+    //TODO: Consider using an empty body as a synonym or replacement for "reload"
     if(verifyInputFormat(update)){
+      // get rid of the old data, cache, etc.
       clearLoadedInput(rname);
+
+      // add the new input to the input map
       inputs.set(rname,update);
+
+      // populate the data
       loadInput(rname,update);
+
+      //TODO: consider sending the status URL instead
+      // send the new data back
       res.json(update);
     } else {
       res.status(400).type("text/plain").send("Invalid input specification")
@@ -520,33 +563,47 @@ app.put(url_root+dyn_root+':input',jsonParser,function(req,res){
   }
 });
 
+// Authentication check API. See README.
 app.post(url_root+'auth_check',function(req,res){
+  // Perform the verification check, but do not enforce it
   let verif = verifyRequestAuthorization(req)
+  // Let the caller see the result of the check
   res.json(verif)
 });
 
-// Used for forcing the reload of a named data source
+// Authenticated API used for forcing the reload of a named data source
 app.post(url_root+dyn_root+':input/reload/',function(req,res){
+  // Ensure the API request is authorized:
   let verif = verifyRequestAuthorization(req, ['date','(request-target)'])
   if(!verif.passed) {
     res.status(401).type("text/plain").send(failedAuthMessage(verif));
   }  else {
     let rname = req.params['input'];
     let input = inputs.get(rname);
+    // get rid of the old data, cache, etc.
     clearLoadedInput(rname);
+
+    // populate the data
     loadInput(rname, input)
+
+    // TODO: consider redirecting to ready.json instead
+    // send the requester home
     res.redirect(homeurl)
   }
 });
 
 
 // Used for polling ready state (used in-browser)
+// TODO: document this API, noting that it is used internally
+// TODO: consider renaming to status.js
 app.get(url_root+dyn_root+':input/ready.js',function(req,res){
   let rname = req.params['input'];
   res.type("text/javascript").send(jsonWrap('ready',statuses.get(rname)));
 });
 
 // Used for examining ready state via curl, etc
+// TODO: document this API
+// TODO: consider renaming to status.json
 app.get(url_root+dyn_root+':input/ready.json',function(req,res){
   let rname = req.params['input'];
   res.json(statuses.get(rname));
@@ -554,6 +611,7 @@ app.get(url_root+dyn_root+':input/ready.json',function(req,res){
 
 /* Potentially useful for building applications that fetch filter rules
    for particular matrix paths, but not used by this application at the moment */
+// TODO: document this API
 app.get(url_root+dyn_root+':input/*/filter.txt',function(req,res){
   let rname = req.params['input'];
   let ps = req.params['0'];
@@ -575,12 +633,14 @@ app.get(url_root+dyn_root+':input/*/filter.txt',function(req,res){
   }
 });
 // As above, but for the default (no-path) rule
+// TODO: document this API
 app.get(url_root+dyn_root+':input/filter.txt',function(req,res){
   res.type("text/plain")
   res.send("tcp or udp\n");
 });
 
 // Unused route for getting a view into the selected data set's records
+// TODO: rename "pcap" to something else, document this API
 app.get(url_root+dyn_root+':input/pcap.json',function(req,res){
   let rname = req.params['input'];
   let recs = records.get(rname);
@@ -593,6 +653,7 @@ app.get(url_root+dyn_root+':input/pcap.json',function(req,res){
 
 /* Unused route for getting a view into the selected data set's records
    for the given matrix path */
+// TODO: rename "pcap" to something else, document this API
 app.get(url_root+dyn_root+':input/*/pcap.json',function(req,res){
   let rname = req.params['input'];
   let ps = req.params['0'];
@@ -610,12 +671,13 @@ app.get(url_root+dyn_root+':input/*/pcap.json',function(req,res){
   }
 });
 
-// "main" code that executes when 'npm start' is run begins here.
 
+// Returns true if any of the known inputs are in the "loading" state
 function anyInputLoading(){
   return Array.from(statuses.values()).some(v=>v.status=="loading");
 }
 
+// "main" code that executes when 'npm start' is run begins here.
 console.log("Reading records");
 let dots = setInterval(function(){
   /* TODO: consider managing this timer so that it is disabled after initial
@@ -628,14 +690,29 @@ let dots = setInterval(function(){
 // TODO: move require() calls to the top
 const FlowParser = require('./lib/flowparser');
 
+// Updates a field in the status array. Centralized to reduce code duplication.
 function updateStatus(key,attr,val){
   let status = statuses.get(key);
   status[attr]=val;
 }
+
+// Remove all traces of one of the inputs. It doesn't have to be "loaded"
 function  clearLoadedInput(key){
+  // delete the label set
   labels.delete(key);
+
+  // delete the data itself
   records.delete(key);
+
+  // remove it from the status list
   statuses.delete(key);
+
+  /* remove its cache entries
+     IMPORTANT: this is needed for when (if) the data set is ever re-added
+     Since the "reload" logic first removes and then re-adds a data-set,
+     this is absolutely essential to ensuring that the user will see the new
+     data rather than the old data.
+  */
   mwcache.forEach(function(_,ckey,c){
     let ck=JSON.parse(ckey);
     if(ck.length && ck[0]==key) {
@@ -644,6 +721,8 @@ function  clearLoadedInput(key){
   })
 }
 
+
+// mark the input status as "failed" so we can surface this in the UI
 function  recordLoadFailure(key,why){
   console.log(inputs.get(key));
   let status = statuses.get(key);
@@ -653,6 +732,8 @@ function  recordLoadFailure(key,why){
   console.log(`Failed to load "${key}": ${why}`);
 }
 
+/* New data and labels have arrived for an input.
+   Assiciate them with the input and mark it as ready. */
 function  acceptLoadedInput(key,[p,l]){
   let input = inputs.get(key)
   console.log(input)
@@ -666,13 +747,14 @@ function  acceptLoadedInput(key,[p,l]){
   console.log(`Loaded ${status.record_count} records in ${elapsedSecs} seconds for "${key}"`);
 }
 
-
+// TODO: get rid of "proms" and use the statuses array instead
 // List of promises to track:
 let proms = [];
 for([key,input] of inputs){
   loadInput(key, input, proms)
 }
 
+// Log that all startup inputs have finished
 Promise.all(proms).then(function(){
   console.log('All startup inputs loaded');
 })
