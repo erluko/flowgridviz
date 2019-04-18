@@ -9,10 +9,10 @@ warnings.filterwarnings('ignore', category=CryptographyDeprecationWarning)
 
 def usage():
   print('''USAGE:
-apitool.js keyid:path/to/key check BASE_URL
-apitool.js keyid:path/to/key reload URL
-apitool.js keyid:path/to/key update URL JSON
-apitool.js keyid:path/to/key delete URL
+apitool.py keyid:path/to/key check BASE_URL
+apitool.py keyid:path/to/key reload URL
+apitool.py keyid:path/to/key update URL JSON
+apitool.py keyid:path/to/key delete URL
   ''');
   exit(1)
 
