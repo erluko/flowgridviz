@@ -6,7 +6,8 @@ sources and destinations of tcp and udp traffic onto a 53x53 grid.
 Sources and destinations are either port numbers or IP addresses. Each
 grid point represents the intersection of source and destination. The
 darkness of each point is based on the number of such pairs present in
-the input data.
+the input data. This representation is chosen as it makes it possible
+to retrieve salient information from very sparse data.
 
 The hashing function used to make the initial reduction down to the
 coordinate space is intentionally reversible so that the list of
@@ -435,6 +436,12 @@ Gear icon is in the public domain:
 https://publicdomainvectors.org/en/free-clipart/Tool-options/67662.html
 
 See package.json for a list of server-side dependencies.
+
+Security Considerations
+=======================
+
+See SECURITY.md for a thorough examination of the security properties
+of pcapviz.
 
 License
 =======
