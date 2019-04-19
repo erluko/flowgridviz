@@ -129,6 +129,22 @@ URL: BASE/viz/{dataset-name}/{matrix-path}/matrix.json
 RETURNS: The JSON object used for rendering the selected matrix-path
 
 
+Get all data for data set
+-------------------------
+
+URL: BASE/viz/{dataset-name}/records.json
+RETURNS: All of the flow or packet records for the data set.
+
+
+Get all data for path within data set
+-------------------------------------
+
+URL: BASE/viz/{dataset-name}/{matrix-path}/records.json
+RETURNS: All of the flow or packet records for the selected
+         matrix-path within the data set.
+
+
+
 Authenticated APIs
 ==================
 

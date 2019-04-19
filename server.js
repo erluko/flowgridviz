@@ -636,9 +636,9 @@ app.get(url_root+dyn_root+':input/filter.txt',function(req,res){
   res.send("tcp or udp\n");
 });
 
-// Unused route for getting a view into the selected data set's records
-// TODO: rename "pcap" to something else, document this API
-app.get(url_root+dyn_root+':input/pcap.json',function(req,res){
+/* API Route to list flow or packet records for the data set.
+   Not used internally */
+app.get(url_root+dyn_root+':input/records.json',function(req,res){
   let rname = req.params['input'];
   let recs = records.get(rname);
   if(recs){
@@ -648,10 +648,9 @@ app.get(url_root+dyn_root+':input/pcap.json',function(req,res){
   }
 });
 
-/* Unused route for getting a view into the selected data set's records
-   for the given matrix path */
-// TODO: rename "pcap" to something else, document this API
-app.get(url_root+dyn_root+':input/*/pcap.json',function(req,res){
+/* API Route to list flow or packet records for the given matrix path
+   within the data set.  Not used internally */
+app.get(url_root+dyn_root+':input/*/records.json',function(req,res){
   let rname = req.params['input'];
   let ps = req.params['0'];
   let pp = pu.pathParser(ps);
