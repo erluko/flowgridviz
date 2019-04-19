@@ -95,11 +95,45 @@ present in the `input/` directory. The default install will copy these
 files into the `data/` directory. Please edit the `data/inputs.json` file
 to point at the correct data sources.
 
-APIs
-====
 
-pcapviz supports a few simple REST APIs. All APIs capable of modifying
-the application require the use of
+Unauthenticated APIs
+====================
+
+pcapviz supports a few GET endpoints for extracting information about
+the system state or the data sets. These read-only APIs do not require
+authentication. These APIs are unversioned and subject to change.
+
+All URLs in the API definitions below are rooted in the base URL
+defined by the port and url_root defined in the configuration. Assume
+your pcapviz installation is at `https://site.com/pcv/`. Call that the
+`BASE`. All API urls will be relative to that.
+
+List data set labels
+--------------------
+
+URL: BASE/viz/{dataset-name}/labels.json
+RETURNS: A JSON array of the labels present in the dataset
+
+
+Get data set definition
+-----------------------
+
+URL: BASE/viz/{dataset-name}/input.json
+RETURNS: A JSON structure describing the data set
+
+
+Get matrix structure
+--------------------
+
+URL: BASE/viz/{dataset-name}/{matrix-path}/matrix.json
+RETURNS: The JSON object used for rendering the selected matrix-path
+
+
+Authenticated APIs
+==================
+
+pcapviz supports a few REST APIs capable of modifying the
+application. These require the use of
 [http-signature](https://tools.ietf.org/html/draft-cavage-http-signatures-10)
 authorization using public keys. Authentication details are described
 after the list of API endpoints. A few informative APIs are available
@@ -115,7 +149,7 @@ desired, but they are complete enough to use as-is. Both support
 All URLs in the API definitions below are rooted in the base URL
 defined by the port and url_root defined in the configuration. Assume
 your pcapviz installation is at `https://site.com/pcv/`. Call that the
-`BASE_URL`. All API urls will be relative to that. **Be certain to use
+`BASE`. All API urls will be relative to that. **Be certain to use
 the proper scheme (http/https) or there will be silent errors**
 
 
@@ -123,7 +157,7 @@ Verify authentication works
 ---------------------------
 
 Method: POST
-URL: `BASE_URL/check_auth`
+URL:  BASE/check_auth
 BODY: ignored
 AUTH: any
 RESPONSE: a json object describing success or failure of the auth check
@@ -137,7 +171,7 @@ Update or add input source
 ---------------------------
 
 Method: PUT
-URL: `BASE_URL/viz/`*dataset-name*
+URL:  BASE/viz/{dataset-name}
 BODY: a json payload conforming to the object format described in
       INPUT DATA above.
 AUTH: The body digest, date, and (request-target) must be signed
@@ -154,7 +188,7 @@ Delete input source
 -------------------
 
 Method: DELETE
-URL: `BASE_URL/viz/`*dataset-name*
+URL:  BASE/viz/{dataset-name}
 BODY: ignored
 AUTH: The date and (request-target) must be signed
 RESPONSE: The JSON object describing the now-deleted input source
@@ -168,7 +202,7 @@ Reload input source
 ---------------------
 
 Method: POST
-URL: `BASE_URL/viz/`*dataset-name*`/reload`
+URL:  BASE/viz/{dataset-name}/reload
 BODY: ignored
 AUTH: The date and (request-target) must be signed
 RESPONSE: An HTTP redirect to the list of inputs

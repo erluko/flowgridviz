@@ -346,8 +346,7 @@ app.get(url_root+dyn_root+':input/*/index.html',function(req,res){
     }});
 });
 
-/* This route is unused by the application, but is available for debugging
-   and for future work */
+/* API Route to list data set labels. Not used internally */
 app.get(url_root+dyn_root+':input/labels.json',function(req,res){
   let rname = req.params['input'];
   let ls = labels.get(rname);
@@ -362,8 +361,7 @@ app.get(url_root+dyn_root+':input/labels.js',function(req,res){
   res.send(jsonWrap("labels",ls));
 });
 
-/* This route is unused by the application, but is available for debugging
-   and for future work */
+/* API Route to get data set definition. Not used internally */
 app.get(url_root+dyn_root+':input/input.json',function(req,res){
   let rname = req.params['input'];
   let inp= inputs.get(rname);
@@ -379,8 +377,7 @@ app.get(url_root+dyn_root+':input/input.js',function(req,res){
   res.send(jsonWrap("input",[rname,inp,homeurl]));
 });
 
-/* This route is unused by the application, but is available for debugging
-   and for future work */
+/* API Route to get matrix for given matrix path. Not used internally */
 app.get(url_root+dyn_root+':input/*/matrix.json',function(req,res){
   let rname = req.params['input'];
   let ps = req.params['0'];
