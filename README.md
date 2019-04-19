@@ -144,6 +144,20 @@ RETURNS: All of the flow or packet records for the selected
          matrix-path within the data set.
 
 
+Get tshark filter rule for path within data set
+-----------------------------------------------
+
+URL: BASE/viz/{dataset-name}/{matrix-path}/filter.txt
+RETURNS: The same tshark filter rule visible in the UI for this matrix-
+         path within this data set
+
+
+Get base tshark filter rule
+---------------------------
+
+URL: BASE/viz/{dataset-name}/filter.txt
+RETURNS: The constant top-level tshark filter
+
 
 Authenticated APIs
 ==================

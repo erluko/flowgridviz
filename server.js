@@ -606,9 +606,13 @@ app.get(url_root+dyn_root+':input/ready.json',function(req,res){
   res.json(statuses.get(rname));
 });
 
-/* Potentially useful for building applications that fetch filter rules
-   for particular matrix paths, but not used by this application at the moment */
-// TODO: document this API
+/* API Route to list tshark filter rules for the given matrix path
+   within the data set.
+
+   Potentially useful for building applications that fetch filter rules
+   for particular matrix paths.
+
+   Not used internally */
 app.get(url_root+dyn_root+':input/*/filter.txt',function(req,res){
   let rname = req.params['input'];
   let ps = req.params['0'];
@@ -629,8 +633,7 @@ app.get(url_root+dyn_root+':input/*/filter.txt',function(req,res){
     }
   }
 });
-// As above, but for the default (no-path) rule
-// TODO: document this API
+// API Route as described above, but for the default (no-path) rule
 app.get(url_root+dyn_root+':input/filter.txt',function(req,res){
   res.type("text/plain")
   res.send("tcp or udp\n");
