@@ -355,7 +355,8 @@ Pre-deployment testing was made possible by Amazon's guide to running
 an EC2-like Linux image in VirtualBox:
 https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/amazon-linux-2-virtual-machine.html
 
-Checkbox icon was created from scratch in GiMP.
+Checkbox icon and label control icon were created from scratch in GiMP
+and Inkscape, respectively.
 
 Gear icon is in the public domain:
 https://publicdomainvectors.org/en/free-clipart/Tool-options/67662.html
