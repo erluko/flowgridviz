@@ -122,8 +122,8 @@ URL: BASE/viz/{dataset-name}/input.json
 RETURNS: A JSON structure describing the data set
 
 
-Get matrix structure
---------------------
+Get matrix structure for path within data set
+---------------------------------------------
 
 URL: BASE/viz/{dataset-name}/{matrix-path}/matrix.json
 RETURNS: The JSON object used for rendering the selected matrix-path
