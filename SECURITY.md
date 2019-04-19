@@ -62,7 +62,10 @@ traffic from pcapviz, but its handling of data from the capture system
 and its interaction with its users, environment, etc., are not
 considered. The safety of pcapviz is not predicated on any filtering
 property of the labeling system preventing harmful data (such as from
-within a malformed packet capture) from reaching pcapviz.
+within a malformed packet capture) from reaching pcapviz. This is
+particularly important as pcapviz is intended as a security tool and
+will be exposed to packet and flow analysis containing intentionally
+malicious data.
 
 Similarly, underlying infrastructure such as power, DNS, IP routing,
 and vm hosting are contemplated, but not assumed to operate in a way
