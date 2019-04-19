@@ -425,8 +425,13 @@ app.get(url_root+dyn_root+':input/*/pmatrix.js',function(req,res){
    Returns an object that contains details of the verification process.
    the .verified element of that object should be checked: it's set to true IFF
    the signature was valid and covered all the required headers.
+
+   This is used to authenticate the API request. Authorization is
+   implied by the presence of a known key. Future changes may create
+   per-api permissions, in which case an authorization function will
+   be needed in addition to this authentication function.
 */
-function verifyRequestAuthorization(req,required_headers = []){
+function verifyRequestAuthenticity(req,required_headers = []){
   // Extract the signature data
   let parsed = httpSignature.parseRequest(req);
   /* TODO: check that parsed throws no errors rather than letting the
@@ -464,7 +469,7 @@ function verifyRequestAuthorization(req,required_headers = []){
 
 // Generate a message explaining why authentication failed
 function failedAuthMessage(info){
-  return "Signature authorization with a known public key is required over "+
+  return "Signature authentication with a known public key is required over "+
     "at least (" + JSON.stringify(info.required_headers) + ").\n" +
     "See: https://tools.ietf.org/html/draft-cavage-http-signatures-10"
 }
@@ -508,8 +513,8 @@ function loadInput(key,input,proms) {
 // Authenticate API to remove a data set
 app.delete(url_root+dyn_root+':input',function(req,res){
   let rname = req.params['input'];
-  // Ensure the API request is authorized:
-  let verif = verifyRequestAuthorization(req, ['date','(request-target)'])
+  // Ensure the API request is authentic
+  let verif = verifyRequestAuthenticity(req, ['date','(request-target)'])
   if(!verif.passed){
     res.status(401).type("text/plain").send(failedAuthMessage(verif));
   } else {
@@ -534,8 +539,8 @@ app.delete(url_root+dyn_root+':input',function(req,res){
 // Authenticated API to add, replace, or reload a data set
 app.put(url_root+dyn_root+':input',jsonParser,function(req,res){
   let rname = req.params['input'];
-  // Ensure the API request is authorized (including the body digest):
-  let verif = verifyRequestAuthorization(req, ['date','digest','(request-target)'])
+  // Ensure the API request is authentic (including the body digest):
+  let verif = verifyRequestAuthenticity(req, ['date','digest','(request-target)'])
   if(!verif.passed) {
     res.status(401).type("text/plain").send(failedAuthMessage(verif));
   } else {
@@ -563,15 +568,15 @@ app.put(url_root+dyn_root+':input',jsonParser,function(req,res){
 // Authentication check API. See README.
 app.post(url_root+'auth_check',function(req,res){
   // Perform the verification check, but do not enforce it
-  let verif = verifyRequestAuthorization(req)
+  let verif = verifyRequestAuthenticity(req)
   // Let the caller see the result of the check
   res.json(verif)
 });
 
 // Authenticated API used for forcing the reload of a named data source
 app.post(url_root+dyn_root+':input/reload/',function(req,res){
-  // Ensure the API request is authorized:
-  let verif = verifyRequestAuthorization(req, ['date','(request-target)'])
+  // Ensure the API request is authentic:
+  let verif = verifyRequestAuthenticity(req, ['date','(request-target)'])
   if(!verif.passed) {
     res.status(401).type("text/plain").send(failedAuthMessage(verif));
   }  else {

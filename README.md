@@ -174,7 +174,7 @@ Authenticated APIs
 pcapviz supports a few REST APIs capable of modifying the
 application. These require the use of
 [http-signature](https://tools.ietf.org/html/draft-cavage-http-signatures-10)
-authorization using public keys. Authentication details are described
+authentication using public keys. Authentication details are described
 after the list of API endpoints. A few informative APIs are available
 by sending GET requests. These are not yet documented.
 
@@ -256,7 +256,7 @@ API Authentication
 
 All APIs require the use of
 [http-signature](https://tools.ietf.org/html/draft-cavage-http-signatures-10)
-authorization using public keys.
+authentication using public keys.
 
 Each user can generate their keys using OpenSSL:
 
