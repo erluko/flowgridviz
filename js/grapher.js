@@ -7,7 +7,14 @@
   let importData = inNode?n=>require('../out/'+n+'.js').IMPORT_DATA.get(n):n=>IMPORT_DATA.get(n);
 
   // See js/onecookie.js for more info:
-  let settings = OneCookie.get({anim:true,shrt:false});
+  let defsettings = {anim:true,shrt:false};
+  let settings = OneCookie.get(defsettings);
+  Object.entries(defsettings).forEach(
+    function([dk,dv]) {
+      if(!(dk in settings)){
+        settings[dk]=dv;
+      }
+    });
 
   // Build an empty watcher array for each setting
   let settingsWatchers = Object.entries(settings).reduce((a,[k,v])=>(a[k]=[],a),{});
@@ -62,6 +69,9 @@
                               (x >>> 16 & 0x0FF)+'.'+
                               (x >>>  8 & 0x0FF)+'.'+
                               (x >>>  0 & 0x0FF))};
+
+  let uilabels = ["None"].concat(labels)
+  let labelOpacitySettings = uilabels.map(()=>0);
 
   // get the nethasher code
   let phr = inNode?require('nethasher.js'):{nethasher: root.nethasher};
@@ -264,6 +274,12 @@
                         .range([PADDINGS.a[xy],
                                 squareSide * (bcount+1)
                                 + PADDINGS.a[xy]]));
+    // opacity scale for label sliders
+    scales.op = d3.scaleLinear()
+      .domain([-10,0])
+      .range([0,1])
+      .clamp(true);
+
     let UNIT_SIZE = {
       x: scales.x(1)-scales.x(0), //~=squareSide
       y: scales.y(1)-scales.y(0)  //~=squareSide
@@ -407,7 +423,7 @@
         .classed("plot",true);
 
     // Each anchor has an href linking to that point's subgraph
-    as.merge(newAs)
+    let allRects = as.merge(newAs)
       .attr("xlink:href",([idx,v]) => subgraphURL(+idx))
       .on("click",function(){
         // animate "zooming in" to the point if animation is enabled
@@ -436,14 +452,22 @@
           // if not animating, at least provide the loading feedback
           showLoading();
         }
-      })
-      .select("rect")
-      .attr("width",UNIT_SIZE.x*(gapf))
+      }).select("rect")
+
+    function opacityForLabelVs(lvs){
+      console.log(scales.op(d3.mean([])))
+      return scales.op(d3.mean(lvs));
+    }
+
+    allRects.attr("width",UNIT_SIZE.x*(gapf))
       .attr("height",UNIT_SIZE.y*(gapf))
       .attr("x",([idx,[v,l]])=>scales.x((+idx) % bcount)+UNIT_SIZE.x*(gapf/2))
       .attr("y",([idx,[v,l]])=>scales.y(Math.floor((+idx) / bcount))+UNIT_SIZE.y*(gapf/2))
       .attr("fill",([idx,[v,l]])=>v=0?'white':d3.interpolateYlOrBr(scales.z(v)))
       .classed("labeled",([idx,[v,l]])=>l!=0) // highlight labeled points
+      .style("opacity",([idx,[v,l]])=>opacityForLabelVs(
+        labelOpacitySettings.filter(
+          (_,li)=>(l==0 && li==0) || ((l<<1) & (1<<li)))))
       .on("mouseover",function(){handleHover.call(this,true,...arguments)})
       .on("mouseout",function(){handleHover.call(this,false,...arguments)})
 
@@ -451,7 +475,37 @@
     let labeler = body.select('#labeler');
     let labelerbox = body.select('#labeler-panel');
     if(labels.length > 0){
-      labelerbox.text("placeholder");
+      let uiusedL = (usedL << 1) | 1; //"None" is always enabled
+      let labelopts = labelerbox.append("form")
+          .selectAll("label.labeler-opt")
+          .data(uilabels)
+          .enter()
+          .append("label")
+          .classed("labeler-opt",true)
+          .classed("enabled-label",(d,i)=>uiusedL & 1<<i)
+      labelopts.append('input')
+        .classed("label-slider",true)
+        .attr("type","range")
+        .attr("min","-10")
+        .attr("max",(d,i)=>i==0?"0":"10")
+        .attr("value",(d,i)=>labelOpacitySettings[i])
+        .attr("id",d=>d)
+        .on("input",function(d,i){
+          labelOpacitySettings[i] = +this.value;
+          allRects.each(function(){
+            let rect=d3.select(this);
+            let [idx,[c,l]]=rect.datum();
+            //Only affect rects whose label opacity was modified
+            if((l==0 && i==0) || ((l<<1) & (1<<i))){
+               rect.style("opacity",opacityForLabelVs(
+                 labelOpacitySettings.filter(
+                   (_,li)=>(l==0 && li==0) || ((l<<1) & (1<<li)))))
+            }
+          })
+        })
+
+      labelopts.append(d=>document.createTextNode(d));
+
       labeler.classed("hidden",false);
       labeler.on("click", function(){
         if(labelerbox.style("visibility") == "visible"){
