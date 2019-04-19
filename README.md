@@ -144,6 +144,15 @@ RETURNS: All of the flow or packet records for the selected
          matrix-path within the data set.
 
 
+Check loading status for a data set
+-----------------------------------
+
+URL: BASE/viz/{dataset-name}/status.json
+RETURNS: Internal loading state of the selected data set. Includes
+         timing information, ready/loading/failed state, and (if
+         loaded) the number of records loaded.
+
+
 Get tshark filter rule for path within data set
 -----------------------------------------------
 

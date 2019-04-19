@@ -26,7 +26,7 @@
   let input_home = inp[2];
 
   // check for data source readiness
-  let status = (importData('ready') || {status: 'failed'})['status'];
+  let status = (importData('status') || {status: 'failed'})['status'];
   if(status == 'loading'){
     window.onload=function(){
       // Show a loading screen if the data is not ready yet, poll every second

@@ -58,7 +58,7 @@
             }
           });
           // status polling url:
-          aj.open("GET", link.realhref+"ready.json");
+          aj.open("GET", link.realhref+"status.json");
           aj.send();
         }
       }).bind(null,link);

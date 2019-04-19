@@ -590,18 +590,16 @@ app.post(url_root+dyn_root+':input/reload/',function(req,res){
 });
 
 
-// Used for polling ready state (used in-browser)
-// TODO: document this API, noting that it is used internally
-// TODO: consider renaming to status.js
-app.get(url_root+dyn_root+':input/ready.js',function(req,res){
+/* Used for polling loading status of a data set
+   USED INTERNALLY BY grapher.js */
+app.get(url_root+dyn_root+':input/status.js',function(req,res){
   let rname = req.params['input'];
-  res.type("text/javascript").send(jsonWrap('ready',statuses.get(rname)));
+  res.type("text/javascript").send(jsonWrap('status',statuses.get(rname)));
 });
 
-// Used for examining ready state via curl, etc
-// TODO: document this API
-// TODO: consider renaming to status.json
-app.get(url_root+dyn_root+':input/ready.json',function(req,res){
+/* API Route for examining loading status of a data set.
+   USED INTERNALLY BY inputsloading.js via AJAX*/
+app.get(url_root+dyn_root+':input/status.json',function(req,res){
   let rname = req.params['input'];
   res.json(statuses.get(rname));
 });
