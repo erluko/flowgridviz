@@ -1,11 +1,4 @@
-These are the steps I took to install flowgridviz on a local VM running
-Amazon Linux 2. They are not guaranteed to be reproducible.
-
-
-# First, fetch the pcaps in the background. This will take a while.
-
-    # this is one example, you can use another
-    curl -sO https://iscxdownloads.cs.unb.ca/iscxdownloads/ISCX-Bot-2014/ISCX_Botnet-Training.pcap &
+# Guide to installing flowgridviz on AWS
 
 # Optional: install the mg editor
 
@@ -36,12 +29,6 @@ Amazon Linux 2. They are not guaranteed to be reproducible.
     sudo yum install -y git
 
 
-# install wireshark to get tshark
-
-    #only if using actual pcaps and not just flows
-    sudo yum install -y wireshark
-
-
 # set up repo
 
     git init --bare flowgridviz.git
@@ -60,35 +47,19 @@ Amazon Linux 2. They are not guaranteed to be reproducible.
 
     git clone flowgridviz.git
 
-# Configure `G_SLICE` to not break tshark:
-
-    #thanks to:  https://unix.stackexchange.com/questions/281523/tshark-memory-error-6265-gslice-assertion-failed-sinfo-n-allocate https://developer.gnome.org/glib/stable/glib-running.html
-    export G_SLICE=always_malloc
-
 # Prepare the repository for serving
 
     cd flowgridviz
-    npm config set flowgridviz:num_packets "all"
+    npm config set flowgridviz:num_records "all"
     npm config set flowgridviz:url_root fgv
+    npm install
+    pm2 start #if you skipped pm2 installation, run npm start
 
 # Configure nginx
 
     npm run conf_nginx
     sudo cp nginx/flowgridviz.conf /etc/nginx/default.d/
     sudo systemctl start nginx
-
-
-# Final repository setup (depends on giant pcap download)
-
-    wait %1 #wait for pcap download to complete
-    ./util/convert-pcap.sh $(pwd)/../ISCX_Botnet-Training.pcap | \
-      gzip -c > data/ISCX-Bot-2014.gz
-    echo '[["ISCX-Bot-2014",{"file": "ISCX-Bot-2014.gz",
-          "title": "Unabeled 9M packet ISCX_Botnet-Training.pcap"}]]' \
-       > data/inputs.json
-    npm install
-    pm2 start #if you skipped pm2 installation, run npm start
-
 
 # Now for TLS
 

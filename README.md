@@ -309,6 +309,7 @@ Installing and Running
 ======================
 
     git clone https://github.gatech.edu/ekobrin3/2019-Spring-CSE6242-flowgridviz.git
+    cd 2019-Spring-CSE6242-flowgridviz
     npm install
     npm start
 

@@ -1,6 +1,6 @@
 {
   "name": "flowgridviz",
-  "version": "0.17.0",
+  "version": "0.17.1",
   "description": "Network Flow Grid Visualizer",
   "main": "server.js",
   "config": {
