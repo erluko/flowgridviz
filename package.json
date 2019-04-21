@@ -1,7 +1,7 @@
 {
-  "name": "pcapviz",
+  "name": "flowgridviz",
   "version": "0.16.2",
-  "description": "Packet Capture Visualizer",
+  "description": "Network Flow Grid Visualizer",
   "main": "server.js",
   "config": {
     "listen_ip": "127.0.0.1",
@@ -16,7 +16,7 @@
     "start": "node --max-old-space-size=8192 server.js",
     "debug": "node --inspect --max-old-space-size=8192 server.js",
     "make": "make",
-    "conf_nginx": "node nginx/mkconf.js > nginx/pcapviz.conf"
+    "conf_nginx": "node nginx/mkconf.js > nginx/flowgridviz.conf"
   },
   "dependencies": {
     "express": ">=4.16.4",
@@ -26,7 +26,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.gatech.edu/ekobrin3/2019-Spring-CSE6242-pcapviz.git"
+    "url": "https://github.gatech.edu/ekobrin3/2019-Spring-CSE6242-flowgridviz.git"
   },
   "author": "Eric Kobrin <ekobrin@gatech.edu>",
   "license": "BSD-2-Clause"

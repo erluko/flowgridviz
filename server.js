@@ -86,7 +86,7 @@ const key_dir = process.env.npm_package_config_key_dir;
 // configured *per-dataset* upper limit on records to load
 const max_records = (s=>s?(s.toLowerCase()=='all'?0:+s||0):0)(process.env.npm_package_config_max_records);
 
-// base for all urls, usually "pcv" in production
+// base for all urls, usually "fgv" in production
 let url_root = process.env.npm_package_config_url_root || '/';
 if(!url_root.endsWith("/")) url_root=url_root+'/';
 if(!url_root.startsWith("/")) url_root='/'+url_root;
@@ -112,7 +112,7 @@ let defaultView = function(rname){
 }
 
 /* Originally "porthasher walker", now the "ph" is just an artifact of
-   the days before pcapviz supported flows and IPs.
+   the days before flowgridviz supported flows and IPs.
 
    TODO: rename phwalk
 
@@ -764,4 +764,4 @@ Promise.all(proms).then(function(){
 //Start the server at the selected IP and port
 var server = http.createServer(app);
 server.on("error", e =>console.log(`Unable to start server: ${e}`));
-server.listen(port, ip, () => console.log(`pcapviz listening on http://${ip}:${port}${url_root}!`));
+server.listen(port, ip, () => console.log(`flowgridviz listening on http://${ip}:${port}${url_root}!`));

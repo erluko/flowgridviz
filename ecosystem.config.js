@@ -3,7 +3,7 @@ module.exports = {
 // https://stackoverflow.com/questions/31579509/can-pm2-run-an-npm-start-script
     "apps": [
         {
-            "name": "pcapviz",
+            "name": "flowgridviz",
             "script": "npm",
             "args" : "start"
         }

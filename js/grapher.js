@@ -1,4 +1,4 @@
-/* Uses D3 to render the pcapviz UI */
+/* Uses D3 to render the flowgridviz UI */
 (function(){
     var inNode = !(typeof Window === 'function' &&
                  Window.prototype.isPrototypeOf(this));

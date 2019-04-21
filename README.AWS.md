@@ -1,4 +1,4 @@
-These are the steps I took to install pcapviz on a local VM running
+These are the steps I took to install flowgridviz on a local VM running
 Amazon Linux 2. They are not guaranteed to be reproducible.
 
 
@@ -44,7 +44,7 @@ Amazon Linux 2. They are not guaranteed to be reproducible.
 
 # set up repo
 
-    git init --bare pcapviz.git
+    git init --bare flowgridviz.git
 
 # STOP HERE
 
@@ -52,13 +52,13 @@ Amazon Linux 2. They are not guaranteed to be reproducible.
 
 # On your own machine run:
 
-    #git remote add aws ssh://[user@host]/~/pcapviz.git
+    #git remote add aws ssh://[user@host]/~/flowgridviz.git
     #git push aws master
 
 
 # Back on AWS, clone the repo:
 
-    git clone pcapviz.git
+    git clone flowgridviz.git
 
 # Configure `G_SLICE` to not break tshark:
 
@@ -67,14 +67,14 @@ Amazon Linux 2. They are not guaranteed to be reproducible.
 
 # Prepare the repository for serving
 
-    cd pcapviz
-    npm config set pcapviz:num_packets "all"
-    npm config set pcapviz:url_root pcv
+    cd flowgridviz
+    npm config set flowgridviz:num_packets "all"
+    npm config set flowgridviz:url_root fgv
 
 # Configure nginx
 
     npm run conf_nginx
-    sudo cp nginx/pcapviz.conf /etc/nginx/default.d/
+    sudo cp nginx/flowgridviz.conf /etc/nginx/default.d/
     sudo systemctl start nginx
 
 
@@ -102,13 +102,13 @@ Amazon Linux 2. They are not guaranteed to be reproducible.
     sudo certbot --nginx
 
 
-# Optional: redirect from / to the pcapviz dir
+# Optional: redirect from / to the flowgridviz dir
 
     # in /etc/nginx.conf, look for the "location / {}" block that has
     # your cert name as server_name, add:
-    #    return 301 https://$host/pcv/ ;
-    # Note: if you have pcapviz installed somewhere other than /pcv/
-    # make sure you use the same value as you used for pcapviz:url_root
+    #    return 301 https://$host/fgv/ ;
+    # Note: if you have flowgridviz installed somewhere other than /fgv/
+    # make sure you use the same value as you used for flowgridviz:url_root
 
 
 # Optional: Replace old default site with redirect to TLS site
