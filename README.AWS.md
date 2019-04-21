@@ -1,4 +1,4 @@
-# Guide to installing flowgridviz on AWS
+# Guide to installing flowgridviz on AWS -- make sure you have 8gb of RAM on your instance
 
 # Optional: install the mg editor
 
@@ -19,6 +19,7 @@
     sudo bash ./setup_11.x
     sudo yum install -y nodejs
 
+
 # install pm2
 
     sudo npm install -g pm2
@@ -29,23 +30,10 @@
     sudo yum install -y git
 
 
-# set up repo
+# clone flowgridviz from github
 
-    git init --bare flowgridviz.git
+    git clone https://github.com/erluko/flowgridviz
 
-# STOP HERE
-
-    exit; #this line is here for people who copy-and-paste without reading
-
-# On your own machine run:
-
-    #git remote add aws ssh://[user@host]/~/flowgridviz.git
-    #git push aws master
-
-
-# Back on AWS, clone the repo:
-
-    git clone flowgridviz.git
 
 # Prepare the repository for serving
 
@@ -54,6 +42,8 @@
     npm config set flowgridviz:url_root fgv
     npm install
     pm2 start #if you skipped pm2 installation, run npm start
+    # flowgrigviz is now live locally, listening at http://127.0.0.1:8080/fgv/
+
 
 # Configure nginx
 
@@ -61,7 +51,8 @@
     sudo cp nginx/flowgridviz.conf /etc/nginx/default.d/
     sudo systemctl start nginx
 
-# Now for TLS
+
+# Now for TLS. Your sever needs a public-facing domain name for this to work.
 
     curl -sLO  https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
     sudo yum install -y ./epel-release-latest-7.noarch.rpm

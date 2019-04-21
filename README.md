@@ -308,8 +308,11 @@ itself can be run from that directory using `pipenv run ./apitool.py ...`
 Installing and Running
 ======================
 
-    git clone https://github.gatech.edu/ekobrin3/2019-Spring-CSE6242-flowgridviz.git
-    cd 2019-Spring-CSE6242-flowgridviz
+**If you are deploying on AWS, see README.AWS.md in this directory for
+more complete instructions.**
+
+    git clone https://github.com/erluko/flowgridviz
+    cd flowgridviz
     npm install
     npm start
 
