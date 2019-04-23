@@ -279,9 +279,11 @@ directory.
 Prerequisites
 =============
 
+Requires Node.js 8.10.0 or newer. **Will not run under Node v4.**
+
 Installation requires an Internet connection for the node.js
 prerequisite download. No Internet connection is needed once `npm
-install` is complete.
+install` is complete unless remote data sets are added.
 
 Presumes the presence of `make`, `tr`, `sed`, `sort`, `gzip`,
 `/etc/services`, and `node`. If reading from a pcap, `tshark` is
@@ -291,8 +293,8 @@ time.
 apitool.js
 -----------
 
-`apitool.js` has depependencies on 'request'. The request library is
-already installed as a dependency of flowgridviz itself.
+`apitool.js` depends on 'request'. The request library is already
+installed as a dependency of flowgridviz itself.
 
 
 apitool.py
