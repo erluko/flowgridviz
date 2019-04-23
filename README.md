@@ -114,35 +114,35 @@ the `BASE`. All API urls will be relative to that.
 List data set labels
 --------------------
 
-URL: BASE/viz/{dataset-name}/labels.json
+URL: BASE/viz/{dataset-name}/labels.json  
 RETURNS: A JSON array of the labels present in the dataset
 
 
 Get data set definition
 -----------------------
 
-URL: BASE/viz/{dataset-name}/input.json
+URL: BASE/viz/{dataset-name}/input.json  
 RETURNS: A JSON structure describing the data set
 
 
 Get matrix structure for path within data set
 ---------------------------------------------
 
-URL: BASE/viz/{dataset-name}/{matrix-path}/matrix.json
+URL: BASE/viz/{dataset-name}/{matrix-path}/matrix.json  
 RETURNS: The JSON object used for rendering the selected matrix-path
 
 
 Get all data for data set
 -------------------------
 
-URL: BASE/viz/{dataset-name}/records.json
+URL: BASE/viz/{dataset-name}/records.json  
 RETURNS: All of the flow or packet records for the data set.
 
 
 Get all data for path within data set
 -------------------------------------
 
-URL: BASE/viz/{dataset-name}/{matrix-path}/records.json
+URL: BASE/viz/{dataset-name}/{matrix-path}/records.json  
 RETURNS: All of the flow or packet records for the selected
          matrix-path within the data set.
 
@@ -150,7 +150,7 @@ RETURNS: All of the flow or packet records for the selected
 Check loading status for a data set
 -----------------------------------
 
-URL: BASE/viz/{dataset-name}/status.json
+URL: BASE/viz/{dataset-name}/status.json  
 RETURNS: Internal loading state of the selected data set. Includes
          timing information, ready/loading/failed state, and (if
          loaded) the number of records loaded.
@@ -159,7 +159,7 @@ RETURNS: Internal loading state of the selected data set. Includes
 Get tshark filter rule for path within data set
 -----------------------------------------------
 
-URL: BASE/viz/{dataset-name}/{matrix-path}/filter.txt
+URL: BASE/viz/{dataset-name}/{matrix-path}/filter.txt  
 RETURNS: The same tshark filter rule visible in the UI for this matrix-
          path within this data set
 
@@ -167,7 +167,7 @@ RETURNS: The same tshark filter rule visible in the UI for this matrix-
 Get base tshark filter rule
 ---------------------------
 
-URL: BASE/viz/{dataset-name}/filter.txt
+URL: BASE/viz/{dataset-name}/filter.txt  
 RETURNS: The constant top-level tshark filter
 
 
@@ -198,10 +198,10 @@ the proper scheme (http/https) or there will be silent errors**
 Verify authentication works
 ---------------------------
 
-Method: POST
-URL:  BASE/check_auth
-BODY: ignored
-AUTH: any
+Method: POST  
+URL:  BASE/check_auth  
+BODY: ignored  
+AUTH: any  
 RESPONSE: a json object describing success or failure of the auth check
 
 Example: with dataset-name=sample
@@ -212,11 +212,11 @@ Example: with dataset-name=sample
 Update or add input source
 ---------------------------
 
-Method: PUT
-URL:  BASE/viz/{dataset-name}
+Method: PUT  
+URL:  BASE/viz/{dataset-name}  
 BODY: a json payload conforming to the object format described in
-      INPUT DATA above.
-AUTH: The body digest, date, and (request-target) must be signed
+      INPUT DATA above.  
+AUTH: The body digest, date, and (request-target) must be signed  
 RESPONSE: The JSON object describing the input source
 
 Example: with dataset-name=sample
@@ -229,10 +229,10 @@ Note: the update action also forces a reload of the data set.
 Delete input source
 -------------------
 
-Method: DELETE
-URL:  BASE/viz/{dataset-name}
-BODY: ignored
-AUTH: The date and (request-target) must be signed
+Method: DELETE  
+URL:  BASE/viz/{dataset-name}  
+BODY: ignored  
+AUTH: The date and (request-target) must be signed  
 RESPONSE: The JSON object describing the now-deleted input source
 
 Example: with dataset-name=sample
@@ -243,10 +243,10 @@ Example: with dataset-name=sample
 Reload input source
 ---------------------
 
-Method: POST
-URL:  BASE/viz/{dataset-name}/reload
-BODY: ignored
-AUTH: The date and (request-target) must be signed
+Method: POST  
+URL:  BASE/viz/{dataset-name}/reload  
+BODY: ignored  
+AUTH: The date and (request-target) must be signed  
 RESPONSE: An HTTP redirect to the list of inputs
 
 Example: with dataset-name=sample
