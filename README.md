@@ -194,6 +194,10 @@ your flowgridviz installation is at `https://site.com/fgv/`. Call that the
 `BASE`. All API urls will be relative to that. **Be certain to use
 the proper scheme (http/https) or there will be silent errors**
 
+If the digest header is signed (currently required only when adding or
+updating input sources) the digest used must be 'SHA', 'SHA-256', or
+'SHA-512'. No other hashing algorithms are supported.
+
 
 Verify authentication works
 ---------------------------

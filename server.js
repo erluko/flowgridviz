@@ -8,9 +8,35 @@ const { JSDOM } = jsdom;
 const LRU = require("lru-cache")
 const httpSignature = require('http-signature');
 const bodyParser = require('body-parser');
+const crypto = require('crypto');
 
-// allow jsonParser to ignore content-type header
-var jsonParser = bodyParser.json({type: _=>true})
+/*
+  verifyInstanceDigest is a body-parser verifier that checks that if a
+  Digest: header was provided, the digest is using an allowed
+  algorithm and the digest matches the request body.
+*/
+const DIGEST_RE =new RegExp("^SHA-?(256|512)?=(.*)$",'i'); //sha,sha-256,sha-512
+function verifyInstanceDigest(req, res, buf, encoding) {
+  let dhead=req.headers['digest'];
+  if(!dhead) {
+    throw new Error("HTTP Instance Digest requried but not provided")
+  }
+  let alg_match=DIGEST_RE.exec(dhead);
+  if(alg_match){
+    let expected = crypto.createHash('sha'+(alg_match[1]||'')).update(buf).digest('base64');
+    let received = alg_match[2];
+    if((''+expected) == (''+received)){
+      return true;
+    }
+    throw new Error("HTTP Instance Digest mismatch")
+  } else {
+    throw new Error("Unrecognized Instance Digest algorithm");
+  }
+}
+
+// allow jsonParser to ignore content-type header, make it enforce RFC3230/5843 digest
+var jsonParser = bodyParser.json({type: _=>true,
+                                  verify: verifyInstanceDigest})
 
 
 // local modules
