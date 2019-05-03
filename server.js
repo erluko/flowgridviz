@@ -82,6 +82,13 @@ function Dataset(){
   this.records = []; // per-dataset list of flows or packets
   this.statuses = [];// per-dataset object showing loading status
 }
+
+Dataset.prototype = {
+  updateStatus: function (attr,val) {
+    this.statuses[attr]=val;
+  }
+};
+
 let datasets = new Map();
 
 // dynamic urls all start with this prefix:
@@ -723,12 +730,6 @@ let dots = setInterval(function(){
 // TODO: move require() calls to the top
 const FlowParser = require('./lib/flowparser');
 
-// Updates a field in the status array. Centralized to reduce code duplication.
-function updateStatus(key,attr,val){
-  let status = datasets.get(key).statuses;
-  status[attr]=val;
-}
-
 // Remove all traces of one of the inputs. It doesn't have to be "loaded"
 function  clearLoadedInput(key){
   // delete the labels, records, and status for the dataset
@@ -752,10 +753,10 @@ function  clearLoadedInput(key){
 // mark the input status as "failed" so we can surface this in the UI
 function  recordLoadFailure(key,why){
   console.log(inputs.get(key));
-  let status = datasets.get(key).statuses;
-  updateStatus(key,'status',"failed");
-  updateStatus(key,'error',why);
-  updateStatus(key,'done',new Date().getTime());
+  let dataset = datasets.get(key);
+  dataset.updateStatus('status',"failed");
+  dataset.updateStatus('error',why);
+  dataset.updateStatus('done',new Date().getTime());
   console.log(`Failed to load "${key}": ${why}`);
 }
 
@@ -765,11 +766,11 @@ function  acceptLoadedInput(key,[p,l]){
   let input = inputs.get(key)
   console.log(input)
   let dataset = datasets.getOrSet(key,_=>new Dataset());
-  updateStatus(key,'done',new Date().getTime());
-  updateStatus(key,'record_count',p.length)
+  dataset.updateStatus('done',new Date().getTime());
+  dataset.updateStatus('record_count',p.length)
   dataset.labels = l;
   dataset.records = p;
-  updateStatus(key,'status',"ready");
+  dataset.updateStatus('status',"ready");
   let status = dataset.statuses;
   let elapsedSecs = ((status.done - status.start)/1000).toFixed(3);
   console.log(`Loaded ${status.record_count} records in ${elapsedSecs} seconds for "${key}"`);
