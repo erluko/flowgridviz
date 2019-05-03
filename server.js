@@ -96,6 +96,7 @@ LRU.prototype.getOrSet = Map.prototype.getOrSet = function(k,f){
   return v;
 }
 
+// returns k in map, or def if not present
 Map.prototype.getOr = function(k,def){
   let v = this.get(k);
   if(typeof v === 'undefined'){
