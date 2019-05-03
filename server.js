@@ -57,16 +57,6 @@ function verifyInputFormat(input){
   // Only one of "file" or "url" can be specified
 }
 
-// load list of input datasources
-let inputs_r = new Map(JSON.parse(fs.readFileSync("./data/inputs.json")));
-let inputs = new Map();
-for([key,input] of inputs_r){
-  if(verifyInputFormat(input)){
-    inputs.set(key,input)
-  } else {
-    console.log(`Rejecting malformed input "${key}"`)
-  }
-}
 
 /* ph0 is the default un-configured hasher to use for the initial top-level
    views where no axis shows ports */
@@ -76,19 +66,41 @@ let ph0 = new phr.nethasher();
    ports. It is used for top-level views where at least one axis shows ports. */
 let ph0_servs = new phr.nethasher(slist.servicemap);
 
-let labels  = new Map(); // per-dataset list of labels
-let records = new Map(); // per-dataset list of flows or packets
-let statuses = new Map();// per-dataset object showing loading status
+
+function Dataset(key,input){
+  this.input = input;
+  this.key = key;
+  this.labels  = []; // per-dataset list of labels
+  this.records = []; // per-dataset list of flows or packets
+  this.status = {};// per-dataset object showing loading status
+}
+
+Dataset.prototype = {
+  updateStatus: function (attr,val) {
+    this.status[attr]=val;
+  }
+};
+
+let datasets = new Map();
 
 // dynamic urls all start with this prefix:
 let dyn_root = 'viz/';
 
-// every LRU should have a get-or-set method
-LRU.prototype.getOrSet = function(k,f){
+// every LRU and Map should have a get-or-set method
+LRU.prototype.getOrSet = Map.prototype.getOrSet = function(k,f){
   let v = this.get(k);
   if(typeof v === 'undefined'){
     v = f();
     this.set(k,v);
+  }
+  return v;
+}
+
+// returns k in map, or def if not present
+Map.prototype.getOr = function(k,def){
+  let v = this.get(k);
+  if(typeof v === 'undefined'){
+    return def
   }
   return v;
 }
@@ -132,7 +144,7 @@ let legalViews=new Set(['pp','pi','ip','ii']);
 /* Each dataset can set a default view.
    If none is specified, start with Port x Port */
 let defaultView = function(rname){
-  let inp = inputs.get(rname);
+  let inp = datasets.getOr(rname,{}).input;
   let view = (inp?inp.initial:null);
   return legalViews.has(view)?view:'pp';
 }
@@ -155,7 +167,7 @@ let phwalk = function(rname,pth){
              pth[0][0][1]=='p')?ph0_servs:ph0;
 
   // pkts is the list of records to consider in this walk
-  let pkts = records.get(rname);
+  let pkts = datasets.getOr(rname,{}).records;
   if(!pkts){
     /* this only happens if someone requests a url that depends
        on the records for a nonexistent or not-yet-loaded dataset.
@@ -300,11 +312,11 @@ app.get(homeurl,function(req,res){
       }
       // Generate <img> and <a> tags for each data source
       let holder = document.getElementById("sources");
-      for(name of inputs.keys()){
+      for(dataset of datasets.values()){
         /* prevent path weirdness in data source names. */
-        if(name.indexOf('/') == -1){
+        if(dataset.key.indexOf('/') == -1){
           let img = document.createElement("img");
-          let status = (statuses.get(name) || {status: 'failed'})['status'];
+          let status = (dataset.status || {status: 'failed'})['status'];
           img.setAttribute("src", status=='ready'?"images/checkbox.png":
                            status=='failed'?"images/redx.png":
                            "images/loading-sm.gif");
@@ -313,9 +325,9 @@ app.get(homeurl,function(req,res){
           if (status != 'failed'){
             /* the "readyscript" polls for readiness of all href-having
                anchor tags, don't provide an href for known-bad sources */
-            a.setAttribute("href",dyn_root + name+"/");
+            a.setAttribute("href",dyn_root + dataset.key+"/");
           }
-          a.appendChild(document.createTextNode(inputs.get(name).title));
+          a.appendChild(document.createTextNode(dataset.input.title));
           holder.appendChild(a);
           holder.appendChild(document.createElement("br"));
         } else {
@@ -375,14 +387,14 @@ app.get(url_root+dyn_root+':input/*/index.html',function(req,res){
 /* API Route to list data set labels. Not used internally */
 app.get(url_root+dyn_root+':input/labels.json',function(req,res){
   let rname = req.params['input'];
-  let ls = labels.get(rname);
+  let ls = datasets.getOr(rname,{}).labels;
   res.json(ls);
 });
 
 // This route makes the labels for the selected data set available in-browser
 app.get(url_root+dyn_root+':input/labels.js',function(req,res){
   let rname = req.params['input'];
-  let ls = labels.get(rname);
+  let ls = datasets.getOr(rname,{}).labels;
   res.type("text/javascript");
   res.send(jsonWrap("labels",ls));
 });
@@ -390,7 +402,7 @@ app.get(url_root+dyn_root+':input/labels.js',function(req,res){
 /* API Route to get data set definition. Not used internally */
 app.get(url_root+dyn_root+':input/input.json',function(req,res){
   let rname = req.params['input'];
-  let inp= inputs.get(rname);
+  let inp= datasets.getOr(rname,{}).input;
   res.json([rname,inp,homeurl]);
 });
 
@@ -398,7 +410,7 @@ app.get(url_root+dyn_root+':input/input.json',function(req,res){
    available in-browser */
 app.get(url_root+dyn_root+':input/input.js',function(req,res){
   let rname = req.params['input'];
-  let inp = inputs.get(rname);
+  let inp = datasets.getOr(rname,{}).input;
   res.type("text/javascript");
   res.send(jsonWrap("input",[rname,inp,homeurl]));
 });
@@ -501,9 +513,12 @@ function failedAuthMessage(info){
 }
 
 // Start loading an input definition, including storing it in the input map
-function loadInput(key,input,proms) {
-  statuses.set(key,{status:"loading",start:new Date().getTime()});
-  console.log(`Started loading input "${key}"`);
+function loadInput(dataset,proms) {
+  datasets.set(dataset.key,dataset);
+  dataset.status={status:"loading",start:new Date().getTime()};
+  let input = dataset.input;
+
+  console.log(`Started loading input "${dataset.key}"`);
   console.log(input);
 
   let prom = null;
@@ -529,8 +544,8 @@ function loadInput(key,input,proms) {
       proms.push(prom.catch(_=>{}));
     }
     // Either store the sucessfully loaded data or record that the load failed
-    prom.then(acceptLoadedInput.bind(null,key),
-              recordLoadFailure.bind(null,key));
+    prom.then(acceptLoadedInput.bind(null,dataset),
+              recordLoadFailure.bind(null,dataset));
   }
   //above use of bind inspired by:
   // https://stackoverflow.com/questions/32912459/promises-pass-additional-parameters-to-then-chain
@@ -544,23 +559,14 @@ app.delete(url_root+dyn_root+':input',function(req,res){
   if(!verif.passed){
     res.status(401).type("text/plain").send(failedAuthMessage(verif));
   } else {
-    let oldInput = inputs.get(rname);
+    let oldInput = datasets.getOr(rname,{}).input;
     // get rid of the old data, cache, etc.
     clearLoadedInput(rname);
-
-    // remove the input from the input map
-    inputs.delete(rname);
 
     // Send back whatever the old definition was
     res.json(oldInput);
   }
 });
-
-/* FIXME: all state-mutating API calls have a race condition if called
-          repeatedly on the same dataset. Each will create a promise
-          and the final result is based on the promise retirement
-          order. This could lead to interleaved writes to data structures
-          and an undefined state for the resource. */
 
 // Authenticated API to add, replace, or reload a data set
 app.put(url_root+dyn_root+':input',jsonParser,function(req,res){
@@ -576,11 +582,8 @@ app.put(url_root+dyn_root+':input',jsonParser,function(req,res){
       // get rid of the old data, cache, etc.
       clearLoadedInput(rname);
 
-      // add the new input to the input map
-      inputs.set(rname,update);
-
       // populate the data
-      loadInput(rname,update);
+      loadInput(new Dataset(rname,update));
 
       //TODO: consider sending the status URL instead
       // send the new data back
@@ -607,12 +610,12 @@ app.post(url_root+dyn_root+':input/reload/',function(req,res){
     res.status(401).type("text/plain").send(failedAuthMessage(verif));
   }  else {
     let rname = req.params['input'];
-    let input = inputs.get(rname);
+    let input = datasets.getOr(rname,{}).input;
     // get rid of the old data, cache, etc.
     clearLoadedInput(rname);
 
     // populate the data
-    loadInput(rname, input)
+    loadInput(new Dataset(rname, input));
 
     // TODO: consider redirecting to ready.json instead
     // send the requester home
@@ -625,14 +628,14 @@ app.post(url_root+dyn_root+':input/reload/',function(req,res){
    USED INTERNALLY BY grapher.js */
 app.get(url_root+dyn_root+':input/status.js',function(req,res){
   let rname = req.params['input'];
-  res.type("text/javascript").send(jsonWrap('status',statuses.get(rname)));
+  res.type("text/javascript").send(jsonWrap('status',datasets.getOr(rname,{}).status));
 });
 
 /* API Route for examining loading status of a data set.
    USED INTERNALLY BY inputsloading.js via AJAX*/
 app.get(url_root+dyn_root+':input/status.json',function(req,res){
   let rname = req.params['input'];
-  res.json(statuses.get(rname));
+  res.json(datasets.getOr(rname,{}).status);
 });
 
 /* API Route to list tshark filter rules for the given matrix path
@@ -672,7 +675,7 @@ app.get(url_root+dyn_root+':input/filter.txt',function(req,res){
    Not used internally */
 app.get(url_root+dyn_root+':input/records.json',function(req,res){
   let rname = req.params['input'];
-  let recs = records.get(rname);
+  let recs = datasets.getOr(rname,{}).records;
   if(recs){
     res.json(recs);
   } else {
@@ -702,7 +705,7 @@ app.get(url_root+dyn_root+':input/*/records.json',function(req,res){
 
 // Returns true if any of the known inputs are in the "loading" state
 function anyInputLoading(){
-  return Array.from(statuses.values()).some(v=>v.status=="loading");
+  return Array.from(datasets.values()).some(v=>v.status.status=="loading");
 }
 
 // "main" code that executes when 'npm start' is run begins here.
@@ -718,22 +721,10 @@ let dots = setInterval(function(){
 // TODO: move require() calls to the top
 const FlowParser = require('./lib/flowparser');
 
-// Updates a field in the status array. Centralized to reduce code duplication.
-function updateStatus(key,attr,val){
-  let status = statuses.get(key);
-  status[attr]=val;
-}
-
 // Remove all traces of one of the inputs. It doesn't have to be "loaded"
 function  clearLoadedInput(key){
-  // delete the label set
-  labels.delete(key);
-
-  // delete the data itself
-  records.delete(key);
-
-  // remove it from the status list
-  statuses.delete(key);
+  // delete the labels, records, and status for the dataset
+  datasets.delete(key);
 
   /* remove its cache entries
      IMPORTANT: this is needed for when (if) the data set is ever re-added
@@ -751,35 +742,40 @@ function  clearLoadedInput(key){
 
 
 // mark the input status as "failed" so we can surface this in the UI
-function  recordLoadFailure(key,why){
-  console.log(inputs.get(key));
-  let status = statuses.get(key);
-  updateStatus(key,'status',"failed");
-  updateStatus(key,'error',why);
-  updateStatus(key,'done',new Date().getTime());
-  console.log(`Failed to load "${key}": ${why}`);
+function  recordLoadFailure(dataset,why){
+  console.log(dataset.input);
+  dataset.updateStatus('status',"failed");
+  dataset.updateStatus('error',why);
+  dataset.updateStatus('done',new Date().getTime());
+  console.log(`Failed to load "${dataset.key}": ${why}`);
 }
 
 /* New data and labels have arrived for an input.
    Assiciate them with the input and mark it as ready. */
-function  acceptLoadedInput(key,[p,l]){
-  let input = inputs.get(key)
-  console.log(input)
-  updateStatus(key,'done',new Date().getTime());
-  updateStatus(key,'record_count',p.length)
-  labels.set(key,l);
-  records.set(key,p);
-  updateStatus(key,'status',"ready");
-  let status = statuses.get(key);
+function  acceptLoadedInput(dataset,[p,l]){
+  console.log(dataset.input);
+  dataset.updateStatus('done',new Date().getTime());
+  dataset.updateStatus('record_count',p.length)
+  dataset.labels = l;
+  dataset.records = p;
+  dataset.updateStatus('status',"ready");
+  let status = dataset.status;
   let elapsedSecs = ((status.done - status.start)/1000).toFixed(3);
-  console.log(`Loaded ${status.record_count} records in ${elapsedSecs} seconds for "${key}"`);
+  console.log(`Loaded ${status.record_count} records in ${elapsedSecs} seconds for "${dataset.key}"`);
 }
 
 // TODO: get rid of "proms" and use the statuses array instead
 // List of promises to track:
 let proms = [];
-for([key,input] of inputs){
-  loadInput(key, input, proms)
+
+// load list of input datasources
+let inputs_r = new Map(JSON.parse(fs.readFileSync("./data/inputs.json")));
+for(let [key,input] of inputs_r){
+  if(verifyInputFormat(input)){
+    loadInput(new Dataset(key, input), proms)
+  } else {
+    console.log(`Rejecting malformed input "${key}"`)
+  }
 }
 
 // Log that all startup inputs have finished
