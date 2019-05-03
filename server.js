@@ -77,7 +77,9 @@ let ph0 = new phr.nethasher();
 let ph0_servs = new phr.nethasher(slist.servicemap);
 
 
-function Dataset(){
+function Dataset(key,input){
+  this.input = input;
+  this.key = key;
   this.labels  = []; // per-dataset list of labels
   this.records = []; // per-dataset list of flows or packets
   this.statuses = [];// per-dataset object showing loading status
@@ -513,7 +515,9 @@ function failedAuthMessage(info){
 
 // Start loading an input definition, including storing it in the input map
 function loadInput(key,input,proms) {
-  let dataset = datasets.getOrSet(key,_=>new Dataset());
+  let dataset = new Dataset(key, input);
+  datasets.delete(key); //not strictly necessary
+  datasets.set(key,dataset);
   dataset.statuses={status:"loading",start:new Date().getTime()};
   console.log(`Started loading input "${key}"`);
   console.log(input);
@@ -541,8 +545,8 @@ function loadInput(key,input,proms) {
       proms.push(prom.catch(_=>{}));
     }
     // Either store the sucessfully loaded data or record that the load failed
-    prom.then(acceptLoadedInput.bind(null,key),
-              recordLoadFailure.bind(null,key));
+    prom.then(acceptLoadedInput.bind(null,dataset),
+              recordLoadFailure.bind(null,dataset));
   }
   //above use of bind inspired by:
   // https://stackoverflow.com/questions/32912459/promises-pass-additional-parameters-to-then-chain
@@ -751,21 +755,18 @@ function  clearLoadedInput(key){
 
 
 // mark the input status as "failed" so we can surface this in the UI
-function  recordLoadFailure(key,why){
-  console.log(inputs.get(key));
-  let dataset = datasets.get(key);
+function  recordLoadFailure(dataset,why){
+  console.log(dataset.input);
   dataset.updateStatus('status',"failed");
   dataset.updateStatus('error',why);
   dataset.updateStatus('done',new Date().getTime());
-  console.log(`Failed to load "${key}": ${why}`);
+  console.log(`Failed to load "${dataset.key}": ${why}`);
 }
 
 /* New data and labels have arrived for an input.
    Assiciate them with the input and mark it as ready. */
-function  acceptLoadedInput(key,[p,l]){
-  let input = inputs.get(key)
-  console.log(input)
-  let dataset = datasets.getOrSet(key,_=>new Dataset());
+function  acceptLoadedInput(dataset,[p,l]){
+  console.log(dataset.input);
   dataset.updateStatus('done',new Date().getTime());
   dataset.updateStatus('record_count',p.length)
   dataset.labels = l;
