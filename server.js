@@ -567,12 +567,6 @@ app.delete(url_root+dyn_root+':input',function(req,res){
   }
 });
 
-/* FIXME: all state-mutating API calls have a race condition if called
-          repeatedly on the same dataset. Each will create a promise
-          and the final result is based on the promise retirement
-          order. This could lead to interleaved writes to data structures
-          and an undefined state for the resource. */
-
 // Authenticated API to add, replace, or reload a data set
 app.put(url_root+dyn_root+':input',jsonParser,function(req,res){
   let rname = req.params['input'];
