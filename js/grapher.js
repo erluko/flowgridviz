@@ -459,7 +459,6 @@
     let allRects = allAs.select("rect");
 
     function opacityForLabelVs(lvs){
-      console.log(scales.op(d3.mean([])))
       return scales.op(d3.mean(lvs));
     }
 
