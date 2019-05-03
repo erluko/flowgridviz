@@ -76,15 +76,19 @@ let ph0 = new phr.nethasher();
    ports. It is used for top-level views where at least one axis shows ports. */
 let ph0_servs = new phr.nethasher(slist.servicemap);
 
-let labels  = new Map(); // per-dataset list of labels
-let records = new Map(); // per-dataset list of flows or packets
-let statuses = new Map();// per-dataset object showing loading status
+
+function Dataset(){
+  this.labels  = []; // per-dataset list of labels
+  this.records = []; // per-dataset list of flows or packets
+  this.statuses = [];// per-dataset object showing loading status
+}
+let datasets = new Map();
 
 // dynamic urls all start with this prefix:
 let dyn_root = 'viz/';
 
-// every LRU should have a get-or-set method
-LRU.prototype.getOrSet = function(k,f){
+// every LRU and Map should have a get-or-set method
+LRU.prototype.getOrSet = Map.prototype.getOrSet = function(k,f){
   let v = this.get(k);
   if(typeof v === 'undefined'){
     v = f();
@@ -155,7 +159,7 @@ let phwalk = function(rname,pth){
              pth[0][0][1]=='p')?ph0_servs:ph0;
 
   // pkts is the list of records to consider in this walk
-  let pkts = records.get(rname);
+  let pkts = datasets.get(rname).records;
   if(!pkts){
     /* this only happens if someone requests a url that depends
        on the records for a nonexistent or not-yet-loaded dataset.
@@ -304,7 +308,7 @@ app.get(homeurl,function(req,res){
         /* prevent path weirdness in data source names. */
         if(name.indexOf('/') == -1){
           let img = document.createElement("img");
-          let status = (statuses.get(name) || {status: 'failed'})['status'];
+          let status = (datasets.get(name).statuses || {status: 'failed'})['status'];
           img.setAttribute("src", status=='ready'?"images/checkbox.png":
                            status=='failed'?"images/redx.png":
                            "images/loading-sm.gif");
@@ -375,14 +379,14 @@ app.get(url_root+dyn_root+':input/*/index.html',function(req,res){
 /* API Route to list data set labels. Not used internally */
 app.get(url_root+dyn_root+':input/labels.json',function(req,res){
   let rname = req.params['input'];
-  let ls = labels.get(rname);
+  let ls = datasets.get(rname).labels;
   res.json(ls);
 });
 
 // This route makes the labels for the selected data set available in-browser
 app.get(url_root+dyn_root+':input/labels.js',function(req,res){
   let rname = req.params['input'];
-  let ls = labels.get(rname);
+  let ls = datasets.get(rname).labels;
   res.type("text/javascript");
   res.send(jsonWrap("labels",ls));
 });
@@ -502,7 +506,8 @@ function failedAuthMessage(info){
 
 // Start loading an input definition, including storing it in the input map
 function loadInput(key,input,proms) {
-  statuses.set(key,{status:"loading",start:new Date().getTime()});
+  let dataset = datasets.getOrSet(key,_=>new Dataset());
+  dataset.statuses={status:"loading",start:new Date().getTime()};
   console.log(`Started loading input "${key}"`);
   console.log(input);
 
@@ -625,14 +630,14 @@ app.post(url_root+dyn_root+':input/reload/',function(req,res){
    USED INTERNALLY BY grapher.js */
 app.get(url_root+dyn_root+':input/status.js',function(req,res){
   let rname = req.params['input'];
-  res.type("text/javascript").send(jsonWrap('status',statuses.get(rname)));
+  res.type("text/javascript").send(jsonWrap('status',datasets.get(rname).statuses));
 });
 
 /* API Route for examining loading status of a data set.
    USED INTERNALLY BY inputsloading.js via AJAX*/
 app.get(url_root+dyn_root+':input/status.json',function(req,res){
   let rname = req.params['input'];
-  res.json(statuses.get(rname));
+  res.json(datasets.get(rname).statuses);
 });
 
 /* API Route to list tshark filter rules for the given matrix path
@@ -672,7 +677,7 @@ app.get(url_root+dyn_root+':input/filter.txt',function(req,res){
    Not used internally */
 app.get(url_root+dyn_root+':input/records.json',function(req,res){
   let rname = req.params['input'];
-  let recs = records.get(rname);
+  let recs = datasets.get(rname).records;
   if(recs){
     res.json(recs);
   } else {
@@ -702,7 +707,7 @@ app.get(url_root+dyn_root+':input/*/records.json',function(req,res){
 
 // Returns true if any of the known inputs are in the "loading" state
 function anyInputLoading(){
-  return Array.from(statuses.values()).some(v=>v.status=="loading");
+  return Array.from(datasets.values()).map(d=>d.statuses).some(v=>v.status=="loading");
 }
 
 // "main" code that executes when 'npm start' is run begins here.
@@ -720,20 +725,14 @@ const FlowParser = require('./lib/flowparser');
 
 // Updates a field in the status array. Centralized to reduce code duplication.
 function updateStatus(key,attr,val){
-  let status = statuses.get(key);
+  let status = datasets.get(key).statuses;
   status[attr]=val;
 }
 
 // Remove all traces of one of the inputs. It doesn't have to be "loaded"
 function  clearLoadedInput(key){
-  // delete the label set
-  labels.delete(key);
-
-  // delete the data itself
-  records.delete(key);
-
-  // remove it from the status list
-  statuses.delete(key);
+  // delete the labels, records, and status for the dataset
+  datasets.delete(key);
 
   /* remove its cache entries
      IMPORTANT: this is needed for when (if) the data set is ever re-added
@@ -753,7 +752,7 @@ function  clearLoadedInput(key){
 // mark the input status as "failed" so we can surface this in the UI
 function  recordLoadFailure(key,why){
   console.log(inputs.get(key));
-  let status = statuses.get(key);
+  let status = datasets.get(key).statuses;
   updateStatus(key,'status',"failed");
   updateStatus(key,'error',why);
   updateStatus(key,'done',new Date().getTime());
@@ -765,12 +764,13 @@ function  recordLoadFailure(key,why){
 function  acceptLoadedInput(key,[p,l]){
   let input = inputs.get(key)
   console.log(input)
+  let dataset = datasets.getOrSet(key,_=>new Dataset());
   updateStatus(key,'done',new Date().getTime());
   updateStatus(key,'record_count',p.length)
-  labels.set(key,l);
-  records.set(key,p);
+  dataset.labels = l;
+  dataset.records = p;
   updateStatus(key,'status',"ready");
-  let status = statuses.get(key);
+  let status = dataset.statuses;
   let elapsedSecs = ((status.done - status.start)/1000).toFixed(3);
   console.log(`Loaded ${status.record_count} records in ${elapsedSecs} seconds for "${key}"`);
 }
