@@ -72,12 +72,12 @@ function Dataset(key,input){
   this.key = key;
   this.labels  = []; // per-dataset list of labels
   this.records = []; // per-dataset list of flows or packets
-  this.statuses = {};// per-dataset object showing loading status
+  this.status = {};// per-dataset object showing loading status
 }
 
 Dataset.prototype = {
   updateStatus: function (attr,val) {
-    this.statuses[attr]=val;
+    this.status[attr]=val;
   }
 };
 
@@ -315,7 +315,7 @@ app.get(homeurl,function(req,res){
         /* prevent path weirdness in data source names. */
         if(dataset.key.indexOf('/') == -1){
           let img = document.createElement("img");
-          let status = (dataset.statuses || {status: 'failed'})['status'];
+          let status = (dataset.status || {status: 'failed'})['status'];
           img.setAttribute("src", status=='ready'?"images/checkbox.png":
                            status=='failed'?"images/redx.png":
                            "images/loading-sm.gif");
@@ -514,7 +514,7 @@ function failedAuthMessage(info){
 // Start loading an input definition, including storing it in the input map
 function loadInput(dataset,proms) {
   datasets.set(dataset.key,dataset);
-  dataset.statuses={status:"loading",start:new Date().getTime()};
+  dataset.status={status:"loading",start:new Date().getTime()};
   let input = dataset.input;
 
   console.log(`Started loading input "${dataset.key}"`);
@@ -633,14 +633,14 @@ app.post(url_root+dyn_root+':input/reload/',function(req,res){
    USED INTERNALLY BY grapher.js */
 app.get(url_root+dyn_root+':input/status.js',function(req,res){
   let rname = req.params['input'];
-  res.type("text/javascript").send(jsonWrap('status',datasets.getOr(rname,{}).statuses));
+  res.type("text/javascript").send(jsonWrap('status',datasets.getOr(rname,{}).status));
 });
 
 /* API Route for examining loading status of a data set.
    USED INTERNALLY BY inputsloading.js via AJAX*/
 app.get(url_root+dyn_root+':input/status.json',function(req,res){
   let rname = req.params['input'];
-  res.json(datasets.getOr(rname,{}).statuses);
+  res.json(datasets.getOr(rname,{}).status);
 });
 
 /* API Route to list tshark filter rules for the given matrix path
@@ -710,7 +710,7 @@ app.get(url_root+dyn_root+':input/*/records.json',function(req,res){
 
 // Returns true if any of the known inputs are in the "loading" state
 function anyInputLoading(){
-  return Array.from(datasets.values()).some(v=>v.statuses.status=="loading");
+  return Array.from(datasets.values()).some(v=>v.status.status=="loading");
 }
 
 // "main" code that executes when 'npm start' is run begins here.
@@ -764,7 +764,7 @@ function  acceptLoadedInput(dataset,[p,l]){
   dataset.labels = l;
   dataset.records = p;
   dataset.updateStatus('status',"ready");
-  let status = dataset.statuses;
+  let status = dataset.status;
   let elapsedSecs = ((status.done - status.start)/1000).toFixed(3);
   console.log(`Loaded ${status.record_count} records in ${elapsedSecs} seconds for "${dataset.key}"`);
 }
