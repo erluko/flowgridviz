@@ -422,37 +422,41 @@
     newAs.append("rect")
         .classed("plot",true);
 
-    // Each anchor has an href linking to that point's subgraph
-    let allRects = as.merge(newAs)
-      .attr("xlink:href",([idx,v]) => subgraphURL(+idx))
-      .on("click",function(){
-        // animate "zooming in" to the point if animation is enabled
-        if(settings.anim){
-          let anchor = d3.select(this);
-          d3.event.preventDefault()
-          let crect = d3.select(svg.node()
-                                .appendChild(anchor.select("rect")
-                                             .node()
-                                             .cloneNode()));
-          let recs = d3.selectAll('rect.plot')
-              .transition()
-              .style("opacity",0);
+    /* If there are multiple points, each anchor has an href linking
+       to that point's subgraph */
+    let allAs = as.merge(newAs);
+    if(plotrix.length>1){
+      allAs.attr("xlink:href",([idx,v]) => subgraphURL(+idx))
+        .on("click",function(){
+          // animate "zooming in" to the point if animation is enabled
+          if(settings.anim){
+            let anchor = d3.select(this);
+            d3.event.preventDefault()
+            let crect = d3.select(svg.node()
+                                  .appendChild(anchor.select("rect")
+                                               .node()
+                                               .cloneNode()));
+            let recs = d3.selectAll('rect.plot')
+                .transition()
+                .style("opacity",0);
 
-          crect.style('clip-path','none')
-            .style("opacity",0.1)
-            .transition()
-            .attr("width",WIDTH-PADDINGS.x)
-            .attr("height",HEIGHT-PADDINGS.y)
-            .attr('x',scales.x(0))
-            .attr('y',scales.y(0))
-            .style("opacity",1)
-            .on("end",_=>{window.location=anchor.attr("href");
-                          showLoading()});
-        } else {
-          // if not animating, at least provide the loading feedback
-          showLoading();
-        }
-      }).select("rect")
+            crect.style('clip-path','none')
+              .style("opacity",0.1)
+              .transition()
+              .attr("width",WIDTH-PADDINGS.x)
+              .attr("height",HEIGHT-PADDINGS.y)
+              .attr('x',scales.x(0))
+              .attr('y',scales.y(0))
+              .style("opacity",1)
+              .on("end",_=>{window.location=anchor.attr("href");
+                            showLoading()});
+          } else {
+            // if not animating, at least provide the loading feedback
+            showLoading();
+          }
+        });
+    }
+    let allRects = allAs.select("rect");
 
     function opacityForLabelVs(lvs){
       console.log(scales.op(d3.mean([])))
