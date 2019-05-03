@@ -374,13 +374,30 @@ loaded is set as follows:
 The path a local file path relative to where the server is started
 from. The default value is `public_keys`.
 
+Two configuration options affect the generation of nginx configuation,
+for those who will run flowgridviz behind an nginx proxy:
+
+    npm config set flowgridviz:nginx_full_config [true|false]
+    npm config set flowgridviz:nginx_hostname YOUR_HOSTNAME_HERE
+
+The first determines whether a full `server{}` block will be generated
+or just a snippet suitable for inclusion in an existing `server{}`
+block. The second overrides the simplistic hostname detection built
+into the configuration tool, which is handy for virtual hosting.
+
 
 Running Under NGINX
 -------------------
 
 Execute `npm run conf_nginx` to put a reasonable nginx config file in
-`nginx/flowgridviz.conf`. This file is suitable for inclusion in a
-`server{}` block in your nginx configuration.
+`nginx/flowgridviz.conf`. By default, this file is suitable for
+inclusion in a `server{}` block in your nginx configuration. With some
+additional configuration set (`npm config set
+flowgridviz:nginx_full_config true`), it can produce a complete
+`server{}` block. Choose the style that fits your nginx configuration
+style.
+
+### RedHat Style: default.d
 
 For example, if your nginx config contains the following (which is
 default from Amazon Linux 2):
@@ -401,6 +418,34 @@ already enabled nginx (`sudo systemctl enable nginx`):
     npm config set flowgridviz:url_root fgv
     npm run conf_nginx
     sudo cp nginx/flowgridviz.conf /etc/nginx/default.d/
+    sudo systemctl restart nginx
+    npm start #consider using pm2 instead (see below)
+
+
+### Debian Style: sites-enabled
+
+If your nginx configuration includes a line like the following
+(as is common on Ubuntu):
+
+    include /etc/nginx/sites-enabled/*.conf;
+
+Then you can configure nginx by running the following, assuming you've
+already enabled nginx (`sudo systemctl enable nginx`)
+
+    npm config set flowgridviz:nginx_full_config true
+    npm run conf_nginx
+
+If for some reason the `nginx/flowgrigviz.conf` generated doesn't
+contain your proper hostname, run the following, substituting your
+desired hostname.
+
+    npm config set flowgridviz:nginx_hostname YOUR_HOSTNAME_HERE
+    npm run conf_nginx
+
+Once you are satisfied that `nginx/flowgrigviz.conf` contains your
+proper hostname, run:
+
+    sudo cp nginx/flowgridviz.conf /etc/nginx/default.d
     sudo systemctl restart nginx
     npm start #consider using pm2 instead (see below)
 
