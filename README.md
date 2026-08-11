@@ -1,3 +1,19 @@
+ARCHIVED
+========
+
+This project is being **archived** for two reasons:
+
+1. The libraries FGV depends on have had numerous security issues since it
+was released. The flowgridviz project will not be updated. Don't use it
+unless you plan to update the libraries yourself.
+
+2. The URL signing IETF draft that was used in this project is expired and
+archived. There's no longer any support for it. The replacement is in
+[RFC-9421](https://datatracker.ietf.org/doc/html/rfc9421), but
+flowgridviz will not be updated to use the new standard.
+
+**Original README follows:**
+
 Interactive Grid-Based Network Flow Visualization
 =================================================
 
